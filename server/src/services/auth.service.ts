@@ -66,14 +66,20 @@ export function setRefreshCookie(res: Response, user: { _id: unknown; role?: str
   res.cookie(REFRESH_COOKIE, token, {
     httpOnly: true,
     secure: env.isProd,
-    sameSite: 'lax',
+    // Cross-origin setups (Vercel frontend -> Render backend) require 'none' + secure in production.
+    sameSite: env.isProd ? 'none' : 'lax',
     path: '/api/auth',
     maxAge: env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
   });
 }
 
 export function clearRefreshCookie(res: Response): void {
-  res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
+  res.clearCookie(REFRESH_COOKIE, {
+    path: '/api/auth',
+    httpOnly: true,
+    secure: env.isProd,
+    sameSite: env.isProd ? 'none' : 'lax',
+  });
 }
 
 export function toUserProfile(user: UserDoc): UserProfile {

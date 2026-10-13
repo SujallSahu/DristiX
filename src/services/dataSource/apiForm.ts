@@ -6,13 +6,14 @@
  * itself, and forcing a header produces a body the server cannot parse.
  */
 import { getAccessToken, refreshSession } from './apiToken.js';
+import { BASE_API_URL } from './apiUrl.js';
 
 export async function requestForm<T>(path: string, form: FormData): Promise<T> {
   const headers: Record<string, string> = {};
   const token = getAccessToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${BASE_API_URL}${path}`, {
     method: 'POST',
     headers,
     body: form,

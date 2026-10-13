@@ -43,6 +43,8 @@ export function setAccessToken(next: string | null): void {
   token = next;
 }
 
+import { BASE_API_URL } from './apiUrl.js';
+
 /**
  * Single-flight refresh: many parallel 401s must not trigger many refreshes.
  */
@@ -51,7 +53,7 @@ export async function refreshSession(): Promise<boolean> {
 
   refreshInFlight = (async () => {
     try {
-      const res = await fetch('/api/auth/refresh', {
+      const res = await fetch(`${BASE_API_URL}/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
       });

@@ -35,7 +35,7 @@ import type {
  *    failing mid-conversation.
  */
 
-const BASE = import.meta.env.VITE_API_URL ?? '/api';
+import { BASE_API_URL } from './apiUrl.js';
 
 // Token state and the single-flight refresh live in apiToken.ts so the multipart
 // helper can share them; re-declaring them here would desynchronise the two.
@@ -81,7 +81,7 @@ async function request<T>(path: string, init: RequestInit = {}, retry = true): P
   const token = getAccessToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${BASE_API_URL}${path}`, {
     ...init,
     headers,
     credentials: 'include',

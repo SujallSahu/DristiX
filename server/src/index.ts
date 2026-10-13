@@ -56,6 +56,17 @@ app.use(
   })
 );
 
+function isOriginAllowed(origin: string): boolean {
+  return env.corsOrigins.some((allowed) => {
+    if (allowed === origin) return true;
+    if (allowed.includes('*')) {
+      const escaped = allowed.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+      return new RegExp(`^${escaped}$`).test(origin);
+    }
+    return false;
+  });
+}
+
 app.use(
   cors({
     origin(origin, callback) {
@@ -66,7 +77,7 @@ app.use(
       // served without CORS headers so the browser blocks it. Throwing here
       // would surface as a 500 and log a stack trace on every rejected
       // cross-origin request — noise rather than security.
-      return callback(null, env.corsOrigins.includes(origin));
+      return callback(null, isOriginAllowed(origin));
     },
     credentials: true, // required for the refresh cookie
   })
