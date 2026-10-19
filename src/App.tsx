@@ -32,6 +32,7 @@ import { getDataSource } from './services/dataSource';
 import { formatDuration } from './utils/formatDuration';
 import { dispatchAccessibilityEvent } from './accessibility';
 import { useNetworkStatus } from './hooks/useNetworkStatus';
+import { ShieldCheck } from 'lucide-react';
 
 export const App: React.FC = () => {
   useNetworkStatus();
@@ -481,7 +482,7 @@ export const App: React.FC = () => {
         <SkipLinks />
         <LiveAnnouncer />
         {!isAdminAuthenticated ? (
-          <AdminLogin onReturnToStudent={() => navigateTo('/')} />
+          <AdminLogin onReturnToStudent={() => navigateTo('/login')} />
         ) : (
           <AdminPanel onReturnToStudent={() => navigateTo('/')} />
         )}
@@ -514,13 +515,24 @@ export const App: React.FC = () => {
                   <p className="text-xs text-theme-text-secondary">Accessible Online Examination Platform</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => navigateTo('/')}
-                className="h-10 px-4 rounded-xl border-2 border-theme-border bg-theme-bg font-bold text-sm text-theme-text hover:bg-theme-surface-elevated transition"
-              >
-                ← Back to home
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigateTo('/admin')}
+                  className="h-10 px-3.5 rounded-xl border-2 border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition focus:ring-4 focus:ring-indigo-500/50"
+                  aria-label="Navigate to Examiner or Admin Studio"
+                >
+                  <ShieldCheck className="w-4 h-4" aria-hidden="true" />
+                  <span>Admin Studio</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('/')}
+                  className="h-10 px-4 rounded-xl border-2 border-theme-border bg-theme-bg font-bold text-sm text-theme-text hover:bg-theme-surface-elevated transition"
+                >
+                  ← Back to home
+                </button>
+              </div>
             </div>
           </header>
 
@@ -528,6 +540,7 @@ export const App: React.FC = () => {
             <StudentAuthScreen
               initialMode={currentRoute.startsWith('/register') ? 'register' : 'login'}
               onAuthenticated={() => navigateTo('/')}
+              onNavigateToAdmin={() => navigateTo('/admin')}
             />
           </main>
           <A11ySettingsModal />
