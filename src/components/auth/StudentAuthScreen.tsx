@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import { soundEffects } from '../../utils/soundEffects';
-import { LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { LogIn, UserPlus, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import type { AccessibilityPreference } from '../../../shared/types';
 import { VoiceGuidedLoginCard } from './VoiceGuidedLoginCard';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
@@ -11,11 +11,13 @@ interface StudentAuthScreenProps {
   onAuthenticated?: () => void;
   /** Which tab to open on. `/register` deep-links the sign-up form. */
   initialMode?: 'login' | 'register';
+  onNavigateToAdmin?: () => void;
 }
 
 export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
   onAuthenticated,
   initialMode = 'login',
+  onNavigateToAdmin,
 }) => {
   const { loginStudent, registerStudent } = useAuthStore();
   const [authMode, setAuthMode] = useState<'login' | 'register'>(initialMode);
@@ -136,6 +138,16 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoToAdmin = () => {
+    soundEffects.playSelect();
+    if (onNavigateToAdmin) {
+      onNavigateToAdmin();
+    } else {
+      window.history.pushState({}, '', '/admin');
+      window.dispatchEvent(new PopStateEvent('popstate'));
     }
   };
 
@@ -330,6 +342,19 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                 Don't have an account? Register New Student
               </button>
             </div>
+
+            {/* Examiner / Administrator Portal Switcher */}
+            <div className="pt-3.5 mt-3.5 border-t-2 border-theme-border/60 text-center">
+              <button
+                type="button"
+                onClick={handleGoToAdmin}
+                onFocus={() => speakInput('Examiner and Admin Studio sign in ke liye Enter press karein')}
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border-2 border-indigo-500/30 hover:border-indigo-500/50 transition-all shadow-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/50"
+              >
+                <ShieldCheck className="w-4.5 h-4.5" aria-hidden="true" />
+                <span>Sign In to Examiner / Admin Studio &rarr;</span>
+              </button>
+            </div>
           </form>
         )}
 
@@ -473,6 +498,19 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                 className="text-xs sm:text-sm font-bold text-theme-text/80 hover:text-theme-primary underline underline-offset-4 focus:outline-none focus:ring-2 focus:ring-theme-focus rounded-lg px-2 py-1 transition"
               >
                 Already have an account? Sign In
+              </button>
+            </div>
+
+            {/* Examiner / Administrator Portal Switcher */}
+            <div className="pt-3.5 mt-3.5 border-t-2 border-theme-border/60 text-center">
+              <button
+                type="button"
+                onClick={handleGoToAdmin}
+                onFocus={() => speakInput('Examiner and Admin Studio sign in ke liye Enter press karein')}
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border-2 border-indigo-500/30 hover:border-indigo-500/50 transition-all shadow-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/50"
+              >
+                <ShieldCheck className="w-4.5 h-4.5" aria-hidden="true" />
+                <span>Sign In to Examiner / Admin Studio &rarr;</span>
               </button>
             </div>
           </form>
