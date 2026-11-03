@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useAuthStore, type StudentProfile } from '../../store/useAuthStore';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useAuthStore, type StudentProfile, type ExamSubmission, deduplicateSubmissions } from '../../store/useAuthStore';
 import { useExamStore } from '../../store/useExamStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import { soundEffects } from '../../utils/soundEffects';
@@ -71,12 +71,35 @@ interface AdminPanelProps {
   onReturnToStudent: () => void;
 }
 
+/**
+ * Resilient student matcher that handles ObjectId, roll numbers (case-insensitive),
+ * and student names to ensure candidate attempts are accurately correlated with their profile.
+ */
+function matchesStudent(
+  s: { studentId?: string; studentRoll?: string; studentName?: string },
+  std: { id?: string; rollNumber?: string; name?: string }
+): boolean {
+  const stdRoll = std.rollNumber ? std.rollNumber.trim().toLowerCase() : '';
+  const stdId = std.id ? String(std.id).trim().toLowerCase() : '';
+  const stdName = std.name ? std.name.trim().toLowerCase() : '';
+
+  const sRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
+  const sId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
+  const sName = s.studentName ? s.studentName.trim().toLowerCase() : '';
+
+  if (stdRoll && (sRoll === stdRoll || sId === stdRoll)) return true;
+  if (stdId && (sId === stdId || sRoll === stdId)) return true;
+  if (stdName && sName && sName === stdName) return true;
+  return false;
+}
+
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => {
   const {
     students,
     submissions,
     logoutAdmin,
     deleteSubmission,
+    clearAllSubmissions,
     syncSubmissions,
     fetchStudents,
     deleteStudent,
@@ -155,10 +178,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Refresh the cohort's results & student roster from the server on mount / tab change
+  // Refresh the cohort's results & student roster from the server on mount, tab change,
+  // cross-tab submission events, focus events, and gentle background polling
   useEffect(() => {
     void syncSubmissions();
     void fetchStudents();
+
+    const handleDataRefresh = () => {
+      void syncSubmissions();
+      void fetchStudents();
+    };
+
+    window.addEventListener('dristix:submission-updated', handleDataRefresh);
+    window.addEventListener('dristix:submission-deleted', handleDataRefresh);
+    window.addEventListener('dristix:submission-cleared', handleDataRefresh);
+    window.addEventListener('dristix:student-history-cleared', handleDataRefresh);
+    window.addEventListener('focus', handleDataRefresh);
+
+    const interval = setInterval(() => {
+      // Auto-poll quietly in the background so test completions reflect in real time without manual reload
+      void syncSubmissions();
+      void fetchStudents();
+    }, 10000);
+
+    return () => {
+      window.removeEventListener('dristix:submission-updated', handleDataRefresh);
+      window.removeEventListener('dristix:submission-deleted', handleDataRefresh);
+      window.removeEventListener('dristix:submission-cleared', handleDataRefresh);
+      window.removeEventListener('dristix:student-history-cleared', handleDataRefresh);
+      window.removeEventListener('focus', handleDataRefresh);
+      clearInterval(interval);
+    };
   }, [syncSubmissions, fetchStudents, activeAdminTab]);
 
   const [submissionSearch, setSubmissionSearch] = useState('');
@@ -443,6 +493,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
     }
   };
 
+  // Top Performing Students computed dynamically from real candidate scores
+  const topPerformingStudents = React.useMemo(() => {
+    if (!students || students.length === 0) return [];
+    const scored = students.map((st) => {
+      const stdSubs = submissions.filter((s) => matchesStudent(s, st));
+      const avg = stdSubs.length > 0 ? Math.round(stdSubs.reduce((acc, c) => acc + (c.percentage || 0), 0) / stdSubs.length) : 0;
+      return {
+        name: st.name,
+        accuracy: avg,
+        attempts: stdSubs.length,
+      };
+    });
+    scored.sort((a, b) => b.accuracy - a.accuracy || b.attempts - a.attempts);
+    return scored.slice(0, 4).map((st, idx) => ({
+      rank: idx + 1,
+      medal: idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : String(idx + 1),
+      name: st.name,
+      accuracy: st.accuracy,
+    }));
+  }, [students, submissions]);
+
   // Calculations for KPI Cards
   const totalSubmissions = submissions.length;
   const avgScore =
@@ -454,7 +525,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
   const distinctionRate = totalSubmissions > 0 ? Math.round((highScorersCount / totalSubmissions) * 100) : 0;
 
   // Filtered Submissions
-  const filteredSubmissions = submissions.filter((sub) => {
+  const filteredSubmissions: ExamSubmission[] = useMemo(() => {
+    const matched = submissions.filter((sub) => {
     const matchesSearch =
       submissionSearch.trim() === '' ||
       sub.studentName.toLowerCase().includes(submissionSearch.toLowerCase()) ||
@@ -472,7 +544,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
       (submissionAccuracyFilter === 'low' && sub.percentage < 50);
 
     return matchesSearch && matchesExam && matchesAccuracy;
-  });
+    });
+    return deduplicateSubmissions(matched);
+  }, [submissions, submissionSearch, selectedExamFilter, submissionAccuracyFilter]);
 
   // Submissions Pagination (5 per page)
   const SUBMISSIONS_PER_PAGE = 5;
@@ -490,7 +564,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
   // Cohort Analytics for Student Management Hub
   const studentsWithAttempts = students.filter((std) =>
-    submissions.some((s) => s.studentId === std.id || s.studentRoll === std.rollNumber)
+    submissions.some((s) => matchesStudent(s, std))
   );
   const cohortActiveRate = students.length > 0 ? Math.round((studentsWithAttempts.length / students.length) * 100) : 0;
   const cohortScores = submissions.map((s) => s.percentage || 0);
@@ -522,8 +596,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
       return true;
     })
     .sort((a, b) => {
-      const aSubs = submissions.filter((s) => s.studentId === a.id || s.studentRoll === a.rollNumber);
-      const bSubs = submissions.filter((s) => s.studentId === b.id || s.studentRoll === b.rollNumber);
+      const aSubs = submissions.filter((s) => matchesStudent(s, a));
+      const bSubs = submissions.filter((s) => matchesStudent(s, b));
       const aAvg = aSubs.length > 0 ? aSubs.reduce((acc, c) => acc + (c.percentage || 0), 0) / aSubs.length : 0;
       const bAvg = bSubs.length > 0 ? bSubs.reduce((acc, c) => acc + (c.percentage || 0), 0) / bSubs.length : 0;
 
@@ -544,7 +618,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
     soundEffects.playSelect();
     const headers = ['Name', 'Roll Number', 'Email', 'Accessibility Mode', 'Total Tests', 'Avg Accuracy', 'Registered Date'];
     const rows = students.map((s) => {
-      const stdSubs = submissions.filter((sub) => sub.studentId === s.id || sub.studentRoll === s.rollNumber);
+      const stdSubs = submissions.filter((sub) => matchesStudent(sub, s));
       const avg = stdSubs.length > 0 ? Math.round(stdSubs.reduce((acc, c) => acc + (c.percentage || 0), 0) / stdSubs.length) : 'N/A';
       const reg = s.registeredAt ? new Date(s.registeredAt).toLocaleDateString() : 'N/A';
       return [
@@ -630,6 +704,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
     (acc, e) => acc + (e.questions?.length || e.questionCount || 0),
     0
   );
+
+  const [isClearingSubmissions, setIsClearingSubmissions] = useState(false);
+
+  const handleClearAllSubmissions = async () => {
+    if (submissions.length === 0) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to permanently clear all ${submissions.length} candidate submission records from the administrative database? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setIsClearingSubmissions(true);
+    try {
+      await clearAllSubmissions();
+    } finally {
+      setIsClearingSubmissions(false);
+    }
+  };
 
   const handleExportSubmissionsCsv = () => {
     soundEffects.playSelect();
@@ -1740,10 +1834,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <FileText className="w-6 h-6" aria-hidden="true" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-2xl sm:text-3xl font-black text-theme-text leading-tight">{submissions.length || 41}</div>
+                      <div className="text-2xl sm:text-3xl font-black text-theme-text leading-tight">{submissions.length}</div>
                       <span className="text-xs sm:text-sm font-semibold text-theme-text/75 block truncate">Total Submissions</span>
                       <span className="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1 mt-0.5">
-                        <span>↑</span> +{Math.max(8, submissions.length)} graded
+                        <span>↑</span> {submissions.length} graded
                       </span>
                     </div>
                   </div>
@@ -1949,7 +2043,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
                       <div className="absolute text-center">
                         <div className="text-xl sm:text-2xl font-black text-theme-text leading-none">
-                          {submissions.length || 41}
+                          {submissions.length}
                         </div>
                         <div className="text-[10px] text-theme-text/60 font-bold uppercase tracking-wider mt-1">Submissions</div>
                       </div>
@@ -1962,7 +2056,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         <span className="w-2.5 h-2.5 rounded-full bg-[#008f7a]" /> Correct
                       </span>
                       <span className="font-extrabold text-theme-text">
-                        {Math.round(totalSubmissions ? avgScore : 44)}%
+                        {Math.round(totalSubmissions ? avgScore : 0)}%
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -2069,14 +2163,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 <div className="lg:col-span-5 p-5 sm:p-6 rounded-2xl bg-theme-surface border border-theme-border shadow-sm flex flex-col justify-between">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-base sm:text-lg font-extrabold text-theme-text">Recent Submissions</h3>
-                    <button
-                      type="button"
-                      onClick={() => setActiveAdminTab('submissions')}
+                    <div className="flex items-center gap-2">
+                      {submissions.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleClearAllSubmissions}
+                          disabled={isClearingSubmissions}
+                          className="px-2.5 py-1 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold flex items-center gap-1 transition disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-400"
+                          title="Clear all test submission records"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Clear History</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setActiveAdminTab('submissions')}
                       className="text-xs sm:text-sm font-bold text-[#008f7a] hover:underline flex items-center gap-1"
                     >
                       <span>View All</span>
                       <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="overflow-x-auto">
@@ -2090,37 +2198,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-theme-border/40">
-                        {(submissions.length > 0
-                          ? submissions.slice(0, 4).map((sub) => ({
-                            id: sub.id,
-                            name: sub.studentName,
-                            exam: sub.examTitle,
-                            score: `${sub.score} / ${sub.maxScore}`,
-                            status: 'Completed',
-                          }))
-                          : [
-                            { id: '1', name: 'Shivam Kumar Maurya', exam: 'SSC CGL Tier-1 Mock', score: '9 / 10', status: 'Completed' },
-                            { id: '2', name: 'Priya Singh', exam: 'Reasoning Speed Drill', score: '8 / 20', status: 'Completed' },
-                            { id: '3', name: 'Aman Verma', exam: 'Quantitative Aptitude', score: '12 / 20', status: 'Completed' },
-                            { id: '4', name: 'Neha Patel', exam: 'General Awareness', score: '15 / 25', status: 'Completed' },
-                          ]
-                        ).map((row) => (
-                          <tr key={row.id} className="hover:bg-theme-bg/50 transition">
-                            <td className="py-2.5 px-2 font-bold text-theme-text flex items-center gap-2">
-                              <span className="w-6 h-6 rounded-full bg-[#008f7a]/20 text-[#008f7a] font-black text-xs flex items-center justify-center shrink-0">
-                                {row.name.charAt(0)}
-                              </span>
-                              <span className="truncate max-w-[130px] font-semibold">{row.name}</span>
-                            </td>
-                            <td className="py-2.5 px-2 text-theme-text/80 truncate max-w-[140px] font-medium">{row.exam}</td>
-                            <td className="py-2.5 px-2 font-mono font-bold text-center text-theme-text">{row.score}</td>
-                            <td className="py-2.5 px-2 text-right">
-                              <span className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                {row.status}
-                              </span>
+                        {submissions.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="py-6 text-center text-xs text-theme-text/60 font-semibold">
+                              No recent candidate submissions yet. Test attempts will appear here in real time.
                             </td>
                           </tr>
-                        ))}
+                        ) : (
+                          submissions.slice(0, 4).map((sub) => (
+                            <tr key={sub.id} className="hover:bg-theme-bg/50 transition">
+                              <td className="py-2.5 px-2 font-bold text-theme-text flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-[#008f7a]/20 text-[#008f7a] font-black text-xs flex items-center justify-center shrink-0">
+                                  {(sub.studentName || 'C').charAt(0).toUpperCase()}
+                                </span>
+                                <span className="truncate max-w-[130px] font-semibold">{sub.studentName}</span>
+                              </td>
+                              <td className="py-2.5 px-2 text-theme-text/80 truncate max-w-[140px] font-medium">{sub.examTitle}</td>
+                              <td className="py-2.5 px-2 font-mono font-bold text-center text-theme-text">
+                                {Number(sub.score.toFixed(2))} / {sub.maxScore}
+                              </td>
+                              <td className="py-2.5 px-2 text-right">
+                                <span className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                  Completed
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -2141,26 +2245,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   </div>
 
                   <div className="space-y-2.5">
-                    {[
-                      { rank: 1, medal: '🥇', name: students[0]?.name || 'Sujal Sahu', accuracy: 92 },
-                      { rank: 2, medal: '🥈', name: students[1]?.name || 'Priya Singh', accuracy: 88 },
-                      { rank: 3, medal: '🥉', name: students[2]?.name || 'Aman Verma', accuracy: 85 },
-                      { rank: 4, medal: '4', name: students[3]?.name || 'Neha Patel', accuracy: 78 },
-                    ].map((st) => (
-                      <div key={st.rank} className="flex items-center gap-2.5 text-xs sm:text-sm py-1">
-                        <span className="w-5 text-center font-bold text-theme-text/70 text-sm">{st.medal}</span>
-                        <div className="w-6 h-6 rounded-full bg-theme-bg border border-theme-border text-xs font-black flex items-center justify-center shrink-0">
-                          {st.name.charAt(0)}
-                        </div>
-                        <span className="font-bold text-theme-text truncate flex-1">{st.name}</span>
-                        <div className="w-20 sm:w-24 bg-theme-bg rounded-full h-2 overflow-hidden border border-theme-border">
-                          <div className="bg-[#008f7a] h-full rounded-full" style={{ width: `${st.accuracy}%` }} />
-                        </div>
-                        <span className="font-mono font-bold text-theme-text text-xs sm:text-sm w-9 text-right">
-                          {st.accuracy}%
-                        </span>
+                    {topPerformingStudents.length === 0 ? (
+                      <div className="py-6 text-center text-xs text-theme-text/60 font-semibold">
+                        No student performance records recorded yet.
                       </div>
-                    ))}
+                    ) : (
+                      topPerformingStudents.map((st) => (
+                        <div key={st.rank} className="flex items-center gap-2.5 text-xs sm:text-sm py-1">
+                          <span className="w-5 text-center font-bold text-theme-text/70 text-sm">{st.medal}</span>
+                          <div className="w-6 h-6 rounded-full bg-theme-bg border border-theme-border text-xs font-black flex items-center justify-center shrink-0">
+                            {st.name.charAt(0)}
+                          </div>
+                          <span className="font-bold text-theme-text truncate flex-1">{st.name}</span>
+                          <div className="w-20 sm:w-24 bg-theme-bg rounded-full h-2 overflow-hidden border border-theme-border">
+                            <div className="bg-[#008f7a] h-full rounded-full" style={{ width: `${st.accuracy}%` }} />
+                          </div>
+                          <span className="font-mono font-bold text-theme-text text-xs sm:text-sm w-9 text-right">
+                            {st.accuracy}%
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -2244,6 +2349,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 </div>
 
                 <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                  {submissions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearAllSubmissions}
+                      disabled={isClearingSubmissions}
+                      className="px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-2xs transition disabled:opacity-50 focus:outline-none focus:ring-4 focus:ring-red-400"
+                      title="Clear all test submission records from database"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>{isClearingSubmissions ? 'Clearing Records...' : 'Clear History'}</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={handleExportSubmissionsCsv}
@@ -2396,6 +2513,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       {label}
                     </button>
                   ))}
+
+                  {submissions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearAllSubmissions}
+                      disabled={isClearingSubmissions}
+                      className="ml-auto px-3.5 py-1.5 rounded-lg text-xs font-bold transition shrink-0 border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center gap-1.5 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-400"
+                      title="Clear all test submission records from Admin Portal"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>{isClearingSubmissions ? 'Clearing Records...' : 'Clear History'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -2802,7 +2932,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       </thead>
                       <tbody className="divide-y divide-theme-border/50">
                         {filteredStudents.map((std) => {
-                          const stdSubs = submissions.filter((s) => s.studentId === std.id || s.studentRoll === std.rollNumber);
+                          const stdSubs = submissions.filter((s) => matchesStudent(s, std));
                           const isDeleting = deletingStudentId === std.id;
                           const avgScore = stdSubs.length > 0 ? Math.round(stdSubs.reduce((acc, c) => acc + (c.percentage || 0), 0) / stdSubs.length) : null;
                           const badge = getAccessibilityBadge(std.accessibilityPreference);
@@ -2980,7 +3110,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
                     {/* 4 Mini Summary Metric Cards */}
                     {(() => {
-                      const studentSubs = submissions.filter((s) => s.studentId === selectedStudent.id || s.studentRoll === selectedStudent.rollNumber);
+                      const studentSubs = submissions.filter((s) => matchesStudent(s, selectedStudent));
                       const avg = studentSubs.length > 0 ? Math.round(studentSubs.reduce((a, b) => a + (b.percentage || 0), 0) / studentSubs.length) : 0;
                       const best = studentSubs.length > 0 ? Math.max(...studentSubs.map((s) => s.percentage || 0)) : 0;
                       const badge = getAccessibilityBadge(selectedStudent.accessibilityPreference);
@@ -3010,7 +3140,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
                           {/* Test Attempts History */}
                           <div className="space-y-3">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between flex-wrap gap-2">
                               <h4 className="text-sm font-extrabold text-theme-text flex items-center gap-2">
                                 <Award className="w-4 h-4 text-[#008f7a]" />
                                 Examination & Drill Attempts ({studentSubs.length})
@@ -3034,7 +3164,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                       <th className="py-2.5 px-3">Examination</th>
                                       <th className="py-2.5 px-3">Mode</th>
                                       <th className="py-2.5 px-3 text-center">Score</th>
-                                      <th className="py-2.5 px-3 text-right">Accuracy</th>
+                                      <th className="py-2.5 px-3 text-center">Accuracy</th>
+                                      <th className="py-2.5 px-3 text-right">Action</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-theme-border/50">
@@ -3051,12 +3182,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                         <td className="py-2.5 px-3 text-center font-mono font-bold text-theme-text">
                                           {sub.score} / {sub.maxScore}
                                         </td>
-                                        <td className="py-2.5 px-3 text-right">
+                                        <td className="py-2.5 px-3 text-center">
                                           <span className={`px-2 py-0.5 rounded-full text-xs font-black ${
                                             (sub.percentage || 0) >= 80 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                                           }`}>
                                             {sub.percentage}%
                                           </span>
+                                        </td>
+                                        <td className="py-2.5 px-3 text-right">
+                                          <button
+                                            type="button"
+                                            onClick={async () => {
+                                              if (window.confirm(`Delete attempt of "${sub.examTitle}" for ${selectedStudent.name}?`)) {
+                                                await deleteSubmission(sub.id);
+                                              }
+                                            }}
+                                            className="p-1 rounded-md text-theme-text/50 hover:text-red-500 hover:bg-red-500/10 transition"
+                                            title="Delete this attempt"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
                                         </td>
                                       </tr>
                                     ))}

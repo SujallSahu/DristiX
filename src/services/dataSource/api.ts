@@ -349,6 +349,54 @@ const apiExams: ExamDataSource = {
     return submissions;
   },
 
+  async deleteSubmission(submissionId: string): Promise<void> {
+    try {
+      await request(`/admin/submissions/${encodeURIComponent(submissionId)}`, { method: 'DELETE' });
+    } catch {
+      try {
+        await request(`/attempts/${encodeURIComponent(submissionId)}`, { method: 'DELETE' });
+      } catch (err) {
+        console.warn('[dristix] deleteSubmission backend request failed:', err);
+      }
+    }
+  },
+
+  async clearStudentSubmissions(studentIdOrRoll: string): Promise<void> {
+    try {
+      await request(`/admin/submissions/student/${encodeURIComponent(studentIdOrRoll)}`, { method: 'DELETE' });
+    } catch {
+      try {
+        await request('/attempts', { method: 'DELETE' });
+      } catch (err) {
+        console.warn('[dristix] clearStudentSubmissions backend request failed:', err);
+      }
+    }
+  },
+
+  async clearStudentAttempts(): Promise<void> {
+    try {
+      await request('/attempts', { method: 'DELETE' });
+    } catch (err) {
+      console.warn('[dristix] clearStudentAttempts backend request failed:', err);
+    }
+  },
+
+  async dismissStudentAttempt(attemptId: string): Promise<void> {
+    try {
+      await request(`/attempts/${encodeURIComponent(attemptId)}`, { method: 'DELETE' });
+    } catch (err) {
+      console.warn('[dristix] dismissStudentAttempt backend request failed:', err);
+    }
+  },
+
+  async clearAllSubmissions(): Promise<void> {
+    try {
+      await request('/admin/submissions', { method: 'DELETE' });
+    } catch (err) {
+      console.warn('[dristix] clearAllSubmissions backend request failed:', err);
+    }
+  },
+
   async submitFeedback(payload): Promise<{ ok: boolean; message: string }> {
     try {
       return await request<{ ok: boolean; message: string }>('/feedback', {

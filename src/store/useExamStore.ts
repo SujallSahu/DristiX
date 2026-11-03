@@ -5,7 +5,14 @@ import { useAnnouncerStore } from './useAnnouncerStore';
 import { verbalizeMath, verbalizeForSpeech } from '../utils/mathVerbalizer';
 import { describeOptionSelection } from '../utils/optionSpeech';
 import { isHindiPreferred } from '../utils/voiceRecognition';
-import { useAuthStore } from './useAuthStore';
+import {
+  useAuthStore,
+  type ExamSubmission,
+  authBroadcastChannel,
+  getStudentClearedTimestamp,
+  getStudentDismissedIds,
+  deduplicateSubmissions,
+} from './useAuthStore';
 import { getDataSource } from '../services/dataSource';
 import { dispatchAccessibilityEvent } from '../accessibility';
 import { offlinePracticeStorage } from '../services/offlinePracticeStorage';
@@ -60,6 +67,69 @@ export interface AnalyticsSnapshot {
     incorrectCount: number;
     unattemptedCount: number;
   }>;
+}
+
+export function computeAnalyticsSnapshot(subs: ExamSubmission[]): AnalyticsSnapshot {
+  const cleanSubs = deduplicateSubmissions(subs);
+  const total = cleanSubs.length;
+  if (total === 0) {
+    return {
+      totalTests: 0,
+      timedExamsCount: 0,
+      drillsCount: 0,
+      bestScorePercentage: 0,
+      bestScoreTitle: 'N/A',
+      bestScoreMarks: '0',
+      averageAccuracy: 0,
+      questionsSolved: 0,
+      correctCount: 0,
+      wrongCount: 0,
+      recentSubmissions: [],
+    };
+  }
+
+  const timedExamsCount = cleanSubs.filter((s) => s.examType === 'exam').length;
+  const drillsCount = cleanSubs.filter((s) => s.examType === 'practice').length;
+
+  let best = cleanSubs[0];
+  let sumPercentage = 0;
+  let sumCorrect = 0;
+  let sumIncorrect = 0;
+
+  cleanSubs.forEach((s) => {
+    sumPercentage += s.percentage;
+    sumCorrect += s.correctCount;
+    sumIncorrect += s.incorrectCount;
+    if (s.percentage > best.percentage || (s.percentage === best.percentage && s.score > best.score)) {
+      best = s;
+    }
+  });
+
+  return {
+    totalTests: total,
+    timedExamsCount,
+    drillsCount,
+    bestScorePercentage: Math.round(best.percentage),
+    bestScoreTitle: best.examTitle,
+    bestScoreMarks: `${Number(best.score.toFixed(2))}/${best.maxScore}`,
+    averageAccuracy: Math.round(sumPercentage / total),
+    questionsSolved: sumCorrect + sumIncorrect,
+    correctCount: sumCorrect,
+    wrongCount: sumIncorrect,
+    recentSubmissions: cleanSubs.slice(0, 10).map((s) => ({
+      examTitle: s.examTitle,
+      examCode: s.examCode,
+      examType: s.examType,
+      date: new Date(s.submittedAt).toLocaleDateString(),
+      time: new Date(s.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      score: Number(s.score.toFixed(2)),
+      maxScore: s.maxScore,
+      percentage: Math.round(s.percentage),
+      correctCount: s.correctCount,
+      incorrectCount: s.incorrectCount,
+      unattemptedCount: s.unattemptedCount,
+    })),
+  };
 }
 
 interface ExamState {
@@ -1087,7 +1157,10 @@ export const useExamStore = create<ExamState>((set, get) => ({
       set({ questions: report.questions as unknown as QuestionItem[] });
     }
 
+    const authoritativeAttemptId = (attemptId && attemptId !== 'local') ? attemptId : (report?.attemptId || undefined);
+
     useAuthStore.getState().addSubmission({
+      id: authoritativeAttemptId,
       examId: currentExam.id,
       examTitle: currentExam.title,
       examCode: currentExam.code,
@@ -1098,6 +1171,49 @@ export const useExamStore = create<ExamState>((set, get) => ({
       correctCount: report.correctCount,
       incorrectCount: report.incorrectCount,
       unattemptedCount: report.unattemptedCount,
+    });
+
+    // Instant real-time synchronization:
+    // Update live currentAnalytics snapshot immediately so voice assistant & screen reader reflect accurate marks
+    const activeStudent = useAuthStore.getState().currentStudent;
+    const initialSubs = useAuthStore.getState().submissions;
+    const studentKey = (activeStudent?.rollNumber || activeStudent?.id || '').trim().toLowerCase();
+    const clearedAt = getStudentClearedTimestamp(studentKey);
+    const dismissedIds = getStudentDismissedIds(studentKey);
+
+    const sRoll = activeStudent?.rollNumber ? activeStudent.rollNumber.trim().toLowerCase() : '';
+    const sId = activeStudent?.id ? String(activeStudent.id).trim().toLowerCase() : '';
+    const sName = activeStudent?.name ? activeStudent.name.trim().toLowerCase() : '';
+    const myInitialSubs = initialSubs.filter((s) => {
+      const subRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
+      const subId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
+      const subName = s.studentName ? s.studentName.trim().toLowerCase() : '';
+      const isStudent = (sRoll && (subRoll === sRoll || subId === sRoll)) ||
+                        (sId && (subId === sId || subRoll === sId)) ||
+                        (sName && subName === sName);
+      if (!isStudent) return false;
+      if (clearedAt && s.submittedAt <= clearedAt) return false;
+      if (dismissedIds.has(s.id)) return false;
+      return true;
+    });
+    set({ currentAnalytics: computeAnalyticsSnapshot(myInitialSubs) });
+
+    // Background server sync to maintain authoritative state without blocking user
+    void useAuthStore.getState().syncSubmissions().then(() => {
+      const freshSubs = useAuthStore.getState().submissions;
+      const myFreshSubs = freshSubs.filter((s) => {
+        const subRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
+        const subId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
+        const subName = s.studentName ? s.studentName.trim().toLowerCase() : '';
+        const isStudent = (sRoll && (subRoll === sRoll || subId === sRoll)) ||
+                          (sId && (subId === sId || subRoll === sId)) ||
+                          (sName && subName === sName);
+        if (!isStudent) return false;
+        if (clearedAt && s.submittedAt <= clearedAt) return false;
+        if (dismissedIds.has(s.id)) return false;
+        return true;
+      });
+      set({ currentAnalytics: computeAnalyticsSnapshot(myFreshSubs) });
     });
 
     set({
@@ -1157,6 +1273,19 @@ export const useExamStore = create<ExamState>((set, get) => ({
       return { ok: false, message };
     }
 
+    try {
+      authBroadcastChannel?.postMessage({
+        type: 'CATALOG_UPDATED',
+        examId: newExam.id,
+        timestamp: Date.now(),
+      });
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('dristix:catalog-updated', { detail: { examId: newExam.id } })
+      );
+    }
+
     soundEffects.playSuccess();
     useAnnouncerStore
       .getState()
@@ -1185,6 +1314,19 @@ export const useExamStore = create<ExamState>((set, get) => ({
         .getState()
         .announce(`Could not update the examination: ${message}`, 'assertive', true);
       return { ok: false, message };
+    }
+
+    try {
+      authBroadcastChannel?.postMessage({
+        type: 'CATALOG_UPDATED',
+        examId,
+        timestamp: Date.now(),
+      });
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('dristix:catalog-updated', { detail: { examId } })
+      );
     }
 
     soundEffects.playSuccess();
@@ -1217,6 +1359,26 @@ export const useExamStore = create<ExamState>((set, get) => ({
     if (!get().currentExam.id) {
       set({ currentExam: EMPTY_EXAM, questions: [] });
     }
+
+    try {
+      authBroadcastChannel?.postMessage({
+        type: 'CATALOG_UPDATED',
+        examId,
+        deleted: true,
+        timestamp: Date.now(),
+      });
+      authBroadcastChannel?.postMessage({
+        type: 'SUBMISSION_UPDATED',
+        timestamp: Date.now(),
+      });
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('dristix:catalog-updated', { detail: { examId, deleted: true } })
+      );
+      window.dispatchEvent(new CustomEvent('dristix:submission-updated'));
+    }
+    void useAuthStore.getState().syncSubmissions();
 
     soundEffects.playSelect();
     useAnnouncerStore.getState().announce('Examination removed from catalog.', 'polite', true);
@@ -1597,3 +1759,38 @@ useExamStore.subscribe((state, prev) => {
       });
   }, 1200);
 });
+
+// Automatic synchronization listeners across tabs and window events for analytics and catalog
+if (typeof window !== 'undefined') {
+  const syncLiveSnapshot = () => {
+    const activeStudent = useAuthStore.getState().currentStudent;
+    const subs = useAuthStore.getState().submissions;
+    const studentKey = (activeStudent?.rollNumber || activeStudent?.id || '').trim().toLowerCase();
+    const clearedAt = getStudentClearedTimestamp(studentKey);
+    const dismissedIds = getStudentDismissedIds(studentKey);
+
+    const sRoll = activeStudent?.rollNumber ? activeStudent.rollNumber.trim().toLowerCase() : '';
+    const sId = activeStudent?.id ? String(activeStudent.id).trim().toLowerCase() : '';
+    const sName = activeStudent?.name ? activeStudent.name.trim().toLowerCase() : '';
+    const mySubs = subs.filter((s) => {
+      const subRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
+      const subId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
+      const subName = s.studentName ? s.studentName.trim().toLowerCase() : '';
+      const isStudent = (sRoll && (subRoll === sRoll || subId === sRoll)) ||
+                        (sId && (subId === sId || subRoll === sId)) ||
+                        (sName && subName === sName);
+      if (!isStudent) return false;
+      if (clearedAt && s.submittedAt <= clearedAt) return false;
+      if (dismissedIds.has(s.id)) return false;
+      return true;
+    });
+    useExamStore.getState().setCurrentAnalytics(computeAnalyticsSnapshot(mySubs));
+  };
+
+  window.addEventListener('dristix:submission-deleted', syncLiveSnapshot);
+  window.addEventListener('dristix:student-history-cleared', syncLiveSnapshot);
+  window.addEventListener('dristix:submission-updated', syncLiveSnapshot);
+  window.addEventListener('dristix:catalog-updated', () => {
+    void useExamStore.getState().loadCatalog();
+  });
+}

@@ -1,5 +1,9 @@
 import { useExamStore } from '../store/useExamStore';
-import { useAuthStore } from '../store/useAuthStore';
+import {
+  useAuthStore,
+  getStudentClearedTimestamp,
+  getStudentDismissedIds,
+} from '../store/useAuthStore';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import { voiceRecognition } from './voiceRecognition';
 import type { QuestionItem } from '../../shared/types';
@@ -132,18 +136,25 @@ export function getAssistantContext(): PageContextSnapshot {
     accessibilityPreference: 'Standard',
   };
 
-  let studentSubs = authStore.submissions.filter(
-    (s) =>
-      (student.rollNumber && s.studentRoll && s.studentRoll.toLowerCase() === student.rollNumber.toLowerCase()) ||
-      (student.id && s.studentId && s.studentId === student.id) ||
-      (student.rollNumber && s.studentId && s.studentId.toLowerCase() === student.rollNumber.toLowerCase())
-  );
+  const studentKey = (student.rollNumber || student.id || '').trim().toLowerCase();
+  const clearedAt = getStudentClearedTimestamp(studentKey);
+  const dismissedIds = getStudentDismissedIds(studentKey);
 
-  // If strict filter yielded 0 records but submissions exist in non-admin mode, use all submissions
-  // because /api/attempts is strictly scoped to the logged-in student on the backend.
-  if (studentSubs.length === 0 && authStore.submissions.length > 0 && !authStore.isAdminAuthenticated) {
-    studentSubs = authStore.submissions;
-  }
+  let studentSubs = authStore.submissions.filter((s) => {
+    const sRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
+    const sId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
+    const sName = s.studentName ? s.studentName.trim().toLowerCase() : '';
+
+    const isMatch =
+      (student.rollNumber && (sRoll === student.rollNumber.toLowerCase() || sId === student.rollNumber.toLowerCase())) ||
+      (student.id && (sId === student.id || sRoll === student.id)) ||
+      (student.name && sName === student.name.toLowerCase());
+
+    if (!isMatch) return false;
+    if (clearedAt && s.submittedAt <= clearedAt) return false;
+    if (dismissedIds.has(s.id)) return false;
+    return true;
+  });
 
   // Live analytics directly from the mounted StudentAnalyticsView component take absolute precedence
   const liveA = examStore.currentAnalytics;

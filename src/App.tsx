@@ -171,6 +171,33 @@ export const App: React.FC = () => {
     applyToDOM();
   }, [applyToDOM]);
 
+  // Synchronize catalog and submissions on real-time cross-tab events
+  useEffect(() => {
+    const handleCatalogRefresh = () => {
+      if (useAuthStore.getState().currentStudent) {
+        void useExamStore.getState().loadCatalog();
+      }
+    };
+
+    const handleSubmissionsRefresh = () => {
+      void useAuthStore.getState().syncSubmissions();
+    };
+
+    window.addEventListener('dristix:catalog-updated', handleCatalogRefresh);
+    window.addEventListener('dristix:submission-updated', handleSubmissionsRefresh);
+    window.addEventListener('dristix:submission-deleted', handleSubmissionsRefresh);
+    window.addEventListener('dristix:submission-cleared', handleSubmissionsRefresh);
+    window.addEventListener('focus', handleCatalogRefresh);
+
+    return () => {
+      window.removeEventListener('dristix:catalog-updated', handleCatalogRefresh);
+      window.removeEventListener('dristix:submission-updated', handleSubmissionsRefresh);
+      window.removeEventListener('dristix:submission-deleted', handleSubmissionsRefresh);
+      window.removeEventListener('dristix:submission-cleared', handleSubmissionsRefresh);
+      window.removeEventListener('focus', handleCatalogRefresh);
+    };
+  }, []);
+
   // Off-Thread Timer Web Worker Management
   useEffect(() => {
     let worker: Worker | null = null;

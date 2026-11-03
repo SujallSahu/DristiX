@@ -82,7 +82,7 @@ const examSchema = z.object({
   questions: z.array(questionSchema).min(1),
 });
 
-/** GET /api/admin/exams — includes unpublished, but still no answer keys. */
+/** GET /api/admin/exams â€” includes unpublished, but still no answer keys. */
 adminRouter.get(
   '/exams',
   asyncHandler(async (_req, res) => {
@@ -96,7 +96,7 @@ adminRouter.get(
   })
 );
 
-/** GET /api/admin/exams/:id — full details with answer keys for admin editing. */
+/** GET /api/admin/exams/:id â€” full details with answer keys for admin editing. */
 adminRouter.get(
   '/exams/:id',
   asyncHandler(async (req, res) => {
@@ -138,7 +138,7 @@ adminRouter.get(
   })
 );
 
-/** POST /api/admin/exams — create new exam with answer key. */
+/** POST /api/admin/exams â€” create new exam with answer key. */
 adminRouter.post(
   '/exams',
   asyncHandler(async (req, res) => {
@@ -183,7 +183,7 @@ adminRouter.post(
   })
 );
 
-/** PUT /api/admin/exams/:id — update existing exam & its questions/answer key. */
+/** PUT /api/admin/exams/:id â€” update existing exam & its questions/answer key. */
 adminRouter.put(
   '/exams/:id',
   asyncHandler(async (req, res) => {
@@ -242,7 +242,7 @@ adminRouter.put(
  *
  * Questions are embedded, so the exam and its answer keys disappear in one
  * document delete. Attempts still reference the id, so they are removed
- * explicitly — there is no database-level cascade to rely on.
+ * explicitly â€” there is no database-level cascade to rely on.
  */
 adminRouter.delete(
   '/exams/:id',
@@ -257,7 +257,7 @@ adminRouter.delete(
   })
 );
 
-/** GET /api/admin/students — the roster. Admin only; never exposed to students. */
+/** GET /api/admin/students â€” the roster. Admin only; never exposed to students. */
 adminRouter.get(
   '/students',
   asyncHandler(async (_req, res) => {
@@ -280,7 +280,7 @@ adminRouter.get(
   })
 );
 
-/** DELETE /api/admin/students/:id — remove a registered student and their attempts. */
+/** DELETE /api/admin/students/:id â€” remove a registered student and their attempts. */
 adminRouter.delete(
   '/students/:id',
   asyncHandler(async (req, res) => {
@@ -294,7 +294,7 @@ adminRouter.delete(
   })
 );
 
-/** GET /api/admin/submissions — every student's results. */
+/** GET /api/admin/submissions â€” every student's results. */
 adminRouter.get(
   '/submissions',
   asyncHandler(async (req, res) => {
@@ -303,7 +303,10 @@ adminRouter.get(
       .optional()
       .parse(req.query.status);
 
-    const filter = status ? { status } : {};
+    const filter: Record<string, any> = {
+      clearedByAdmin: { $ne: true },
+    };
+    if (status) filter.status = status;
 
     const attempts = await Attempt.find(filter)
       .sort({ updatedAt: -1 })
@@ -336,12 +339,76 @@ adminRouter.get(
             examsById.get(String(a.examId)) ?? null
           ),
           student: {
+            id: student ? String(student._id) : String(a.studentId),
             name: student?.name ?? '',
             rollNumber: student?.rollNumber ?? '',
             email: student?.email ?? '',
           },
+          studentId: String(a.studentId),
         };
       }),
     });
+  })
+);
+
+/** DELETE /api/admin/submissions/:id — remove a single test attempt */
+adminRouter.delete(
+  '/submissions/:id',
+  asyncHandler(async (req, res) => {
+    const { id } = z.object({ id: z.string().min(1) }).parse(req.params);
+    const permanent = req.query.permanent === 'true';
+    if (permanent) {
+      const attempt = await Attempt.findByIdAndDelete(id).exec();
+      res.json({ ok: true, deleted: !!attempt, permanent: true });
+    } else {
+      const attempt = await Attempt.findByIdAndUpdate(id, {
+        $set: { clearedByAdmin: true, clearedAtAdmin: new Date() },
+      }).exec();
+      res.json({ ok: true, deleted: !!attempt, clearedForAdmin: true });
+    }
+  })
+);
+
+/** DELETE /api/admin/submissions/student/:identifier — remove all attempts for a student by ID or roll */
+adminRouter.delete(
+  '/submissions/student/:identifier',
+  asyncHandler(async (req, res) => {
+    const { identifier } = z.object({ identifier: z.string().min(1) }).parse(req.params);
+    const student = await User.findOne({
+      $or: [
+        { _id: identifier.match(/^[0-9a-fA-F]{24}$/) ? identifier : null },
+        { rollNumber: identifier },
+      ],
+    }).exec();
+
+    const query = student ? { studentId: student._id } : { studentId: identifier };
+    const permanent = req.query.permanent === 'true';
+    if (permanent) {
+      const result = await Attempt.deleteMany(query).exec();
+      res.json({ ok: true, attemptsRemoved: result.deletedCount, permanent: true });
+    } else {
+      const result = await Attempt.updateMany(query, {
+        $set: { clearedByAdmin: true, clearedAtAdmin: new Date() },
+      }).exec();
+      res.json({ ok: true, attemptsCleared: result.modifiedCount, clearedForAdmin: true });
+    }
+  })
+);
+
+/** DELETE /api/admin/submissions — purge all submissions (admin reset) */
+adminRouter.delete(
+  '/submissions',
+  asyncHandler(async (req, res) => {
+    const permanent = req.query.permanent === 'true';
+    if (permanent) {
+      const result = await Attempt.deleteMany({}).exec();
+      res.json({ ok: true, attemptsRemoved: result.deletedCount, permanent: true });
+    } else {
+      const result = await Attempt.updateMany(
+        { clearedByAdmin: { $ne: true } },
+        { $set: { clearedByAdmin: true, clearedAtAdmin: new Date() } }
+      ).exec();
+      res.json({ ok: true, attemptsCleared: result.modifiedCount, clearedForAdmin: true });
+    }
   })
 );

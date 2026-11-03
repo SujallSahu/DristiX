@@ -35,6 +35,14 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
   async run() {
     set({ status: 'loading', error: null });
     try {
+      // Purge any stale client-side submission deletion tombstones from previous tests
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('dristix_deleted_submissions');
+          localStorage.removeItem('dristix_admin_deleted_submissions');
+        } catch {}
+      }
+
       const source = getDataSource();
 
       // Give the server a moment to answer. In local mode this is instant; the
@@ -46,13 +54,20 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
       ]);
 
       const user = result?.user ?? null;
-      // The auth store is the single place the UI reads identity from, so the
-      // session resolved here has to be pushed into it. Nothing is read from
-      // localStorage — an old offline-mode session left in a browser must not
-      // make the app look signed in when the server has no session for it.
-      useAuthStore.getState().setSession(user);
-      if (user) {
+      // Differentiate student session vs administrator session accurately
+      if (user && (user as any).role === 'ADMIN') {
+        useAuthStore.getState().setSession(null);
+        useAuthStore.setState({ isAdminAuthenticated: true });
+        sessionStorage.setItem('dristix_admin_auth', 'true');
         void useAuthStore.getState().syncSubmissions();
+        void useAuthStore.getState().fetchStudents();
+      } else {
+        useAuthStore.getState().setSession(user as any);
+        if (user) {
+          useAuthStore.setState({ isAdminAuthenticated: false });
+          sessionStorage.removeItem('dristix_admin_auth');
+          void useAuthStore.getState().syncSubmissions();
+        }
       }
 
       set({ status: 'ready', session: user, error: null });

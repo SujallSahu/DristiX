@@ -45,6 +45,12 @@ const attemptSchema = new Schema(
     incorrectCount: { type: Number, default: null },
     unattemptedCount: { type: Number, default: null },
     markedCount: { type: Number, default: null },
+
+    // Visibility / Deletion flags for independent history management
+    clearedByStudent: { type: Boolean, default: false, index: true },
+    clearedAtStudent: { type: Date, default: null },
+    clearedByAdmin: { type: Boolean, default: false, index: true },
+    clearedAtAdmin: { type: Date, default: null },
   },
   { timestamps: true }
 );

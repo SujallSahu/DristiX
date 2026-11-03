@@ -113,6 +113,11 @@ export interface ExamDataSource {
    * shared cohort.
    */
   listAllSubmissions(): Promise<AttemptSummary[]>;
+  deleteSubmission?(submissionId: string): Promise<void>;
+  clearStudentSubmissions?(studentIdOrRoll: string): Promise<void>;
+  clearStudentAttempts?(): Promise<void>;
+  dismissStudentAttempt?(attemptId: string): Promise<void>;
+  clearAllSubmissions?(): Promise<void>;
   submitFeedback(payload: {
     examId: string;
     examTitle: string;

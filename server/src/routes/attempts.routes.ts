@@ -15,6 +15,7 @@ import { toPublicQuestions } from '../services/question.service.js';
 import type { StartAttemptResult } from '../../../shared/types.js';
 
 export const attemptRouter = Router();
+export const attemptsRouter = attemptRouter;
 
 const startSchema = z.object({
   examId: z.string().min(1),
@@ -277,7 +278,7 @@ attemptRouter.get(
   '/',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const attempts = await Attempt.find({ studentId: req.user!.id })
+    const attempts = await Attempt.find({ studentId: req.user!.id, clearedByStudent: { $ne: true } })
       .sort({ createdAt: -1 })
       .limit(100)
       .lean()
@@ -299,6 +300,35 @@ attemptRouter.get(
         toAttemptSummary(a as unknown as AttemptDoc, byId.get(String(a.examId)) ?? null)
       ),
     });
+  })
+);
+
+/** DELETE /api/attempts/:id — student dismissing an attempt from their personal view */
+attemptRouter.delete(
+  '/:id',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const student = req.user!;
+    const { id } = z.object({ id: z.string().min(1) }).parse(req.params);
+    const attempt = await Attempt.findOneAndUpdate(
+      { _id: id, studentId: student.id },
+      { $set: { clearedByStudent: true, clearedAtStudent: new Date() } }
+    ).exec();
+    res.json({ ok: true, deleted: !!attempt, preservedForAdmin: true });
+  })
+);
+
+/** DELETE /api/attempts — student clearing history from their personal view */
+attemptRouter.delete(
+  '/',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const student = req.user!;
+    const result = await Attempt.updateMany(
+      { studentId: student.id, clearedByStudent: { $ne: true } },
+      { $set: { clearedByStudent: true, clearedAtStudent: new Date() } }
+    ).exec();
+    res.json({ ok: true, attemptsCleared: result.modifiedCount, preservedForAdmin: true });
   })
 );
 

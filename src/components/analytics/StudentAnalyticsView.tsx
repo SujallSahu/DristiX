@@ -1,11 +1,17 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useAuthStore } from '../../store/useAuthStore';
-import { useExamStore } from '../../store/useExamStore';
+import {
+  useAuthStore,
+  getStudentClearedTimestamp,
+  getStudentDismissedIds,
+  deduplicateSubmissions,
+} from '../../store/useAuthStore';
+import { useExamStore, computeAnalyticsSnapshot } from '../../store/useExamStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import { soundEffects } from '../../utils/soundEffects';
 import {
   Award,
   TrendingUp,
+  Trash2,
   Clock,
   ArrowLeft,
   Volume2,
@@ -29,10 +35,31 @@ interface StudentAnalyticsViewProps {
 export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onReturnToCatalog }) => {
   const { currentStudent, submissions, syncSubmissions } = useAuthStore();
 
-  // Pull the latest results from the server whenever this view opens, so a
-  // score earned in another tab or on another device shows up here.
+  // Pull the latest results from the server whenever this view opens, and keep synchronized
+  // with cross-tab submissions, focus events, and live background polling.
   useEffect(() => {
     void syncSubmissions();
+
+    const handleRefresh = () => {
+      void syncSubmissions();
+    };
+
+    window.addEventListener('dristix:submission-updated', handleRefresh);
+    window.addEventListener('dristix:submission-deleted', handleRefresh);
+    window.addEventListener('dristix:submission-cleared', handleRefresh);
+    window.addEventListener('focus', handleRefresh);
+
+    const pollInterval = setInterval(() => {
+      void syncSubmissions();
+    }, 10000);
+
+    return () => {
+      window.removeEventListener('dristix:submission-updated', handleRefresh);
+      window.removeEventListener('dristix:submission-deleted', handleRefresh);
+      window.removeEventListener('dristix:submission-cleared', handleRefresh);
+      window.removeEventListener('focus', handleRefresh);
+      clearInterval(pollInterval);
+    };
   }, [syncSubmissions]);
   const { selectExam, availableExams, availablePracticeDrills } = useExamStore();
   const { announce } = useAnnouncerStore();
@@ -40,101 +67,83 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
   const [typeFilter, setTypeFilter] = useState<'all' | 'exam' | 'practice'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [focusedRowIndex, setFocusedRowIndex] = useState<number>(0);
+  const [historyVersion, setHistoryVersion] = useState<number>(0);
+
+  // Re-render when student clears history or dismisses an attempt from their view
+  useEffect(() => {
+    const handleStudentHistoryCleared = () => {
+      setHistoryVersion((v) => v + 1);
+    };
+    window.addEventListener('dristix:student-history-cleared', handleStudentHistoryCleared);
+    return () => {
+      window.removeEventListener('dristix:student-history-cleared', handleStudentHistoryCleared);
+    };
+  }, []);
 
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
-  // Filter submissions belonging strictly to the current logged-in student
+  // Filter submissions belonging strictly to the current logged-in student,
+  // respecting candidate-level history clear/dismissal while leaving administrative records completely intact
   const studentSubmissions = useMemo(() => {
     if (!submissions || submissions.length === 0) return [];
     if (!currentStudent) return submissions;
-    const filtered = submissions.filter(
-      (s) =>
-        (s.studentRoll && currentStudent.rollNumber && s.studentRoll.toLowerCase() === currentStudent.rollNumber.toLowerCase()) ||
-        s.studentId === currentStudent.id ||
-        (s.studentId && currentStudent.rollNumber && s.studentId.toLowerCase() === currentStudent.rollNumber.toLowerCase())
-    );
-    return filtered.length > 0 ? filtered : submissions;
-  }, [submissions, currentStudent]);
 
-  // Derived Statistics & KPIs
-  const stats = useMemo(() => {
-    const total = studentSubmissions.length;
-    if (total === 0) {
-      return {
-        totalTests: 0,
-        examCount: 0,
-        practiceCount: 0,
-        bestScorePercent: 0,
-        bestScoreTitle: 'N/A',
-        bestScoreMarks: '0',
-        avgAccuracy: 0,
-        totalCorrect: 0,
-        totalIncorrect: 0,
-        totalAttempted: 0,
-      };
-    }
+    const studentKey = (currentStudent.rollNumber || currentStudent.id || '').trim().toLowerCase();
+    const clearedAt = getStudentClearedTimestamp(studentKey);
+    const dismissedIds = getStudentDismissedIds(studentKey);
 
-    const examCount = studentSubmissions.filter((s) => s.examType === 'exam').length;
-    const practiceCount = studentSubmissions.filter((s) => s.examType === 'practice').length;
+    const currentRoll = currentStudent.rollNumber ? currentStudent.rollNumber.trim().toLowerCase() : '';
+    const currentId = currentStudent.id ? String(currentStudent.id).trim().toLowerCase() : '';
+    const currentName = currentStudent.name ? currentStudent.name.trim().toLowerCase() : '';
 
-    // Find best score submission
-    let best = studentSubmissions[0];
-    let sumPercentage = 0;
-    let sumCorrect = 0;
-    let sumIncorrect = 0;
+    const matching = submissions.filter((s) => {
+      const sRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
+      const sId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
+      const sName = s.studentName ? s.studentName.trim().toLowerCase() : '';
 
-    studentSubmissions.forEach((s) => {
-      sumPercentage += s.percentage;
-      sumCorrect += s.correctCount;
-      sumIncorrect += s.incorrectCount;
-      if (s.percentage > best.percentage || (s.percentage === best.percentage && s.score > best.score)) {
-        best = s;
+      const isStudentMatch =
+        (currentRoll && (sRoll === currentRoll || sId === currentRoll)) ||
+        (currentId && (sId === currentId || sRoll === currentId)) ||
+        (currentName && sName === currentName);
+
+      if (!isStudentMatch) return false;
+
+      // When student clears history, hide previous attempts from student view (retaining them in admin portal)
+      if (clearedAt && s.submittedAt <= clearedAt) {
+        return false;
       }
+
+      // Hide individually dismissed attempts from student view
+      if (dismissedIds.has(s.id)) {
+        return false;
+      }
+
+      return true;
     });
 
-    return {
-      totalTests: total,
-      examCount,
-      practiceCount,
-      bestScorePercent: Math.round(best.percentage),
-      bestScoreTitle: best.examTitle,
-      bestScoreMarks: `${Number(best.score.toFixed(2))}/${best.maxScore}`,
-      avgAccuracy: Math.round(sumPercentage / total),
-      totalCorrect: sumCorrect,
-      totalIncorrect: sumIncorrect,
-      totalAttempted: sumCorrect + sumIncorrect,
-    };
-  }, [studentSubmissions]);
+    return deduplicateSubmissions(matching);
+  }, [submissions, currentStudent, historyVersion]);
+
+  // Derived Statistics & KPIs computed deterministically via computeAnalyticsSnapshot
+  const snapshot = useMemo(() => computeAnalyticsSnapshot(studentSubmissions), [studentSubmissions]);
+  const stats = useMemo(() => ({
+    totalTests: snapshot.totalTests,
+    examCount: snapshot.timedExamsCount,
+    practiceCount: snapshot.drillsCount,
+    bestScorePercent: snapshot.bestScorePercentage,
+    bestScoreTitle: snapshot.bestScoreTitle,
+    bestScoreMarks: snapshot.bestScoreMarks,
+    avgAccuracy: snapshot.averageAccuracy,
+    totalCorrect: snapshot.correctCount,
+    totalIncorrect: snapshot.wrongCount,
+    totalAttempted: snapshot.questionsSolved,
+  }), [snapshot]);
 
   // Publish current live analytics stats to useExamStore so voice assistant and screen reader
   // always speak the 100% exact real-time numbers shown on the cards.
   useEffect(() => {
-    useExamStore.getState().setCurrentAnalytics({
-      totalTests: stats.totalTests,
-      timedExamsCount: stats.examCount,
-      drillsCount: stats.practiceCount,
-      bestScorePercentage: stats.bestScorePercent,
-      bestScoreTitle: stats.bestScoreTitle,
-      bestScoreMarks: stats.bestScoreMarks,
-      averageAccuracy: stats.avgAccuracy,
-      questionsSolved: stats.totalAttempted,
-      correctCount: stats.totalCorrect,
-      wrongCount: stats.totalIncorrect,
-      recentSubmissions: studentSubmissions.slice(0, 10).map((s) => ({
-        examTitle: s.examTitle,
-        examCode: s.examCode,
-        examType: s.examType,
-        date: new Date(s.submittedAt).toLocaleDateString(),
-        time: new Date(s.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        score: Number(s.score.toFixed(2)),
-        maxScore: s.maxScore,
-        percentage: Math.round(s.percentage),
-        correctCount: s.correctCount,
-        incorrectCount: s.incorrectCount,
-        unattemptedCount: s.unattemptedCount,
-      })),
-    });
-  }, [stats, studentSubmissions]);
+    useExamStore.getState().setCurrentAnalytics(snapshot);
+  }, [snapshot]);
 
   // Filtered submissions based on search and type filter
   const filteredSubmissions = useMemo(() => {
@@ -301,6 +310,23 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
 
         {/* Candidate Profile Card & Audio Overview Button */}
         <div className="flex items-center gap-3 w-full sm:w-auto">
+          {studentSubmissions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('Clear all your completed test history from your student view? Your actual test records and scores remain safely preserved in administrative records.')) {
+                  useAuthStore.getState().clearStudentHistory();
+                  setHistoryVersion((v) => v + 1);
+                }
+              }}
+              className="px-3.5 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition focus:outline-none focus:ring-4 focus:ring-red-400"
+              title="Clear all completed test history from student view"
+            >
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
+              <span>Clear History</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleAnnounceSummary}
@@ -628,6 +654,21 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                           >
                             <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
                             <span>Retake</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(`Remove attempt record for ${sub.examTitle} from your student view? Your actual submission remains safely recorded in administration files.`)) {
+                                useAuthStore.getState().dismissStudentSubmission(sub.id);
+                                setHistoryVersion((v) => v + 1);
+                              }
+                            }}
+                            className="p-1.5 rounded-lg border border-theme-border bg-theme-bg hover:border-red-500/50 hover:bg-red-500/10 text-theme-text/60 hover:text-red-500 transition focus:outline-none focus:ring-4 focus:ring-red-400"
+                            title="Remove this test attempt from your view"
+                            aria-label={`Remove attempt record for ${sub.examTitle} from view`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
                         </div>
                       </td>

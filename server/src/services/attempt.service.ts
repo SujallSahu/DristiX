@@ -27,6 +27,7 @@ export function toAttemptSummary(
 ): AttemptSummary {
   return {
     id: String(attempt._id),
+    studentId: String(attempt.studentId),
     examId: String(attempt.examId),
     examTitle: exam?.title ?? '',
     examCode: exam?.code ?? '',
@@ -47,7 +48,7 @@ export function toAttemptSummary(
 }
 
 /**
- * The server owns the clock. The client never decides how much time is left —
+ * The server owns the clock. The client never decides how much time is left â€”
  * it renders `remainingSeconds` and re-syncs on every heartbeat, so editing
  * client state cannot extend an exam and closing the tab does not reset it.
  */
@@ -68,7 +69,7 @@ export function buildClock(attempt: AttemptDoc, serverNow = new Date()): Attempt
  *
  * Mode is part of the lookup on purpose. Without it, a student with a live
  * practice session would have that session resumed when they started a timed
- * exam — handing them practice-mode hints during a graded attempt, and making
+ * exam â€” handing them practice-mode hints during a graded attempt, and making
  * a real exam impossible to start until the practice session is finished.
  */
 export async function findLiveAttempt(

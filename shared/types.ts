@@ -2,7 +2,7 @@
  * Types shared by the DristiX frontend and the Node.js backend.
  *
  * This file is the security contract. The single most important type here is
- * `PublicQuestion` — it deliberately has NO `correctOption` and NO
+ * `PublicQuestion` â€” it deliberately has NO `correctOption` and NO
  * `explanation`. The backend must never send those to a student before the
  * attempt is submitted. `GradedQuestion` is the only shape that carries them,
  * and it only ever comes back from `POST /api/attempts/:id/submit`.
@@ -105,7 +105,7 @@ export interface Exam {
 
   /**
    * How many questions the exam holds. The catalog listing shows this, and the
-   * browser is not sent the questions themselves — so `questions` is empty
+   * browser is not sent the questions themselves â€” so `questions` is empty
    * there and this count is the only thing available.
    */
   questionCount: number;
@@ -151,7 +151,7 @@ export interface AuthResult {
 }
 
 /* ------------------------------------------------------------------ */
-/* Questions — the sensitive/public split                              */
+/* Questions â€” the sensitive/public split                              */
 /* ------------------------------------------------------------------ */
 
 export interface QuestionOption {
@@ -253,7 +253,8 @@ export interface AttemptSummary {
   incorrectCount: number | null;
   unattemptedCount: number | null;
   /** Present only on the admin roster endpoint. */
-  student?: { name: string; rollNumber: string; email: string };
+  student?: { id?: string; name: string; rollNumber: string; email: string };
+  studentId?: string;
 }
 
 /**
@@ -307,7 +308,7 @@ export interface GradeResult {
   verbalSummary: string[];
   weakAreas: string[];
   strongAreas: string[];
-  /** Answer key — safe to send now, the attempt is over. */
+  /** Answer key â€” safe to send now, the attempt is over. */
   questions: GradedQuestion[];
 }
 
@@ -343,7 +344,7 @@ export interface AiChatResponse {
  * Transcription happens on the server via the configured provider, rather than
  * through the browser's SpeechRecognition. The browser API streams audio to
  * Google's own speech service, which is unreachable from some networks and then
- * fails silently — recognition reports "aborted" with no audio ever arriving,
+ * fails silently â€” recognition reports "aborted" with no audio ever arriving,
  * even while the microphone is demonstrably delivering sound.
  */
 export interface TranscribeResult {
