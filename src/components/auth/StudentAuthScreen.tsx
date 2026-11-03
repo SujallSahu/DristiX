@@ -44,6 +44,7 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
   // stored profile allows null for accounts that never set one.
   const [regPref, setRegPref] = useState<AccessibilityPreference>('Screen Reader');
   const [regPassword, setRegPassword] = useState('');
+  const [showRegPassword, setShowRegPassword] = useState(false);
   const [regError, setRegError] = useState('');
 
   // Auto-focus first input when mode changes
@@ -464,16 +465,35 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                 >
                   Create Password <span className="text-red-500">*</span>
                 </label>
-                <input
-                  id="reg-pass"
-                  type="password"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  onFocus={() => speakInput('Create your password, minimum eight characters')}
-                  placeholder="At least 8 characters"
-                  required
-                  className="w-full px-3.5 py-2.5 sm:py-3 rounded-xl bg-theme-surface border-2 border-theme-border text-theme-text placeholder:text-theme-text/50 focus:border-theme-primary focus:ring-4 focus:ring-theme-focus outline-none font-medium text-sm transition"
-                />
+                <div className="relative">
+                  <input
+                    id="reg-pass"
+                    type={showRegPassword ? 'text' : 'password'}
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    onFocus={() => speakInput('Create your password, minimum eight characters')}
+                    placeholder="At least 8 characters"
+                    required
+                    className="w-full px-3.5 py-2.5 sm:py-3 pr-11 rounded-xl bg-theme-surface border-2 border-theme-border text-theme-text placeholder:text-theme-text/50 focus:border-theme-primary focus:ring-4 focus:ring-theme-focus outline-none font-medium text-sm transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowRegPassword(!showRegPassword);
+                      soundEffects.playSelect();
+                    }}
+                    onFocus={() => speakInput(showRegPassword ? 'Hide password button' : 'Show password button')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-theme-text/60 hover:text-theme-text focus:ring-2 focus:ring-theme-focus rounded-lg transition-colors"
+                    aria-label={showRegPassword ? 'Hide password' : 'Show password as plain text'}
+                    title={showRegPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showRegPassword ? (
+                      <EyeOff className="w-5 h-5" aria-hidden="true" />
+                    ) : (
+                      <Eye className="w-5 h-5" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
