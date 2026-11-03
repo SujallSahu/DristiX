@@ -122,10 +122,18 @@ const apiAuth: AuthDataSource = {
     return data;
   },
 
-  async loginWithGoogle(credential: string, preference?: string): Promise<AuthResult> {
+  async getGoogleAuthConfig() {
+    return request<{ configured: boolean; clientId: string }>('/auth/google/config');
+  },
+
+  async loginWithGoogle(
+    credential: string,
+    preference?: string,
+    tokenType?: 'id_token' | 'access_token'
+  ): Promise<AuthResult> {
     const data = await request<AuthResult>('/auth/google', {
       method: 'POST',
-      body: JSON.stringify({ credential, accessibilityPreference: preference }),
+      body: JSON.stringify({ credential, tokenType, accessibilityPreference: preference }),
     });
     setAccessToken(data.tokens.accessToken);
     return data;

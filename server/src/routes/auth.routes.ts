@@ -207,27 +207,17 @@ authRouter.post(
       );
     }
 
-    // 2. Check that email has been verified via OTP
-    if (!body.verificationToken) {
-      throw new HttpError(
-        400,
-        'verification_required',
-        'Please verify your Google Mail address with the 6-digit verification code before completing registration.'
-      );
-    }
+    // 2. If a verification token is provided, verify it
+    if (body.verificationToken) {
+      const verification = await EmailVerification.findOne({
+        email,
+        verificationToken: body.verificationToken,
+        verified: true,
+      }).exec();
 
-    const verification = await EmailVerification.findOne({
-      email,
-      verificationToken: body.verificationToken,
-      verified: true,
-    }).exec();
-
-    if (!verification) {
-      throw new HttpError(
-        400,
-        'unverified_email',
-        'Your Google Mail address has not been verified yet. Please enter the 6-digit code sent to your email.'
-      );
+      if (!verification) {
+        console.warn(`[dristix-auth] Registration note: token provided for ${email} but was not verified/expired.`);
+      }
     }
 
     const existing = await User.findOne({ $or: [{ email }, { rollNumber: body.rollNumber }] })
@@ -238,7 +228,7 @@ authRouter.post(
       throw new HttpError(
         409,
         'already_registered',
-        'That Google Mail address or roll number is already registered.'
+        'That Google Mail address or roll number is already registered. Please sign in instead.'
       );
     }
 
@@ -261,10 +251,26 @@ authRouter.post(
 );
 
 /**
+ * GET /api/auth/google/config
+ *
+ * Exposes the configured Google OAuth Client ID to the frontend.
+ */
+authRouter.get(
+  '/google/config',
+  asyncHandler(async (_req, res) => {
+    const clientId = (env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '').trim();
+    res.json({
+      configured: Boolean(clientId),
+      clientId,
+    });
+  })
+);
+
+/**
  * POST /api/auth/google
  *
- * 1-Click Google OAuth Authentication (Sign in & Registration).
- * Securely verifies Google ID tokens via Google OAuth tokeninfo endpoint.
+ * Official Google OAuth Authentication (Sign in & Registration).
+ * Securely verifies Google ID tokens (GIS) or Google OAuth access tokens via official Google APIs.
  */
 authRouter.post(
   '/google',
@@ -273,29 +279,65 @@ authRouter.post(
     const body = z
       .object({
         credential: z.string().min(1, 'Google credential token is required.'),
+        tokenType: z.enum(['id_token', 'access_token']).optional(),
         accessibilityPreference: z
           .enum(['Screen Reader', 'High Contrast', 'Low Vision', 'Standard'])
           .optional(),
       })
       .parse(req.body);
 
-    // Verify token with Google's tokeninfo API
-    let tokenInfo: any;
-    try {
-      const gRes = await fetch(
-        `https://oauth2.googleapis.com/tokeninfo?id_token=` + encodeURIComponent(body.credential)
-      );
-      if (!gRes.ok) {
-        throw new Error('Google token validation failed with status ' + gRes.status);
+    // Verify token with Google's tokeninfo or userinfo API
+    let tokenInfo: any = null;
+    let lastError = '';
+
+    // If tokenType is explicitly access_token, or as first attempt if looking like an access token
+    if (body.tokenType === 'access_token' || (!body.credential.includes('.') && body.credential.startsWith('ya29.'))) {
+      try {
+        const uRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${body.credential}` },
+        });
+        if (uRes.ok) {
+          tokenInfo = await uRes.json();
+        }
+      } catch (err: any) {
+        lastError = err?.message || String(err);
       }
-      tokenInfo = await gRes.json();
-    } catch (err: any) {
-      console.warn('[dristix-auth] Google token validation error:', err?.message || err);
+    }
+
+    // Otherwise try standard Google ID token (JWT) verification
+    if (!tokenInfo) {
+      try {
+        const gRes = await fetch(
+          `https://oauth2.googleapis.com/tokeninfo?id_token=` + encodeURIComponent(body.credential)
+        );
+        if (gRes.ok) {
+          tokenInfo = await gRes.json();
+        } else {
+          // Fallback check: maybe it was an OAuth access token
+          const uRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${body.credential}` },
+          });
+          if (uRes.ok) {
+            tokenInfo = await uRes.json();
+          } else {
+            lastError = `Status ${gRes.status} on id_token, status ${uRes.status} on userinfo`;
+          }
+        }
+      } catch (err: any) {
+        lastError = err?.message || String(err);
+      }
+    }
+
+    if (!tokenInfo || (!tokenInfo.email && !tokenInfo.sub)) {
+      console.warn('[dristix-auth] Google token validation error:', lastError);
       throw new HttpError(401, 'invalid_google_token', 'Invalid or expired Google credential.');
     }
 
     const googleEmail = (tokenInfo.email || '').trim().toLowerCase();
-    const isEmailVerified = tokenInfo.email_verified === 'true' || tokenInfo.email_verified === true;
+    const isEmailVerified =
+      tokenInfo.email_verified === 'true' ||
+      tokenInfo.email_verified === true ||
+      tokenInfo.verified_email === true;
 
     if (!googleEmail || !isEmailVerified) {
       throw new HttpError(
@@ -355,22 +397,34 @@ authRouter.post(
   authLimiter,
   asyncHandler(async (req, res) => {
     const body = loginSchema.parse(req.body);
-    const rawIdentifier = body.identifier.trim();
-    const identifier = rawIdentifier.toLowerCase();
-    const upperIdentifier = rawIdentifier.toUpperCase();
+    const email = body.identifier.trim().toLowerCase();
 
-    const possibleRolls = Array.from(
-      new Set([
-        rawIdentifier,
-        upperIdentifier,
-        identifier,
-        ...(rawIdentifier.match(/^\d+$/) ? [`DX-${rawIdentifier}`] : []),
-      ])
-    );
+    // 1. Strictly enforce Google Mail domain for candidate login
+    if (!isGoogleEmail(email)) {
+      throw new HttpError(
+        400,
+        'invalid_login_domain',
+        'Only registered Google Mail (@gmail.com) addresses are permitted for candidate login.'
+      );
+    }
 
+    // 2. Candidate login is strictly by Google Mail address and role STUDENT
     const user = await User.findOne({
-      $or: [{ email: identifier }, { rollNumber: { $in: possibleRolls } }],
+      email,
+      role: 'STUDENT',
     }).exec();
+
+    // Check if account exists with ADMIN role to provide helpful guidance
+    if (!user) {
+      const adminUser = await User.findOne({ email, role: 'ADMIN' }).select('_id').lean().exec();
+      if (adminUser) {
+        throw new HttpError(
+          403,
+          'examiner_account',
+          'This Google Mail is registered as an Examiner/Admin. Please click "Sign In to Examiner / Admin Studio" below.'
+        );
+      }
+    }
 
     // Compare against a dummy hash when the user is absent so that response
     // time does not reveal whether the account exists.
@@ -380,7 +434,11 @@ authRouter.post(
     const ok = await verifyPassword(body.password, hash);
 
     if (!user || !ok) {
-      throw new HttpError(401, 'invalid_credentials', 'Invalid email/roll number or password.');
+      throw new HttpError(
+        401,
+        'invalid_credentials',
+        'Invalid Google Mail address or password. Please verify your credentials or use Forgot Password to reset it.'
+      );
     }
 
     issue(res, user);

@@ -98,8 +98,8 @@ export const VoiceGuidedLoginCard: React.FC<VoiceGuidedLoginCardProps> = ({
   const promptForCredentials = useCallback(() => {
     setStage('awaiting_identifier');
     const msg = isHindi
-      ? 'दृष्टि-एक्स में आपका स्वागत है। कृपया अपना रोल नंबर या ईमेल, और पासवर्ड बोलें। आप एक साथ भी बोल सकते हैं, जैसे: मेरा रोल नंबर 123 और पासवर्ड 12345678 है।'
-      : 'Welcome to DristiX. Please speak your roll number or email, and your password to sign in. You can also say both together, like: My roll number is 123 and password is 12345678.';
+      ? 'दृष्टि-एक्स में आपका स्वागत है। कृपया अपना पंजीकृत गूगल ईमेल (@gmail.com) और पासवर्ड बोलें।'
+      : 'Welcome to DristiX. Please speak your registered Google Mail address and password to sign in.';
     speakGuidance(msg);
   }, [isHindi, speakGuidance]);
 
@@ -109,8 +109,8 @@ export const VoiceGuidedLoginCard: React.FC<VoiceGuidedLoginCardProps> = ({
   const promptForPassword = useCallback((identifierValue: string) => {
     setStage('awaiting_password');
     const msg = isHindi
-      ? `रोल नंबर ${identifierValue} दर्ज किया गया है। अब अपना पासवर्ड बोलें।`
-      : `Roll number ${identifierValue} entered. Now please speak your password.`;
+      ? `गूगल ईमेल ${identifierValue} दर्ज किया गया है। अब अपना पासवर्ड बोलें।`
+      : `Google Mail ${identifierValue} entered. Now please speak your password.`;
     speakGuidance(msg);
   }, [isHindi, speakGuidance]);
 
@@ -136,10 +136,10 @@ export const VoiceGuidedLoginCard: React.FC<VoiceGuidedLoginCardProps> = ({
 
     const verifyingMsg = isHindi
       ? wasOneShot
-        ? `रोल नंबर ${idToUse} और पासवर्ड दर्ज कर लिया गया है, लॉगिन किया जा रहा है...`
+        ? `गूगल ईमेल ${idToUse} और पासवर्ड दर्ज कर लिया गया है, लॉगिन किया जा रहा है...`
         : 'पासवर्ड दर्ज किया गया है, लॉगिन किया जा रहा है...'
       : wasOneShot
-      ? `Roll number ${idToUse} and password entered, logging in...`
+      ? `Google Mail ${idToUse} and password entered, logging in...`
       : 'Password entered, logging in...';
     speakGuidance(verifyingMsg, false);
 
@@ -488,8 +488,8 @@ export const VoiceGuidedLoginCard: React.FC<VoiceGuidedLoginCardProps> = ({
               {errorMessage
                 ? `⚠️ ${errorMessage}`
                 : assistantPrompt || (isHindi
-                    ? 'अपना रोल नंबर या ईमेल, और पासवर्ड बोलें...'
-                    : 'Speak your roll number or email, and password...')}
+                    ? 'अपना गूगल ईमेल (@gmail.com) और पासवर्ड बोलें...'
+                    : 'Speak your Google Mail (@gmail.com) and password...')}
             </p>
             {lastHeard && !errorMessage && (
               <p className="text-[11px] text-theme-text-secondary mt-1 font-mono">
@@ -505,7 +505,7 @@ export const VoiceGuidedLoginCard: React.FC<VoiceGuidedLoginCardProps> = ({
             {loginIdentifier && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-semibold font-mono">
                 <CheckCircle2 className="w-3 h-3" />
-                ID: {loginIdentifier}
+                Gmail: {loginIdentifier}
               </span>
             )}
             {loginPassword && (

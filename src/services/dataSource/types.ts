@@ -41,7 +41,12 @@ export interface AuthDataSource {
     inviteCode?: string;
     verificationToken?: string;
   }): Promise<AuthResult>;
-  loginWithGoogle(credential: string, preference?: string): Promise<AuthResult>;
+  loginWithGoogle(
+    credential: string,
+    preference?: string,
+    tokenType?: 'id_token' | 'access_token'
+  ): Promise<AuthResult>;
+  getGoogleAuthConfig(): Promise<{ configured: boolean; clientId: string }>;
   sendRegistrationOtp(
     email: string,
     name?: string

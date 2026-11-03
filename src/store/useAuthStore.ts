@@ -143,7 +143,6 @@ interface AuthState {
     pass: string,
     verificationToken?: string
   ) => Promise<boolean>;
-  loginWithGoogle: (credential: string, preference?: string) => Promise<boolean>;
   sendRegistrationOtp: (
     email: string,
     name?: string
@@ -238,7 +237,7 @@ if (typeof window !== 'undefined') {
   try {
     localStorage.removeItem('dristix_deleted_submissions');
     localStorage.removeItem('dristix_admin_deleted_submissions');
-  } catch {}
+  } catch { }
 }
 
 export function getAdminDeletedSubmissionIds(): Set<string> {
@@ -287,7 +286,7 @@ export function setStudentClearedTimestamp(studentKey: string, timestamp: number
   if (typeof window === 'undefined' || !studentKey) return;
   try {
     localStorage.setItem(`dristix_student_cleared_${studentKey.trim().toLowerCase()}`, String(timestamp));
-  } catch {}
+  } catch { }
 }
 
 export function getStudentDismissedIds(studentKey: string): Set<string> {
@@ -306,7 +305,7 @@ export function addStudentDismissedId(studentKey: string, id: string): void {
     const set = getStudentDismissedIds(studentKey);
     set.add(id);
     localStorage.setItem(`dristix_student_dismissed_${studentKey.trim().toLowerCase()}`, JSON.stringify([...set]));
-  } catch {}
+  } catch { }
 }
 
 /**
@@ -465,26 +464,6 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
     },
 
-    loginWithGoogle: async (credential: string, preference?: string) => {
-      try {
-        const { user } = await getDataSource().auth.loginWithGoogle(credential, preference);
-        set({ currentStudent: user, isAdminAuthenticated: false });
-        sessionStorage.removeItem('dristix_admin_auth');
-        authBroadcastChannel?.postMessage('LOGIN');
-        soundEffects.playSuccess();
-        useAnnouncerStore
-          .getState()
-          .announce(`Welcome ${user.name}. Google authentication successful!`, 'assertive', true);
-        return true;
-      } catch (err: any) {
-        soundEffects.playSelect();
-        useAnnouncerStore
-          .getState()
-          .announce(err?.message || 'Google authentication failed. Please try again.', 'assertive', true);
-        return false;
-      }
-    },
-
     sendRegistrationOtp: async (email: string, name?: string) => {
       return getDataSource().auth.sendRegistrationOtp(email, name);
     },
@@ -577,7 +556,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
             timestamp: Date.now(),
           });
           authBroadcastChannel?.postMessage({ type: 'SUBMISSION_DELETED', timestamp: Date.now() });
-        } catch {}
+        } catch { }
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('dristix:submission-updated'));
         }
@@ -617,9 +596,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
         const rows = isAdmin
           ? (await source.exams.listAllSubmissions()).map((a) => toSubmission(a, a.student))
           : (await source.exams.listAttempts()).map((a) => {
-              const me = get().currentStudent;
-              return toSubmission(a, me ? { id: me.id, name: me.name, rollNumber: me.rollNumber } : undefined);
-            });
+            const me = get().currentStudent;
+            return toSubmission(a, me ? { id: me.id, name: me.name, rollNumber: me.rollNumber } : undefined);
+          });
 
         // For admin portal: filter out any explicitly deleted IDs
         const adminDeletedIds = getAdminDeletedSubmissionIds();
@@ -796,7 +775,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       if (typeof window !== 'undefined') {
         try {
           localStorage.removeItem(ADMIN_DELETED_SUBMISSIONS_KEY);
-        } catch {}
+        } catch { }
       }
 
       // Notify cross-tab and active components in real time
