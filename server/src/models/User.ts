@@ -41,6 +41,20 @@ const userSchema = new Schema(
       enum: ['Screen Reader', 'High Contrast', 'Low Vision', 'Standard'],
       default: null,
     },
+    isGoogleAuthenticated: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
   },
   { timestamps: true }
 );

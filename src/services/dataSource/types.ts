@@ -39,7 +39,29 @@ export interface AuthDataSource {
     password: string;
     accessibilityPreference?: string;
     inviteCode?: string;
+    verificationToken?: string;
   }): Promise<AuthResult>;
+  loginWithGoogle(credential: string, preference?: string): Promise<AuthResult>;
+  sendRegistrationOtp(
+    email: string,
+    name?: string
+  ): Promise<{
+    ok: boolean;
+    message: string;
+    verificationToken: string;
+    isDevFallback?: boolean;
+    devCode?: string;
+  }>;
+  verifyRegistrationOtp(
+    email: string,
+    code: string,
+    verificationToken: string
+  ): Promise<{
+    ok: boolean;
+    verified: boolean;
+    message: string;
+    verificationToken: string;
+  }>;
   logout(): Promise<void>;
   /** Resolves the current session on boot, or null when signed out. */
   restoreSession(): Promise<AuthResult | null>;

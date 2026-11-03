@@ -140,8 +140,30 @@ interface AuthState {
     email: string,
     roll: string,
     preference: StudentProfile['accessibilityPreference'],
-    pass: string
+    pass: string,
+    verificationToken?: string
   ) => Promise<boolean>;
+  loginWithGoogle: (credential: string, preference?: string) => Promise<boolean>;
+  sendRegistrationOtp: (
+    email: string,
+    name?: string
+  ) => Promise<{
+    ok: boolean;
+    message: string;
+    verificationToken: string;
+    isDevFallback?: boolean;
+    devCode?: string;
+  }>;
+  verifyRegistrationOtp: (
+    email: string,
+    code: string,
+    verificationToken: string
+  ) => Promise<{
+    ok: boolean;
+    verified: boolean;
+    message: string;
+    verificationToken: string;
+  }>;
   logoutStudent: () => Promise<void>;
 
   // Admin Actions
@@ -407,7 +429,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
     },
 
-    registerStudent: async (name, email, roll, preference, pass) => {
+    registerStudent: async (name, email, roll, preference, pass, verificationToken) => {
       try {
         const { user } = await getDataSource().auth.register({
           name,
@@ -415,6 +437,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
           rollNumber: roll,
           password: pass,
           accessibilityPreference: preference ?? undefined,
+          verificationToken,
         });
         set({ currentStudent: user, isAdminAuthenticated: false });
         sessionStorage.removeItem('dristix_admin_auth');
@@ -430,16 +453,44 @@ export const useAuthStore = create<AuthState>((set, get) => {
           .getState()
           .announce(`Registration successful! Welcome to DristiX, ${user.name}.`, 'assertive', true);
         return true;
-      } catch {
+      } catch (err: any) {
         useAnnouncerStore
           .getState()
           .announce(
-            'Registration failed. That Email or Roll Number may already be registered.',
+            err?.message || 'Registration failed. That Email or Roll Number may already be registered.',
             'assertive',
             true
           );
         return false;
       }
+    },
+
+    loginWithGoogle: async (credential: string, preference?: string) => {
+      try {
+        const { user } = await getDataSource().auth.loginWithGoogle(credential, preference);
+        set({ currentStudent: user, isAdminAuthenticated: false });
+        sessionStorage.removeItem('dristix_admin_auth');
+        authBroadcastChannel?.postMessage('LOGIN');
+        soundEffects.playSuccess();
+        useAnnouncerStore
+          .getState()
+          .announce(`Welcome ${user.name}. Google authentication successful!`, 'assertive', true);
+        return true;
+      } catch (err: any) {
+        soundEffects.playSelect();
+        useAnnouncerStore
+          .getState()
+          .announce(err?.message || 'Google authentication failed. Please try again.', 'assertive', true);
+        return false;
+      }
+    },
+
+    sendRegistrationOtp: async (email: string, name?: string) => {
+      return getDataSource().auth.sendRegistrationOtp(email, name);
+    },
+
+    verifyRegistrationOtp: async (email: string, code: string, verificationToken: string) => {
+      return getDataSource().auth.verifyRegistrationOtp(email, code, verificationToken);
     },
 
     logoutStudent: async () => {

@@ -2,8 +2,8 @@ import crypto from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
 import { env } from '../env.js';
-import { User, PasswordReset } from '../models/index.js';
-import { sendPasswordResetEmail } from '../services/emailService.js';
+import { User, PasswordReset, EmailVerification } from '../models/index.js';
+import { sendPasswordResetEmail, sendRegistrationOtpEmail } from '../services/emailService.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { authLimiter } from '../middleware/rateLimit.js';
@@ -21,6 +21,11 @@ import type { AuthResult } from '../../../shared/types.js';
 
 export const authRouter = Router();
 
+function isGoogleEmail(email: string): boolean {
+  const clean = email.trim().toLowerCase();
+  return clean.endsWith('@gmail.com') || clean.endsWith('@googlemail.com');
+}
+
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().email().max(120),
@@ -30,6 +35,7 @@ const registerSchema = z.object({
     .enum(['Screen Reader', 'High Contrast', 'Low Vision', 'Standard'])
     .optional(),
   inviteCode: z.string().trim().optional(),
+  verificationToken: z.string().trim().optional(),
 });
 
 const loginSchema = z.object({
@@ -46,6 +52,136 @@ function issue(res: import('express').Response, user: Parameters<typeof toUserPr
   res.json(result);
 }
 
+/**
+ * POST /api/auth/send-registration-otp
+ *
+ * Sends a 6-digit verification code to the candidate's Google Mail address.
+ * Restricts registration exclusively to authenticated Google Mail accounts.
+ */
+authRouter.post(
+  '/send-registration-otp',
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const body = z
+      .object({
+        email: z.string().trim().email('Invalid email address format.'),
+        name: z.string().trim().optional(),
+      })
+      .parse(req.body);
+
+    const cleanEmail = body.email.toLowerCase();
+
+    // 1. Strict Google Mail domain check
+    if (!isGoogleEmail(cleanEmail)) {
+      throw new HttpError(
+        400,
+        'invalid_email_domain',
+        'Only authenticated Google Mail (@gmail.com) addresses are permitted for registration.'
+      );
+    }
+
+    // 2. Prevent duplicate registrations
+    const existing = await User.findOne({ email: cleanEmail }).select('_id').lean().exec();
+    if (existing) {
+      throw new HttpError(
+        409,
+        'already_registered',
+        'That Google Mail address is already registered. Please sign in instead.'
+      );
+    }
+
+    // 3. Generate 6-digit OTP code & unique verification session token
+    const otpCode = crypto.randomInt(100000, 999999).toString();
+    const salt = crypto.randomBytes(16).toString('hex');
+    const codeHash = crypto.createHash('sha256').update(otpCode + salt).digest('hex') + ':' + salt;
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
+    // 4. Save to EmailVerification with 10-minute expiry (TTL index)
+    await EmailVerification.deleteMany({ email: cleanEmail });
+    await EmailVerification.create({
+      email: cleanEmail,
+      codeHash,
+      verificationToken,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    });
+
+    // 5. Dispatch email via Brevo / Resend / SMTP / console
+    const delivery = await sendRegistrationOtpEmail(cleanEmail, body.name || 'Candidate', otpCode);
+
+    res.json({
+      ok: true,
+      message: 'Verification code sent to your Google Mail address.',
+      verificationToken,
+      isDevFallback: delivery.mode === 'console',
+      devCode: delivery.mode === 'console' ? otpCode : undefined,
+    });
+  })
+);
+
+/**
+ * POST /api/auth/verify-registration-otp
+ *
+ * Verifies the 6-digit OTP code entered by the candidate.
+ */
+authRouter.post(
+  '/verify-registration-otp',
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const body = z
+      .object({
+        email: z.string().trim().email(),
+        code: z.string().trim().length(6, 'Verification code must be exactly 6 digits.'),
+        verificationToken: z.string().trim().min(1, 'Verification token is required.'),
+      })
+      .parse(req.body);
+
+    const cleanEmail = body.email.toLowerCase();
+    const record = await EmailVerification.findOne({
+      email: cleanEmail,
+      verificationToken: body.verificationToken,
+    }).exec();
+
+    if (!record || record.expiresAt < new Date()) {
+      throw new HttpError(
+        400,
+        'expired_code',
+        'Verification code has expired. Please request a new code.'
+      );
+    }
+
+    if (record.attempts >= 5) {
+      throw new HttpError(
+        429,
+        'too_many_attempts',
+        'Too many incorrect attempts. Please request a new verification code.'
+      );
+    }
+
+    const [hash, salt] = record.codeHash.split(':');
+    const expected = crypto.createHash('sha256').update(body.code.trim() + salt).digest('hex');
+
+    if (expected !== hash) {
+      record.attempts += 1;
+      await record.save();
+      throw new HttpError(
+        400,
+        'invalid_code',
+        'Invalid 6-digit verification code. Please check your Gmail and try again.'
+      );
+    }
+
+    record.verified = true;
+    await record.save();
+
+    res.json({
+      ok: true,
+      verified: true,
+      message: 'Google Mail address successfully verified.',
+      verificationToken: record.verificationToken,
+    });
+  })
+);
+
 /** POST /api/auth/register */
 authRouter.post(
   '/register',
@@ -61,6 +197,39 @@ authRouter.post(
     }
 
     const email = body.email.toLowerCase();
+
+    // 1. Strict Google Mail domain check
+    if (!isGoogleEmail(email)) {
+      throw new HttpError(
+        400,
+        'invalid_email_domain',
+        'Only authenticated Google Mail (@gmail.com) addresses are permitted for registration.'
+      );
+    }
+
+    // 2. Check that email has been verified via OTP
+    if (!body.verificationToken) {
+      throw new HttpError(
+        400,
+        'verification_required',
+        'Please verify your Google Mail address with the 6-digit verification code before completing registration.'
+      );
+    }
+
+    const verification = await EmailVerification.findOne({
+      email,
+      verificationToken: body.verificationToken,
+      verified: true,
+    }).exec();
+
+    if (!verification) {
+      throw new HttpError(
+        400,
+        'unverified_email',
+        'Your Google Mail address has not been verified yet. Please enter the 6-digit code sent to your email.'
+      );
+    }
+
     const existing = await User.findOne({ $or: [{ email }, { rollNumber: body.rollNumber }] })
       .select('_id')
       .lean()
@@ -69,7 +238,7 @@ authRouter.post(
       throw new HttpError(
         409,
         'already_registered',
-        'That email or roll number is already registered.'
+        'That Google Mail address or roll number is already registered.'
       );
     }
 
@@ -79,9 +248,103 @@ authRouter.post(
       rollNumber: body.rollNumber,
       passwordHash: await hashPassword(body.password),
       accessibilityPreference: body.accessibilityPreference ?? null,
+      isGoogleAuthenticated: true,
+      emailVerified: true,
       role: 'STUDENT',
     });
 
+    // Clean up verified OTP record
+    await EmailVerification.deleteMany({ email });
+
+    issue(res, user);
+  })
+);
+
+/**
+ * POST /api/auth/google
+ *
+ * 1-Click Google OAuth Authentication (Sign in & Registration).
+ * Securely verifies Google ID tokens via Google OAuth tokeninfo endpoint.
+ */
+authRouter.post(
+  '/google',
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const body = z
+      .object({
+        credential: z.string().min(1, 'Google credential token is required.'),
+        accessibilityPreference: z
+          .enum(['Screen Reader', 'High Contrast', 'Low Vision', 'Standard'])
+          .optional(),
+      })
+      .parse(req.body);
+
+    // Verify token with Google's tokeninfo API
+    let tokenInfo: any;
+    try {
+      const gRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=` + encodeURIComponent(body.credential)
+      );
+      if (!gRes.ok) {
+        throw new Error('Google token validation failed with status ' + gRes.status);
+      }
+      tokenInfo = await gRes.json();
+    } catch (err: any) {
+      console.warn('[dristix-auth] Google token validation error:', err?.message || err);
+      throw new HttpError(401, 'invalid_google_token', 'Invalid or expired Google credential.');
+    }
+
+    const googleEmail = (tokenInfo.email || '').trim().toLowerCase();
+    const isEmailVerified = tokenInfo.email_verified === 'true' || tokenInfo.email_verified === true;
+
+    if (!googleEmail || !isEmailVerified) {
+      throw new HttpError(
+        403,
+        'unverified_google_email',
+        'Your Google account does not have a verified email address.'
+      );
+    }
+
+    // Match existing student by email or Google ID
+    let user = await User.findOne({
+      $or: [{ email: googleEmail }, { googleId: tokenInfo.sub }],
+    }).exec();
+
+    if (user) {
+      // Existing candidate: update Google link if needed & sign in
+      if (!user.googleId) user.googleId = tokenInfo.sub;
+      user.isGoogleAuthenticated = true;
+      user.emailVerified = true;
+      await user.save();
+      return issue(res, user);
+    }
+
+    // New candidate: auto-provision Google-authenticated student account
+    const candidateName = tokenInfo.name || tokenInfo.given_name || 'Google Candidate';
+    
+    // Generate unique roll number: DX-G + 4 random digits
+    let assignedRoll = `DX-G` + crypto.randomInt(1000, 9999);
+    while (await User.findOne({ rollNumber: assignedRoll }).select('_id').lean().exec()) {
+      assignedRoll = `DX-G` + crypto.randomInt(1000, 9999);
+    }
+
+    // Generate random secure password hash for account integrity
+    const randomPass = crypto.randomBytes(32).toString('hex');
+    const passwordHash = await hashPassword(randomPass);
+
+    user = await User.create({
+      name: candidateName,
+      email: googleEmail,
+      rollNumber: assignedRoll,
+      passwordHash,
+      accessibilityPreference: body.accessibilityPreference ?? null,
+      isGoogleAuthenticated: true,
+      emailVerified: true,
+      googleId: tokenInfo.sub,
+      role: 'STUDENT',
+    });
+
+    console.log(`[dristix-auth] Registered new Google-authenticated candidate: ` + googleEmail + ` (` + assignedRoll + `)`);
     issue(res, user);
   })
 );

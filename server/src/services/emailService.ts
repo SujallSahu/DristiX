@@ -261,3 +261,171 @@ ${cleanBaseUrl}`;
 
   return { delivered: true, mode: 'console' };
 }
+
+
+/**
+ * Sends a registration OTP email to verify that a Google Mail address is genuine and belongs to the candidate.
+ */
+export async function sendRegistrationOtpEmail(
+  toEmail: string,
+  recipientName: string,
+  verificationCode: string
+): Promise<{ delivered: boolean; mode: 'smtp' | 'brevo' | 'resend' | 'console'; error?: string }> {
+  const subject = `DristiX Verification Code: ${verificationCode} (Google Mail Verification)`;
+
+  const textBody = `Hello ${recipientName},
+
+Welcome to DristiX Accessible Assessment Portal.
+
+To complete your candidate registration, please verify your Google Mail address using the 6-digit verification code below:
+
+>>> ${verificationCode} <<<
+
+This code will expire in 10 minutes. Only verified Google Mail accounts are eligible to register on DristiX.
+
+If you did not initiate this registration, you can safely ignore this email.
+
+Best regards,
+The DristiX Verification Team`;
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>DristiX Google Mail Verification</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; margin: 0; padding: 24px;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);">
+    <tr>
+      <td style="background: linear-gradient(135deg, #059669 0%, #0d9488 100%); padding: 32px 36px; text-align: center;">
+        <div style="display: inline-block; background-color: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 9999px; margin-bottom: 12px;">
+          <span style="color: #ffffff; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">GOOGLE MAIL VERIFICATION</span>
+        </div>
+        <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">DristiX Assessment Portal</h1>
+        <p style="color: #ccfbf1; margin: 6px 0 0; font-size: 13px;">Candidate Account Registration</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 36px 32px;">
+        <h2 style="margin: 0 0 16px; font-size: 18px; color: #111827; font-weight: 700;">Hello ${recipientName},</h2>
+        <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: #4b5563;">
+          Thank you for joining DristiX. Please verify that <strong>${toEmail}</strong> is your genuine Google Mail address by entering this 6-digit verification code in the portal:
+        </p>
+
+        <!-- 6-digit Verification Code -->
+        <div style="background-color: #f0fdf4; border: 2px dashed #86efac; border-radius: 14px; padding: 24px; text-align: center; margin: 24px 0;">
+          <p style="margin: 0 0 10px; font-size: 12px; color: #15803d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+            Your 6-Digit Registration OTP
+          </p>
+          <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #047857; background: #ffffff; padding: 8px 20px; border-radius: 10px; border: 1px solid #bbf7d0; display: inline-block;">
+            ${verificationCode}
+          </span>
+          <p style="margin: 12px 0 0; font-size: 11px; color: #65a30d; font-weight: 600;">
+            Code expires in 10 minutes • Only valid for ${toEmail}
+          </p>
+        </div>
+
+        <p style="margin: 20px 0 0; font-size: 12px; line-height: 1.6; color: #6b7280;">
+          If you did not initiate this registration on DristiX, please disregard this message.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 28px 0 20px;">
+        <p style="margin: 0; font-size: 11px; color: #9ca3af; text-align: center;">
+          Sent by DristiX Automated Candidate Verification Service.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`.trim();
+
+  // 1. Try Brevo HTTPS REST API
+  if (env.BREVO_API_KEY) {
+    try {
+      const rawKey = env.BREVO_API_KEY.trim();
+      const fromEmail = env.SMTP_USER || 'sujalsahu196@gmail.com';
+      const fromName = 'DristiX Examination Portal';
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': rawKey,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: fromName, email: fromEmail },
+          to: [{ email: toEmail, name: recipientName }],
+          subject,
+          htmlContent: htmlBody,
+          textContent: textBody,
+        }),
+      });
+
+      if (res.ok) {
+        console.log(`[dristix-mail] ✅ Sent registration OTP email via Brevo to: ${toEmail}`);
+        return { delivered: true, mode: 'brevo' };
+      }
+    } catch (err: any) {
+      console.error(`[dristix-mail] ❌ Brevo OTP delivery error:`, err?.message || err);
+    }
+  }
+
+  // 2. Try Resend HTTPS REST API
+  if (env.RESEND_API_KEY) {
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.RESEND_API_KEY.trim()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: env.EMAIL_FROM || 'DristiX <onboarding@resend.dev>',
+          to: [toEmail],
+          subject,
+          html: htmlBody,
+          text: textBody,
+        }),
+      });
+
+      if (res.ok) {
+        console.log(`[dristix-mail] ✅ Sent registration OTP email via Resend to: ${toEmail}`);
+        return { delivered: true, mode: 'resend' };
+      }
+    } catch (err: any) {
+      console.error(`[dristix-mail] ❌ Resend OTP delivery error:`, err?.message || err);
+    }
+  }
+
+  // 3. Try SMTP
+  const client = getTransporter();
+  if (client) {
+    try {
+      const info = await client.sendMail({
+        from: env.EMAIL_FROM || env.SMTP_USER,
+        to: toEmail,
+        subject,
+        text: textBody,
+        html: htmlBody,
+      });
+      console.log(`[dristix-mail] ✅ Sent registration OTP email via SMTP to: ${toEmail} (messageId: ${info.messageId})`);
+      return { delivered: true, mode: 'smtp' };
+    } catch (err: any) {
+      console.error(`[dristix-mail] ❌ SMTP OTP delivery failed for ${toEmail}:`, err?.message || err);
+    }
+  }
+
+  // Console Fallback for local dev/testing
+  console.log('\n======================================================================');
+  console.log('📧 [DRISTIX EMAIL DISPATCHER] GOOGLE MAIL REGISTRATION OTP');
+  console.log('======================================================================');
+  console.log(`To:                 ${toEmail} (${recipientName})`);
+  console.log(`Subject:            ${subject}`);
+  console.log(`Registration OTP:   >>>  ${verificationCode}  <<<`);
+  console.log(`Expiry:             10 minutes`);
+  console.log('======================================================================\n');
+
+  return { delivered: true, mode: 'console' };
+}

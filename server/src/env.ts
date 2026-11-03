@@ -58,6 +58,7 @@ const schema = z.object({
 
   /** When set, self-registration is rejected without a valid invite code. */
   INVITE_CODES: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
 
   /** Proxy targets. Absent keys simply disable that provider. */
   GEMINI_API_KEY: z.string().optional(),

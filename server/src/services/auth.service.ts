@@ -91,5 +91,7 @@ export function toUserProfile(user: UserDoc): UserProfile {
     role: user.role as UserProfile['role'],
     accessibilityPreference:
       (user.accessibilityPreference as UserProfile['accessibilityPreference']) ?? null,
+    isGoogleAuthenticated: Boolean(user.isGoogleAuthenticated),
+    emailVerified: Boolean(user.emailVerified),
   };
 }

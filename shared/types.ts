@@ -137,6 +137,8 @@ export interface UserProfile {
   rollNumber: string;
   role: UserRole;
   accessibilityPreference: AccessibilityPreference | null;
+  isGoogleAuthenticated?: boolean;
+  emailVerified?: boolean;
 }
 
 export interface AuthTokens {

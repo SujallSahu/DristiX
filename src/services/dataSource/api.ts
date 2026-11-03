@@ -122,6 +122,40 @@ const apiAuth: AuthDataSource = {
     return data;
   },
 
+  async loginWithGoogle(credential: string, preference?: string): Promise<AuthResult> {
+    const data = await request<AuthResult>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential, accessibilityPreference: preference }),
+    });
+    setAccessToken(data.tokens.accessToken);
+    return data;
+  },
+
+  async sendRegistrationOtp(email: string, name?: string) {
+    return request<{
+      ok: boolean;
+      message: string;
+      verificationToken: string;
+      isDevFallback?: boolean;
+      devCode?: string;
+    }>('/auth/send-registration-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, name }),
+    });
+  },
+
+  async verifyRegistrationOtp(email: string, code: string, verificationToken: string) {
+    return request<{
+      ok: boolean;
+      verified: boolean;
+      message: string;
+      verificationToken: string;
+    }>('/auth/verify-registration-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, verificationToken }),
+    });
+  },
+
   async logout(): Promise<void> {
     try {
       await request('/auth/logout', { method: 'POST' });
