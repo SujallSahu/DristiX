@@ -143,6 +143,7 @@ export interface UserProfile {
 
 export interface AuthTokens {
   accessToken: string;
+  refreshToken?: string;
   /** Seconds until `accessToken` expires. */
   expiresIn: number;
 }

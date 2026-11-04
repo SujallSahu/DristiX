@@ -39,7 +39,16 @@ import { BASE_API_URL } from './apiUrl.js';
 
 // Token state and the single-flight refresh live in apiToken.ts so the multipart
 // helper can share them; re-declaring them here would desynchronise the two.
-import { getAccessToken, setAccessToken, refreshSession } from './apiToken.js';
+import {
+  getAccessToken,
+  setAccessToken,
+  refreshSession,
+  getStoredRefreshToken,
+  setStoredRefreshToken,
+  getStoredSessionUser,
+  setStoredSessionUser,
+  clearSessionTokens,
+} from './apiToken.js';
 import { requestForm } from './apiForm';
 
 async function parse<T>(res: Response): Promise<T> {
@@ -101,6 +110,10 @@ const apiAuth: AuthDataSource = {
       body: JSON.stringify({ identifier, password }),
     });
     setAccessToken(data.tokens.accessToken);
+    if (data.tokens.refreshToken) {
+      setStoredRefreshToken(data.tokens.refreshToken);
+    }
+    setStoredSessionUser(data.user);
     return data;
   },
 
@@ -110,6 +123,10 @@ const apiAuth: AuthDataSource = {
       body: JSON.stringify({ username, password }),
     });
     setAccessToken(data.tokens.accessToken);
+    if (data.tokens.refreshToken) {
+      setStoredRefreshToken(data.tokens.refreshToken);
+    }
+    setStoredSessionUser(data.user);
     return data;
   },
 
@@ -119,6 +136,10 @@ const apiAuth: AuthDataSource = {
       body: JSON.stringify(input),
     });
     setAccessToken(data.tokens.accessToken);
+    if (data.tokens.refreshToken) {
+      setStoredRefreshToken(data.tokens.refreshToken);
+    }
+    setStoredSessionUser(data.user);
     return data;
   },
 
@@ -136,6 +157,10 @@ const apiAuth: AuthDataSource = {
       body: JSON.stringify({ credential, tokenType, accessibilityPreference: preference }),
     });
     setAccessToken(data.tokens.accessToken);
+    if (data.tokens.refreshToken) {
+      setStoredRefreshToken(data.tokens.refreshToken);
+    }
+    setStoredSessionUser(data.user);
     return data;
   },
 
@@ -168,17 +193,60 @@ const apiAuth: AuthDataSource = {
     try {
       await request('/auth/logout', { method: 'POST' });
     } finally {
-      setAccessToken(null);
+      clearSessionTokens();
     }
   },
 
   async restoreSession(): Promise<AuthResult | null> {
     const ok = await refreshSession();
-    if (!ok) return null;
-    return request<{ user: UserProfile } & AuthResult>('/auth/me').then((r) => ({
-      user: r.user,
-      tokens: { accessToken: getAccessToken() ?? '', expiresIn: 0 },
-    }));
+    if (ok) {
+      try {
+        const { user } = await request<{ user: UserProfile }>('/auth/me');
+        setStoredSessionUser(user);
+        return {
+          user,
+          tokens: {
+            accessToken: getAccessToken() ?? '',
+            refreshToken: getStoredRefreshToken() ?? undefined,
+            expiresIn: 0,
+          },
+        };
+      } catch {
+        const storedUser = getStoredSessionUser();
+        if (storedUser) {
+          return {
+            user: storedUser,
+            tokens: {
+              accessToken: getAccessToken() ?? '',
+              refreshToken: getStoredRefreshToken() ?? undefined,
+              expiresIn: 0,
+            },
+          };
+        }
+      }
+    }
+
+    const existingToken = getAccessToken();
+    const storedUser = getStoredSessionUser();
+    if (existingToken && storedUser) {
+      try {
+        const { user } = await request<{ user: UserProfile }>('/auth/me', {}, false);
+        setStoredSessionUser(user);
+        return {
+          user,
+          tokens: {
+            accessToken: existingToken,
+            refreshToken: getStoredRefreshToken() ?? undefined,
+            expiresIn: 0,
+          },
+        };
+      } catch {
+        clearSessionTokens();
+        return null;
+      }
+    }
+
+    return null;
   },
 
   async getProfile(): Promise<UserProfile> {

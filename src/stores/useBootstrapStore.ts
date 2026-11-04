@@ -50,7 +50,7 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
       // a readable message beats an indefinite spinner.
       const result = await Promise.race([
         source.auth.restoreSession(),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 12000)),
       ]);
 
       const user = result?.user ?? null;
@@ -59,14 +59,25 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
         useAuthStore.getState().setSession(null);
         useAuthStore.setState({ isAdminAuthenticated: true });
         sessionStorage.setItem('dristix_admin_auth', 'true');
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dristix_admin_auth', 'true');
+        }
         void useAuthStore.getState().syncSubmissions();
         void useAuthStore.getState().fetchStudents();
-      } else {
+      } else if (user) {
         useAuthStore.getState().setSession(user as any);
-        if (user) {
-          useAuthStore.setState({ isAdminAuthenticated: false });
-          sessionStorage.removeItem('dristix_admin_auth');
-          void useAuthStore.getState().syncSubmissions();
+        useAuthStore.setState({ isAdminAuthenticated: false });
+        sessionStorage.removeItem('dristix_admin_auth');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dristix_admin_auth');
+        }
+        void useAuthStore.getState().syncSubmissions();
+      } else {
+        useAuthStore.getState().setSession(null);
+        useAuthStore.setState({ isAdminAuthenticated: false });
+        sessionStorage.removeItem('dristix_admin_auth');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dristix_admin_auth');
         }
       }
 

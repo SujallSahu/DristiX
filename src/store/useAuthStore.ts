@@ -3,7 +3,7 @@ import { soundEffects } from '../utils/soundEffects';
 import { useAnnouncerStore } from './useAnnouncerStore';
 import { useBootstrapStore } from '../stores/useBootstrapStore';
 import { getDataSource } from '../services/dataSource';
-import { onSessionExpired } from '../services/dataSource/apiToken';
+import { onSessionExpired, getStoredSessionUser, clearSessionTokens } from '../services/dataSource/apiToken';
 import type {
   AccessibilityPreference,
   AttemptSummary,
@@ -390,10 +390,24 @@ export const useAuthStore = create<AuthState>((set, get) => {
   // `currentStudent` in localStorage and read it at module scope, which meant a
   // browser left over from offline mode rendered the full portal while every
   // API call 401'd — the app looked signed in but was not.
-  const initialAdminAuth = sessionStorage.getItem('dristix_admin_auth') === 'true';
+  const initialAdminAuth =
+    (typeof window !== 'undefined' &&
+      (sessionStorage.getItem('dristix_admin_auth') === 'true' ||
+        localStorage.getItem('dristix_admin_auth') === 'true')) ||
+    false;
+
+  const storedUser = getStoredSessionUser();
+  const initialStudent: StudentProfile | null =
+    !initialAdminAuth && storedUser && storedUser.role !== 'ADMIN'
+      ? {
+          ...storedUser,
+          accessibilityPreference:
+            (storedUser.accessibilityPreference as AccessibilityPreference | null) ?? null,
+        }
+      : null;
 
   return {
-    currentStudent: null,
+    currentStudent: initialStudent,
     students: [],
     submissions: [],
     isAdminAuthenticated: initialAdminAuth,
@@ -409,6 +423,12 @@ export const useAuthStore = create<AuthState>((set, get) => {
         const { user } = await getDataSource().auth.login(identifier, pass);
         set({ currentStudent: user, isAdminAuthenticated: false });
         sessionStorage.removeItem('dristix_admin_auth');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dristix_admin_auth');
+        }
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dristix_admin_auth');
+        }
         authBroadcastChannel?.postMessage('LOGIN');
         soundEffects.playSuccess();
         useAnnouncerStore
@@ -440,6 +460,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
         });
         set({ currentStudent: user, isAdminAuthenticated: false });
         sessionStorage.removeItem('dristix_admin_auth');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dristix_admin_auth');
+        }
         authBroadcastChannel?.postMessage('LOGIN');
         // Keep the roster fresh so admin views and the demo list stay accurate.
         void getDataSource().auth
@@ -478,6 +501,11 @@ export const useAuthStore = create<AuthState>((set, get) => {
       } catch {
         // Clearing local state matters more than the server round trip.
       }
+      clearSessionTokens();
+      sessionStorage.removeItem('dristix_admin_auth');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('dristix_admin_auth');
+      }
       set({ currentStudent: null, submissions: [], students: [] });
       authBroadcastChannel?.postMessage('LOGOUT');
       soundEffects.playNavigate();
@@ -489,6 +517,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
         await getDataSource().auth.adminLogin(username, pass);
         set({ isAdminAuthenticated: true, currentStudent: null });
         sessionStorage.setItem('dristix_admin_auth', 'true');
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dristix_admin_auth', 'true');
+        }
         // Authoritative sync: immediately fetch full cohort submissions and roster for Admin Studio
         void get().syncSubmissions();
         void get().fetchStudents();
@@ -506,8 +537,15 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     logoutAdmin: () => {
-      set({ isAdminAuthenticated: false, submissions: [] });
+      clearSessionTokens();
       sessionStorage.removeItem('dristix_admin_auth');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('dristix_admin_auth');
+      }
+      try {
+        void getDataSource().auth.logout();
+      } catch {}
+      set({ isAdminAuthenticated: false, submissions: [] });
       soundEffects.playNavigate();
       useAnnouncerStore.getState().announce('Logged out of Admin Studio.', 'polite', true);
     },

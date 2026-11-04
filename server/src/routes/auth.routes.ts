@@ -13,6 +13,7 @@ import {
   REFRESH_COOKIE,
   setRefreshCookie,
   signAccessToken,
+  signRefreshToken,
   toUserProfile,
   verifyRefreshToken,
   verifyPassword,
@@ -44,9 +45,15 @@ const loginSchema = z.object({
 });
 
 function issue(res: import('express').Response, user: Parameters<typeof toUserProfile>[0]): void {
+  const accessToken = signAccessToken(user);
+  const refreshToken = signRefreshToken(user);
   const result: AuthResult = {
     user: toUserProfile(user),
-    tokens: { accessToken: signAccessToken(user), expiresIn: env.ACCESS_TOKEN_TTL },
+    tokens: {
+      accessToken,
+      refreshToken,
+      expiresIn: env.ACCESS_TOKEN_TTL,
+    },
   };
   setRefreshCookie(res, user);
   res.json(result);
@@ -484,7 +491,12 @@ authRouter.post(
 authRouter.post(
   '/refresh',
   asyncHandler(async (req, res) => {
-    const token = req.cookies?.[REFRESH_COOKIE];
+    const cookieToken = req.cookies?.[REFRESH_COOKIE];
+    const bodyToken = typeof req.body?.refreshToken === 'string' ? req.body.refreshToken.trim() : null;
+    const headerToken = req.headers['x-refresh-token'];
+    const rawHeader = typeof headerToken === 'string' ? headerToken.trim() : null;
+
+    const token = cookieToken || bodyToken || rawHeader;
     if (typeof token !== 'string' || !token) {
       throw new HttpError(401, 'no_session', 'No active session.');
     }
@@ -502,10 +514,11 @@ authRouter.post(
     }
 
     const accessToken = signAccessToken(user);
+    const refreshToken = signRefreshToken(user);
     setRefreshCookie(res, user);
     res.json({
       user: toUserProfile(user),
-      tokens: { accessToken, expiresIn: env.ACCESS_TOKEN_TTL },
+      tokens: { accessToken, refreshToken, expiresIn: env.ACCESS_TOKEN_TTL },
     } satisfies AuthResult);
   })
 );

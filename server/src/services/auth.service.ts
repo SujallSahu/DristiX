@@ -68,14 +68,14 @@ export function setRefreshCookie(res: Response, user: { _id: unknown; role?: str
     secure: env.isProd,
     // Cross-origin setups (Vercel frontend -> Render backend) require 'none' + secure in production.
     sameSite: env.isProd ? 'none' : 'lax',
-    path: '/api/auth',
+    path: '/',
     maxAge: env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
   });
 }
 
 export function clearRefreshCookie(res: Response): void {
   res.clearCookie(REFRESH_COOKIE, {
-    path: '/api/auth',
+    path: '/',
     httpOnly: true,
     secure: env.isProd,
     sameSite: env.isProd ? 'none' : 'lax',
