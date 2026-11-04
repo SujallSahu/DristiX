@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { ShieldCheck, Eye, EyeOff, KeyRound, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { ForgotPasswordModal } from '../auth/ForgotPasswordModal';
 
 interface AdminLoginProps {
@@ -53,33 +53,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onReturnToStudent }) => 
           </p>
         </div>
 
-        {/* Demo Credentials Alert Box */}
-        <div
-          role="note"
-          aria-label="Demo administrator credentials"
-          className="mb-6 p-4 rounded-2xl border-2 border-indigo-500/30 bg-indigo-500/10 text-theme-text text-xs space-y-1.5"
-        >
-          <div className="flex items-center justify-between font-bold text-indigo-500 text-sm">
-            <div className="flex items-center gap-2">
-              <KeyRound className="w-4 h-4" aria-hidden="true" />
-              <span>Default Administrator Credentials:</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setUsername('admin');
-                setPassword('admin123');
-              }}
-              className="text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-xs"
-            >
-              Fill Credentials
-            </button>
-          </div>
-          <div className="text-xs text-theme-text/80 font-medium">
-            Username: <strong className="font-mono text-indigo-600 dark:text-indigo-400">admin</strong> &nbsp;|&nbsp; Password: <strong className="font-mono text-indigo-600 dark:text-indigo-400">admin123</strong>
-          </div>
-        </div>
-
         {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           {errorMessage && (
@@ -101,6 +74,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onReturnToStudent }) => 
             <input
               id="admin-username"
               type="text"
+              placeholder="e.g. DristiX-Admin"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -119,7 +93,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onReturnToStudent }) => 
               <button
                 type="button"
                 onClick={() => setIsForgotPasswordOpen(true)}
-                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-1.5 py-0.5 transition"
+                className="text-xs font-bold text-indigo-800 dark:text-indigo-200 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-1.5 py-0.5 transition"
               >
                 Forgot Password?
               </button>
@@ -128,6 +102,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onReturnToStudent }) => 
               <input
                 id="admin-password"
                 type={showPassword ? 'text' : 'password'}
+                placeholder="Enter administrator password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

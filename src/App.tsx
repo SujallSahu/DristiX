@@ -546,7 +546,7 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigateTo('/admin')}
-                  className="h-10 px-3.5 rounded-xl border-2 border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition focus:ring-4 focus:ring-indigo-500/50"
+                  className="h-10 px-3.5 rounded-xl border-2 border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition focus:ring-4 focus:ring-indigo-500/50"
                   aria-label="Navigate to Examiner or Admin Studio"
                 >
                   <ShieldCheck className="w-4 h-4" aria-hidden="true" />

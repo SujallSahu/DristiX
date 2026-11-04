@@ -564,7 +564,7 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                 type="button"
                 onClick={handleGoToAdmin}
                 onFocus={() => speakInput('Examiner and Admin Studio sign in ke liye Enter press karein')}
-                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border-2 border-indigo-500/30 hover:border-indigo-500/50 transition-all shadow-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/50 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold text-indigo-800 dark:text-indigo-200 bg-indigo-500/10 hover:bg-indigo-500/20 border-2 border-indigo-500/30 hover:border-indigo-500/50 transition-all shadow-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/50 cursor-pointer"
               >
                 <ShieldCheck className="w-4.5 h-4.5" aria-hidden="true" />
                 <span>Sign In to Examiner / Admin Studio &rarr;</span>
@@ -910,7 +910,7 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                 type="button"
                 onClick={handleGoToAdmin}
                 onFocus={() => speakInput('Examiner and Admin Studio sign in ke liye Enter press karein')}
-                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border-2 border-indigo-500/30 hover:border-indigo-500/50 transition-all shadow-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/50 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold text-indigo-800 dark:text-indigo-200 bg-indigo-500/10 hover:bg-indigo-500/20 border-2 border-indigo-500/30 hover:border-indigo-500/50 transition-all shadow-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/50 cursor-pointer"
               >
                 <ShieldCheck className="w-4.5 h-4.5" aria-hidden="true" />
                 <span>Sign In to Examiner / Admin Studio &rarr;</span>

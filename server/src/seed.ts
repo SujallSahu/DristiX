@@ -15,8 +15,9 @@ import { Exam, User } from './models/index.js';
 import { hashPassword } from './services/auth.service.js';
 import { CATALOG_SEED } from './catalogSeed.js';
 
-const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@dristix.local';
-const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'admin123';
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@dristix.edu';
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'DristixAdmin@143';
+const ADMIN_USERNAME = process.env.SEED_ADMIN_USERNAME ?? 'DristiX-Admin';
 const STUDENT_PASSWORD = process.env.SEED_STUDENT_PASSWORD ?? 'student123';
 
 
@@ -26,13 +27,16 @@ async function main(): Promise<void> {
 
   // ── Admin ──────────────────────────────────────────────────────────
   const adminHash = await hashPassword(ADMIN_PASSWORD);
+  await User.deleteMany({ role: 'ADMIN', username: { $ne: ADMIN_USERNAME.toLowerCase() } }).exec();
   await User.findOneAndUpdate(
-    { email: ADMIN_EMAIL },
+    { username: ADMIN_USERNAME.toLowerCase() },
     {
       $set: {
         name: 'DristiX Administrator',
         rollNumber: 'ADMIN-001',
-        username: 'admin',
+        email: ADMIN_EMAIL,
+        emailVerified: true,
+        username: ADMIN_USERNAME.toLowerCase(),
         passwordHash: adminHash,
         role: 'ADMIN',
       },

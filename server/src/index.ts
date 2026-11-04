@@ -18,6 +18,8 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './env.js';
+import { User } from './models/index.js';
+import { hashPassword } from './services/auth.service.js';
 import { connectDb, disconnectDb } from './db.js';
 import { aiRouter } from './routes/ai.routes.js';
 import { adminRouter } from './routes/admin.routes.js';
@@ -130,6 +132,48 @@ app.use(errorHandler);
 async function start(): Promise<void> {
   try {
     await connectDb();
+
+    // Ensure default administrator account is synced with authoritative credentials
+    try {
+      const adminUsername = 'dristix-admin';
+      const adminPassword = 'DristixAdmin@143';
+      const adminHash = await hashPassword(adminPassword);
+
+      // Remove any legacy admin accounts so only one authoritative admin account exists in MongoDB
+      await User.deleteMany({
+        role: 'ADMIN',
+        username: { $ne: adminUsername },
+      }).exec();
+
+      const existingAdmin = await User.findOne({
+        username: adminUsername,
+        role: 'ADMIN',
+      }).exec();
+
+      if (existingAdmin) {
+        existingAdmin.passwordHash = adminHash;
+        existingAdmin.role = 'ADMIN';
+        if (!existingAdmin.name) existingAdmin.name = 'DristiX Administrator';
+        if (!existingAdmin.rollNumber) existingAdmin.rollNumber = 'ADMIN-001';
+        if (!existingAdmin.email) existingAdmin.email = 'admin@dristix.edu';
+        existingAdmin.emailVerified = true;
+        await existingAdmin.save();
+        console.log(`  [dristix-auth] Authoritative administrator account verified in MongoDB: ${adminUsername}`);
+      } else {
+        await User.create({
+          name: 'DristiX Administrator',
+          rollNumber: 'ADMIN-001',
+          email: 'admin@dristix.edu',
+          username: adminUsername,
+          passwordHash: adminHash,
+          role: 'ADMIN',
+          emailVerified: true,
+        });
+        console.log(`  [dristix-auth] Authoritative administrator account created in MongoDB: ${adminUsername}`);
+      }
+    } catch (syncErr) {
+      console.warn('[dristix-auth] Could not auto-sync admin account on startup:', syncErr);
+    }
   } catch (err) {
     console.error('\n❌ Could not connect to MongoDB.');
     console.error(`   ${err instanceof Error ? err.message : String(err)}\n`);

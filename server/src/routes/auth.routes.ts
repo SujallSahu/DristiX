@@ -538,13 +538,33 @@ authRouter.post(
       .object({ username: z.string().trim().min(1), password: z.string().min(1) })
       .parse(req.body);
 
-    const user = await User.findOne({
-      username: username.toLowerCase(),
+    const cleanUser = username.trim().toLowerCase();
+
+    // Query exclusively from MongoDB by lowercase admin username and role
+    let user = await User.findOne({
+      username: cleanUser,
       role: 'ADMIN',
     }).exec();
 
+    // If administrator was deleted from MongoDB and the authoritative admin credentials
+    // are entered, restore the single authoritative administrator account in MongoDB so it is verified from MongoDB.
+    if (!user && cleanUser === 'dristix-admin' && password === 'DristixAdmin@143') {
+      const adminCount = await User.countDocuments({ role: 'ADMIN' });
+      if (adminCount === 0) {
+        user = await User.create({
+          name: 'DristiX Administrator',
+          rollNumber: 'ADMIN-001',
+          email: 'admin@dristix.edu',
+          username: 'dristix-admin',
+          passwordHash: await hashPassword('DristixAdmin@143'),
+          role: 'ADMIN',
+          emailVerified: true,
+        });
+      }
+    }
+
     const DUMMY = '$2a$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidinv';
-    const ok = await verifyPassword(password, user?.passwordHash ?? DUMMY);
+    const ok = user ? await verifyPassword(password, user.passwordHash ?? DUMMY) : false;
 
     if (!user || !ok) {
       throw new HttpError(401, 'invalid_credentials', 'Invalid administrator credentials.');
