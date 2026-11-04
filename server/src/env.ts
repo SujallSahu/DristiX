@@ -40,16 +40,22 @@ const optionalEnvBoolean = () =>
  * Fails fast on boot if the environment is incomplete. A server that starts
  * with a missing JWT secret is worse than one that refuses to start.
  */
+const isProdEnv = process.env.NODE_ENV === 'production';
+
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
 
-  MONGODB_URI: z.string().min(1, 'MONGODB_URI is required'),
+  MONGODB_URI: isProdEnv
+    ? z.string().min(1, 'MONGODB_URI is required in production')
+    : z.string().default('mongodb://127.0.0.1:27017/dristix'),
   /** Logical database name, kept separate from the URI so one URI can host
    *  several environments without rewriting the connection string. */
   MONGODB_DB: z.string().min(1).default('dristix'),
 
-  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  JWT_SECRET: isProdEnv
+    ? z.string().min(32, 'JWT_SECRET must be at least 32 characters in production')
+    : z.string().default('dristix-super-secure-dev-jwt-secret-key-32-chars-minimum'),
   ACCESS_TOKEN_TTL: z.coerce.number().int().positive().default(900), // 15 minutes
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
 

@@ -13,6 +13,7 @@ import {
   AlertCircle,
   RefreshCw,
   KeyRound,
+  Clock,
 } from 'lucide-react';
 import type { AccessibilityPreference } from '../../../shared/types';
 import { VoiceGuidedLoginCard } from './VoiceGuidedLoginCard';
@@ -147,6 +148,9 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
 
   // Send 6-digit registration OTP code to candidate's Gmail
   const handleSendOtp = async () => {
+    if (resendCooldown > 0 || isSendingOtp) {
+      return;
+    }
     setRegError('');
     setOtpMessage('');
     const email = regEmail.trim().toLowerCase();
@@ -180,7 +184,16 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
         }, 150);
       }
     } catch (err: any) {
-      setRegError(err?.message || 'Failed to send verification code. Please check your email and try again.');
+      const errorMsg = err?.message || 'Failed to send verification code. Please check your email and try again.';
+      setRegError(errorMsg);
+      // If error indicates cooldown from server, synchronize frontend timer
+      const cooldownMatch = errorMsg.match(/wait\s+(\d+)\s+second/i);
+      if (cooldownMatch && cooldownMatch[1]) {
+        const remaining = parseInt(cooldownMatch[1], 10);
+        if (!isNaN(remaining) && remaining > 0) {
+          setResendCooldown(remaining);
+        }
+      }
       soundEffects.playSelect();
     } finally {
       setIsSendingOtp(false);
@@ -279,6 +292,20 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
       useAnnouncerStore
         .getState()
         .announce('Registration is strictly restricted to authenticated Google Mail (@gmail.com) addresses.', 'assertive', true);
+      return;
+    }
+
+    // 2. Mandatory Google Mail OTP verification requirement
+    if (!isEmailVerified || !verificationToken) {
+      setRegError('Please verify your Google Mail address with the 6-digit verification code sent to your Gmail inbox.');
+      useAnnouncerStore
+        .getState()
+        .announce('Please verify your Google Mail address with the 6-digit verification code sent to your Gmail inbox.', 'assertive', true);
+      if (!otpSent) {
+        void handleSendOtp();
+      } else {
+        otpInputRef.current?.focus();
+      }
       return;
     }
 
@@ -627,14 +654,28 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                     <button
                       type="button"
                       onClick={handleSendOtp}
-                      disabled={isSendingOtp || !regEmail.trim() || !isGmailDomain(regEmail)}
-                      onFocus={() => speakInput('Send verification code to your Google Mail button')}
+                      disabled={isSendingOtp || resendCooldown > 0 || !regEmail.trim() || !isGmailDomain(regEmail)}
+                      onFocus={() =>
+                        speakInput(
+                          resendCooldown > 0
+                            ? `Resend available in ${resendCooldown} seconds`
+                            : otpSent
+                            ? 'Resend verification code button'
+                            : 'Send verification code to your Google Mail button'
+                        )
+                      }
+                      title={resendCooldown > 0 ? `Resend available in ${resendCooldown}s` : undefined}
                       className="px-2.5 py-1.5 rounded-lg bg-theme-primary text-theme-primary-text font-bold text-xs shadow-xs hover:opacity-90 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1"
                     >
                       {isSendingOtp ? (
                         <>
                           <RefreshCw className="w-3 h-3 animate-spin" />
                           <span>Sending…</span>
+                        </>
+                      ) : resendCooldown > 0 ? (
+                        <>
+                          <Clock className="w-3 h-3" />
+                          <span>Resend ({resendCooldown}s)</span>
                         </>
                       ) : (
                         <>
@@ -664,15 +705,16 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                       Enter 6-digit code sent to {regEmail}
                     </span>
                     {resendCooldown > 0 ? (
-                      <span className="text-[11px] text-theme-text/70 font-semibold">
+                      <span className="text-[11px] text-theme-text/70 font-semibold flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
                         Resend in {resendCooldown}s
                       </span>
                     ) : (
                       <button
                         type="button"
                         onClick={handleSendOtp}
-                        disabled={isSendingOtp}
-                        className="text-[11px] font-bold text-theme-primary hover:underline cursor-pointer"
+                        disabled={isSendingOtp || resendCooldown > 0}
+                        className="text-[11px] font-bold text-theme-primary hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Resend OTP
                       </button>

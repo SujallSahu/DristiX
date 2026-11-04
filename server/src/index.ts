@@ -53,10 +53,13 @@ app.use(
     // set only when we serve the frontend ourselves.
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
 
 function isOriginAllowed(origin: string): boolean {
+  if (!origin) return true;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
   return env.corsOrigins.some((allowed) => {
     if (allowed === origin) return true;
     if (allowed.includes('*')) {

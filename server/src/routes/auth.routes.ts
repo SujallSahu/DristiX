@@ -35,7 +35,7 @@ const registerSchema = z.object({
     .enum(['Screen Reader', 'High Contrast', 'Low Vision', 'Standard'])
     .optional(),
   inviteCode: z.string().trim().optional(),
-  verificationToken: z.string().trim().optional(),
+  verificationToken: z.string().trim().min(1, 'Google Mail verification token is required.'),
 });
 
 const loginSchema = z.object({
@@ -88,6 +88,25 @@ authRouter.post(
         'already_registered',
         'That Google Mail address is already registered. Please sign in instead.'
       );
+    }
+
+    // 2.1 Enforce 60-second cooldown between OTP requests for the same email
+    const recentVerification = await EmailVerification.findOne({ email: cleanEmail })
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
+
+    if (recentVerification && (recentVerification as any).createdAt) {
+      const elapsedMs = Date.now() - new Date((recentVerification as any).createdAt).getTime();
+      const COOLDOWN_MS = 60 * 1000;
+      if (elapsedMs < COOLDOWN_MS) {
+        const remainingSeconds = Math.ceil((COOLDOWN_MS - elapsedMs) / 1000);
+        throw new HttpError(
+          429,
+          'cooldown_active',
+          `Please wait ${remainingSeconds} second${remainingSeconds === 1 ? '' : 's'} before requesting a new verification code.`
+        );
+      }
     }
 
     // 3. Generate 6-digit OTP code & unique verification session token
@@ -207,17 +226,27 @@ authRouter.post(
       );
     }
 
-    // 2. If a verification token is provided, verify it
-    if (body.verificationToken) {
-      const verification = await EmailVerification.findOne({
-        email,
-        verificationToken: body.verificationToken,
-        verified: true,
-      }).exec();
+    // 2. Mandatory Google Mail OTP verification requirement
+    if (!body.verificationToken) {
+      throw new HttpError(
+        400,
+        'verification_required',
+        'Google Mail verification required. Please verify that you own this email with the 6-digit verification code.'
+      );
+    }
 
-      if (!verification) {
-        console.warn(`[dristix-auth] Registration note: token provided for ${email} but was not verified/expired.`);
-      }
+    const verification = await EmailVerification.findOne({
+      email,
+      verificationToken: body.verificationToken,
+      verified: true,
+    }).exec();
+
+    if (!verification) {
+      throw new HttpError(
+        400,
+        'unverified_email',
+        'Your Google Mail address has not been verified yet. Please enter the 6-digit verification code sent to your email.'
+      );
     }
 
     const existing = await User.findOne({ $or: [{ email }, { rollNumber: body.rollNumber }] })

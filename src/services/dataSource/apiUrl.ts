@@ -6,15 +6,27 @@
  * - If VITE_API_URL is omitted (e.g. on free Vercel without configuring env vars),
  *   it automatically defaults to the production Render backend:
  *   https://dristix.onrender.com
- *   This means NO environment variables or paid upgrades are needed on Vercel!
  *
- * In development (npm run dev):
- * - Defaults to '/api' to use Vite's local dev server proxy (http://localhost:4000).
+ * In development / localhost testing (npm run dev or vite preview):
+ * - Always routes through '/api' using Vite's proxy.
+ *   This avoids CORS preflight blocks, Cross-Origin-Resource-Policy blocks,
+ *   and browser third-party cookie restrictions during localhost testing!
  */
 const isProd = import.meta.env.PROD;
-const fallbackUrl = isProd ? 'https://dristix.onrender.com' : '/api';
-const rawUrl = (import.meta.env.VITE_API_URL || fallbackUrl).trim();
 
+const isLocalhost =
+  typeof window !== 'undefined' &&
+  Boolean(
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '::1' ||
+    window.location.hostname.endsWith('.localhost')
+  );
+
+const shouldUseProxy = !isProd || isLocalhost;
+
+const prodFallback = 'https://dristix.onrender.com';
+const rawUrl = (import.meta.env.VITE_API_URL || prodFallback).trim();
 const origin = rawUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
 
-export const BASE_API_URL = origin ? `${origin}/api` : '/api';
+export const BASE_API_URL = shouldUseProxy ? '/api' : (origin ? `${origin}/api` : '/api');
