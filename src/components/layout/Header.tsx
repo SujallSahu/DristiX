@@ -4,6 +4,7 @@ import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import {
   Volume2,
   VolumeX,
+  Type,
   Settings,
   HelpCircle,
   LayoutGrid,
@@ -16,11 +17,12 @@ import {
   ArrowLeft,
   Mic,
 } from 'lucide-react';
-import { usePreferencesStore } from '../../store/usePreferencesStore';
+import { usePreferencesStore, type TextScale } from '../../store/usePreferencesStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { voiceRecognition } from '../../utils/voiceRecognition';
 import type { VoiceState } from '../../utils/voiceRecognition';
 import { soundEffects } from '../../utils/soundEffects';
+import { speechEngine } from '../../utils/speechEngine';
 import { StudentNotificationDropdown } from '../notifications/StudentNotificationDropdown';
 
 export const Header: React.FC = () => {
@@ -41,8 +43,58 @@ export const Header: React.FC = () => {
     isSubmitted,
   } = useExamStore();
 
-  const { ttsEnabled, setTtsEnabled } = usePreferencesStore();
+  const { ttsEnabled, setTtsEnabled, fontSize, setFontSize } = usePreferencesStore();
   const { currentStudent, logoutStudent } = useAuthStore();
+
+  const lastTextSizeChangeTime = React.useRef<number>(0);
+  const clickTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Single Tap: Increase text size step by step (100% -> 125% -> 150% -> 175% -> 200%)
+  const handleSingleTap = () => {
+    lastTextSizeChangeTime.current = Date.now();
+    soundEffects.playSelect();
+    const current = usePreferencesStore.getState().fontSize;
+    const fontSizes: TextScale[] = [100, 125, 150, 175, 200];
+    const currentIndex = fontSizes.indexOf(current);
+
+    if (currentIndex < fontSizes.length - 1) {
+      const next = fontSizes[currentIndex + 1];
+      setFontSize(next);
+      useAnnouncerStore.getState().announce(`Text size increased to ${next} percent. Tab two times to reset to normal.`, 'polite', true);
+    } else {
+      useAnnouncerStore.getState().announce('Maximum text size: 200 percent. Tab two times to reset to normal.', 'polite', true);
+    }
+  };
+
+  // Double Tap: Reset text size back to normal 100% — "There should be only one way to get back is that tab two times on it"
+  const handleDoubleTap = () => {
+    lastTextSizeChangeTime.current = Date.now();
+    soundEffects.playSelect();
+
+    // Ensure audio / TTS is definitely enabled and never muted
+    if (!usePreferencesStore.getState().ttsEnabled) {
+      setTtsEnabled(true);
+    }
+    speechEngine.enabled = true;
+
+    setFontSize(100);
+    useAnnouncerStore.getState().announce('Text size returned to normal: 100 percent.', 'polite', true);
+  };
+
+  const handleTextSizeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      handleDoubleTap();
+    } else {
+      clickTimerRef.current = setTimeout(() => {
+        clickTimerRef.current = null;
+        handleSingleTap();
+      }, 280);
+    }
+  };
 
   const [voiceState, setVoiceState] = useState<VoiceState>(() => voiceRecognition.getState());
 
@@ -322,6 +374,7 @@ export const Header: React.FC = () => {
           <button
             type="button"
             onClick={() => {
+              if (Date.now() - lastTextSizeChangeTime.current < 600) return;
               const next = !ttsEnabled;
               setTtsEnabled(next);
               useAnnouncerStore.getState().announce(
@@ -359,6 +412,41 @@ export const Header: React.FC = () => {
               </kbd>
             </button>
           )}
+
+          {/* Quick Text Size Toggle */}
+          <button
+            type="button"
+            onClick={handleTextSizeClick}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              if (clickTimerRef.current) {
+                clearTimeout(clickTimerRef.current);
+                clickTimerRef.current = null;
+              }
+              handleDoubleTap();
+            }}
+            aria-pressed={fontSize > 100}
+            title={
+              fontSize > 100
+                ? `Text size: ${fontSize}% — Tab once to increase further, tab twice to reset to normal (100%)`
+                : 'Text size: 100% (Normal) — Tab once to increase, tab twice to reset'
+            }
+            aria-label={
+              fontSize > 100
+                ? `Text size ${fontSize}% increased. Tab once to increase, tab twice to reset to normal.`
+                : 'Text size 100% normal. Tab once to increase, tab twice to reset.'
+            }
+            className={`p-2 rounded-lg border-2 border-theme-border transition flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 ${
+              fontSize > 100
+                ? 'bg-theme-primary text-theme-primary-text border-theme-primary'
+                : 'bg-theme-bg text-theme-text hover:bg-theme-surface'
+            }`}
+          >
+            <Type className="w-5 h-5" aria-hidden="true" />
+            <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-white text-black leading-tight shadow-xs">
+              {fontSize}%
+            </kbd>
+          </button>
 
           {/* Accessibility Settings */}
           <button

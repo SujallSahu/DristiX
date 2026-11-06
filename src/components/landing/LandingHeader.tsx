@@ -7,6 +7,8 @@ import {
 } from '../../store/usePreferencesStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import { useExamStore } from '../../store/useExamStore';
+import { soundEffects } from '../../utils/soundEffects';
+import { speechEngine } from '../../utils/speechEngine';
 
 interface LandingHeaderProps {
   onSignIn: () => void;
@@ -27,7 +29,6 @@ const THEME_NAMES: Record<ThemeMode, string> = {
   'dark':           'Charcoal Dark (Emerald Green)',
   'high-contrast':  'High Contrast (Black & Yellow)',
 };
-const TEXT_SIZES: TextScale[] = [100, 125, 150, 175, 200];
 
 const say = (msg: string) =>
   useAnnouncerStore.getState().announce(msg, 'polite', true);
@@ -49,13 +50,63 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
     say(`Colour theme: ${THEME_NAMES[next]}.`);
   };
 
-  const cycleTextSize = () => {
-    const next = TEXT_SIZES[(TEXT_SIZES.indexOf(fontSize) + 1) % TEXT_SIZES.length];
-    setFontSize(next);
-    say(`Text size: ${next} percent.`);
+  const lastTextSizeChangeTime = React.useRef<number>(0);
+  const clickTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Single Tap: Increase text size step by step (100% -> 125% -> 150% -> 175% -> 200%)
+  const handleSingleTap = () => {
+    lastTextSizeChangeTime.current = Date.now();
+    soundEffects.playSelect();
+    const current = usePreferencesStore.getState().fontSize;
+    const fontSizes: TextScale[] = [100, 125, 150, 175, 200];
+    const currentIndex = fontSizes.indexOf(current);
+
+    if (currentIndex < fontSizes.length - 1) {
+      const next = fontSizes[currentIndex + 1];
+      setFontSize(next);
+      say(`Text size increased to ${next} percent. Tab two times to reset to normal.`);
+    } else {
+      say('Maximum text size: 200 percent. Tab two times to reset to normal.');
+    }
+  };
+
+  // Double Tap: Reset text size back to normal 100% — "There should be only one way to get back is that tab two times on it"
+  const handleDoubleTap = () => {
+    lastTextSizeChangeTime.current = Date.now();
+    soundEffects.playSelect();
+
+    // Ensure audio / TTS is definitely enabled and never muted
+    if (!usePreferencesStore.getState().ttsEnabled) {
+      setTtsEnabled(true);
+    }
+    speechEngine.enabled = true;
+
+    setFontSize(100);
+    say('Text size returned to normal: 100 percent.');
+  };
+
+  const handleTextSizeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // If second click arrives within 280ms, it is a double tap!
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      handleDoubleTap();
+    } else {
+      // First click: wait 280ms before firing single tap increase
+      clickTimerRef.current = setTimeout(() => {
+        clickTimerRef.current = null;
+        handleSingleTap();
+      }, 280);
+    }
   };
 
   const toggleTts = () => {
+    // Guard against accidental clicks on Volume button during rapid double-tapping on Text Size button
+    if (Date.now() - lastTextSizeChangeTime.current < 600) {
+      return;
+    }
     const next = !ttsEnabled;
     setTtsEnabled(next);
     useAnnouncerStore.getState().announce(
@@ -126,7 +177,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
         {/* Right: controls + auth */}
         <div className="flex items-center gap-2">
           {/* Accessibility controls */}
-          <div className="flex items-center gap-1.5" role="group" aria-label="Accessibility controls">
+          <div className="flex items-center gap-1.5 shrink-0" role="group" aria-label="Accessibility controls">
             <button
               type="button"
               onClick={toggleTts}
@@ -134,6 +185,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               aria-label={ttsEnabled ? 'Spoken output on — tap to disable' : 'Spoken output off — tap to enable'}
               title={ttsEnabled ? 'Disable spoken output' : 'Enable spoken output'}
               className={`${iconBtn} ${ttsEnabled ? '!bg-theme-primary !text-theme-primary-text !border-theme-primary' : ''}`}
+              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
             >
               {ttsEnabled ? <Volume2 className="w-4 h-4" aria-hidden="true" /> : <VolumeX className="w-4 h-4" aria-hidden="true" />}
             </button>
@@ -144,16 +196,37 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               title={`Theme: ${THEME_NAMES[theme]} — tap to change`}
               aria-label={`Colour theme: ${THEME_NAMES[theme]}. Tap to change.`}
               className={`${iconBtn} hidden sm:grid`}
+              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
             >
               <Contrast className="w-4 h-4" aria-hidden="true" />
             </button>
 
             <button
               type="button"
-              onClick={cycleTextSize}
-              title={`Text size: ${fontSize}% — tap to change`}
-              aria-label={`Text size: ${fontSize}%. Tap to change.`}
-              className={`${iconBtn} hidden sm:grid`}
+              onClick={handleTextSizeClick}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                if (clickTimerRef.current) {
+                  clearTimeout(clickTimerRef.current);
+                  clickTimerRef.current = null;
+                }
+                handleDoubleTap();
+              }}
+              aria-pressed={fontSize > 100}
+              title={
+                fontSize > 100
+                  ? `Text size: ${fontSize}% — Tab once to increase further, tab twice to reset to normal (100%)`
+                  : 'Text size: 100% (Normal) — Tab once to increase, tab twice to reset'
+              }
+              aria-label={
+                fontSize > 100
+                  ? `Text size ${fontSize}% increased. Tab once to increase, tab twice to reset to normal.`
+                  : 'Text size 100% normal. Tab once to increase, tab twice to reset.'
+              }
+              className={`${iconBtn} ${
+                fontSize > 100 ? '!bg-theme-primary !text-theme-primary-text !border-theme-primary' : ''
+              } flex sm:grid`}
+              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
             >
               <Type className="w-4 h-4" aria-hidden="true" />
             </button>
@@ -164,6 +237,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               title="Full accessibility settings"
               aria-label="Open full accessibility settings"
               className={iconBtn}
+              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
             >
               <Settings className="w-4 h-4" aria-hidden="true" />
             </button>
