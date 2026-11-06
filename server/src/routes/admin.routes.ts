@@ -42,7 +42,16 @@ const graphSchema = z.object({
   yAxisLabel: z.string().default(''),
   unit: z.string().default(''),
   data: z.array(graphDataPointSchema).default([]),
-  sonification: graphSonificationSchema.default({}),
+  sonification: graphSonificationSchema.default({
+    enabled: true,
+    spatialAudio: true,
+    trendDetection: true,
+    peakDetection: true,
+    haptic: true,
+    voiceDetail: 'standard',
+    minFrequency: 250,
+    maxFrequency: 900,
+  }),
 });
 
 const questionSchema = z.object({
