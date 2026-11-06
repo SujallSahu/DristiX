@@ -16,7 +16,6 @@ import {
   Clock,
 } from 'lucide-react';
 import type { AccessibilityPreference } from '../../../shared/types';
-import { VoiceGuidedLoginCard } from './VoiceGuidedLoginCard';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 interface StudentAuthScreenProps {
@@ -430,17 +429,6 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
             onSubmit={handleLoginSubmit}
             className="space-y-4"
           >
-            {/* Interactive Guided Voice Flow */}
-            <VoiceGuidedLoginCard
-              loginIdentifier={loginEmail}
-              setLoginIdentifier={setLoginEmail}
-              loginPassword={loginPassword}
-              setLoginPassword={setLoginPassword}
-              onLogin={performLogin}
-              isSubmitting={isSubmitting}
-              errorMessage={loginError}
-            />
-
             {loginError && (
               <div
                 role="alert"

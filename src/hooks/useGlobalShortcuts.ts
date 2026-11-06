@@ -4,7 +4,6 @@ import { useAuthStore } from '../store/useAuthStore';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import type { TextScale } from '../store/usePreferencesStore';
 import { useAnnouncerStore } from '../store/useAnnouncerStore';
-import { speechEngine } from '../utils/speechEngine';
 import { soundEffects } from '../utils/soundEffects';
 
 /**
@@ -116,19 +115,37 @@ export function useGlobalShortcuts() {
       // public landing page and sign-in flow — anything else would move the
       // exam store into a view the visitor cannot see, and the portal would
       // open on that view after they sign in.
-      if (!useAuthStore.getState().currentStudent) {
-        if (e.key.toLowerCase() === 's' && !e.altKey && !e.ctrlKey && !e.metaKey) {
-          e.preventDefault();
-          useAnnouncerStore.getState().stopSpeech();
-          return;
-        }
-        if (e.key.toLowerCase() === 'a' && !e.ctrlKey && !e.metaKey) {
-          e.preventDefault();
-          store.setSettingsOpen(true);
-        }
+      // Universal Accessibility Shortcuts (Available on ALL pages: Landing, Login, Exam, Dashboard)
+      if (e.key.toLowerCase() === 'v' && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('dristix-toggle-voice'));
         return;
       }
 
+      if (e.key === '?' || e.key.toLowerCase() === 'h' || e.key === 'F1') {
+        e.preventDefault();
+        store.setShortcutsOpen(true);
+        return;
+      }
+
+      if (
+        (e.key.toLowerCase() === 'a' && !e.ctrlKey && !e.metaKey) ||
+        (e.altKey && (e.key === 'a' || e.key === 'A'))
+      ) {
+        e.preventDefault();
+        store.setSettingsOpen(true);
+        return;
+      }
+
+      if (e.key.toLowerCase() === 's' && !e.altKey && !e.ctrlKey && !e.metaKey && store.activeView !== 'exam') {
+        e.preventDefault();
+        useAnnouncerStore.getState().stopSpeech();
+        return;
+      }
+
+      if (!useAuthStore.getState().currentStudent) {
+        return;
+      }
       // Toggle Student Performance & Analytics Dashboard 'd' or 'D'
       if (e.key.toLowerCase() === 'd' && !e.altKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
@@ -165,143 +182,7 @@ export function useGlobalShortcuts() {
           store.resetExam();
           return;
         }
-        if (e.key.toLowerCase() === 's' && !e.altKey && !e.ctrlKey && !e.metaKey) {
-          e.preventDefault();
-          if (speechEngine.isSpeaking()) {
-            useAnnouncerStore.getState().stopSpeech();
-            return;
-          }
-          const report = store.getDiagnosticReport();
-          const fullSummary = report.verbalSummary.join(' ');
-          useAnnouncerStore
-            .getState()
-            .announce(`Performance Diagnostic Summary for ${report.examTitle}: ${fullSummary}`, 'assertive', true);
-          return;
-        }
-      }
-
-      // Toggle AI Conversational Voice Assistant 'v' or 'V'
-      if (e.key.toLowerCase() === 'v' && !e.altKey && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        window.dispatchEvent(new CustomEvent('dristix-toggle-voice'));
         return;
-      }
-
-      // Handle Stop speech 's' (available everywhere outside text inputs when not answering exam)
-      if (
-        e.key.toLowerCase() === 's' &&
-        !e.altKey &&
-        !e.ctrlKey &&
-        store.activeView !== 'exam' &&
-        !store.isSubmitted
-      ) {
-        e.preventDefault();
-        useAnnouncerStore.getState().stopSpeech();
-        return;
-      }
-
-      // Accessibility Settings 'a' or 'A' or 'Alt+A' (available everywhere outside text inputs)
-      if (
-        (e.key.toLowerCase() === 'a' && !e.ctrlKey && !e.metaKey) ||
-        (e.altKey && (e.key === 'a' || e.key === 'A'))
-      ) {
-        e.preventDefault();
-        store.setSettingsOpen(true);
-        return;
-      }
-
-      // Help reference '?' or 'h' or 'F1' (available everywhere outside text inputs)
-      if (e.key === '?' || e.key.toLowerCase() === 'h' || e.key === 'F1') {
-        e.preventDefault();
-        store.setShortcutsOpen(true);
-        return;
-      }
-
-      // Alt + S -> Submit Exam Session (only when in active unsubmitted exam)
-      if (e.altKey && (e.key === 's' || e.key === 'S')) {
-        e.preventDefault();
-        if (store.activeView === 'exam' && !store.isSubmitted) {
-          store.setSubmitModalOpen(true);
-        }
-        return;
-      }
-
-      // All remaining exam shortcuts only apply when in active exam view and not submitted
-      if (store.activeView !== 'exam' || store.isSubmitted) return;
-
-      switch (e.key.toLowerCase()) {
-        case 's':
-          // Stop voice reading during exam
-          e.preventDefault();
-          useAnnouncerStore.getState().stopSpeech();
-          break;
-
-        case 'n':
-          e.preventDefault();
-          store.nextQuestion();
-          break;
-
-        case 'p':
-          e.preventDefault();
-          store.previousQuestion();
-          break;
-
-        case 'm':
-          e.preventDefault();
-          store.toggleMarkForReview();
-          break;
-
-        case '1':
-          e.preventDefault();
-          store.selectOption(1);
-          break;
-
-        case '2':
-          e.preventDefault();
-          store.selectOption(2);
-          break;
-
-        case '3':
-          e.preventDefault();
-          store.selectOption(3);
-          break;
-
-        case '4':
-          e.preventDefault();
-          store.selectOption(4);
-          break;
-
-        case 'c':
-          e.preventDefault();
-          store.clearOption();
-          break;
-
-        case 't': {
-          e.preventDefault();
-          const minutes = Math.floor(store.timeRemaining / 60);
-          const seconds = store.timeRemaining % 60;
-          const timeMsg = `Time remaining: ${minutes} minutes and ${seconds} seconds. Timer display: ${store.formattedTime}.`;
-          useAnnouncerStore.getState().announce(timeMsg, 'assertive', true);
-          window.dispatchEvent(new CustomEvent('dristix-announce-time'));
-          break;
-        }
-
-        case 'r':
-          e.preventDefault();
-          store.announceCurrentQuestion(true);
-          break;
-
-        case 'q':
-          e.preventDefault();
-          if (!store.isPaletteOpen) {
-            // Opening palette: announce summary first
-            window.dispatchEvent(new CustomEvent('dristix-announce-palette'));
-          }
-          store.setPaletteOpen(!store.isPaletteOpen);
-          break;
-
-        default:
-          break;
       }
     };
 

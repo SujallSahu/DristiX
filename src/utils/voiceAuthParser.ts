@@ -257,8 +257,74 @@ export function normalizeSpokenDigits(text: string): string {
  * - "DX 102" -> "DX-102"
  * - "student@dristix.in" -> "student@dristix.in"
  */
+export function extractSpokenGmail(transcript: string): string {
+  if (!transcript || !transcript.trim()) return '';
+
+  let text = normalizeSpokenDigits(transcript).trim();
+
+  // Normalize phonetic terms commonly spoken for email addresses
+  text = text
+    .replace(/(?:\bat\s+the\s+rate\s+of\b|\bat\s+the\s+rate\b|\bat\s+rate\b|\bएट\s*द\s*रेट\b|\bएट\s*रेट\b)/gi, ' @ ')
+    .replace(/(?:\bdot\b|\bडॉट\b|\bpoint\b|\bपॉइंट\b)/gi, ' . ')
+    .replace(/(?:\bजीमेल\b|\bg\s*mail\b|\bgoogle\s*mail\b)/gi, ' gmail ')
+    .replace(/(?:\bकॉम\b)/gi, ' com ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // If "at gmail" was spoken without "the rate", convert "at gmail" -> "@ gmail"
+  text = text.replace(/\bat\s+gmail\b/gi, '@ gmail');
+  text = text.replace(/\bएट\s+gmail\b/gi, '@ gmail');
+
+  // Pattern 1: Spoken sequence leading into @ gmail . com
+  const gmailSpokenMatch = text.match(
+    /(?:(?:my\s+)?(?:email|mail|ईमेल|gmail|id)\s+(?:is|hai|था|है|=|:)?\s*)?([a-zA-Z0-9._%+-]+(?:\s+[a-zA-Z0-9._%+-]+)*)\s*(?:@|\bat\b)?\s*gmail\s*(?:\.|\bdot\b|\s+)?\s*com\b/i
+  );
+
+  if (gmailSpokenMatch && gmailSpokenMatch[1]) {
+    let usernamePart = gmailSpokenMatch[1].trim();
+
+    // Strip leading conversational phrases
+    usernamePart = usernamePart.replace(
+      /^(?:(?:my|mera|meri|मेरा|मेरी|the|is|hai|है|था|=|:)\s*)+/i,
+      ''
+    );
+
+    // In username, keep periods but compress spaces between characters
+    // e.g. "sujal . sahu 196" -> "sujal.sahu196"
+    usernamePart = usernamePart
+      .replace(/\s*\.\s*/g, '.')
+      .replace(/[\s\-_]+/g, '')
+      .toLowerCase();
+
+    if (usernamePart.length >= 2 && !/^(?:is|hai|my|the|a|an)$/i.test(usernamePart)) {
+      return `${usernamePart}@gmail.com`;
+    }
+  }
+
+  // Pattern 2: Standard formatted email in transcript
+  const directEmail = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i);
+  if (directEmail) {
+    const cleanEmail = directEmail[0].toLowerCase();
+    if (cleanEmail.endsWith('@gmail.com') || cleanEmail.endsWith('@googlemail.com')) {
+      return cleanEmail;
+    }
+  }
+
+  // Pattern 3: Email with spaces around @ or . that standard regex missed
+  const spacedEmail = text.match(/([a-zA-Z0-9._%+-]+)\s*@\s*([a-zA-Z0-9.-]+)\s*\.\s*([a-zA-Z]{2,})/i);
+  if (spacedEmail) {
+    const combined = `${spacedEmail[1].replace(/\s+/g, '')}@${spacedEmail[2].replace(/\s+/g, '')}.${spacedEmail[3].replace(/\s+/g, '')}`.toLowerCase();
+    return combined;
+  }
+
+  return '';
+}
+
 export function extractRollOrEmail(transcript: string): string {
   if (!transcript) return '';
+  const gmail = extractSpokenGmail(transcript);
+  if (gmail) return gmail;
+
   const text = normalizeSpokenDigits(transcript);
 
   // A. Check for valid email address
@@ -277,7 +343,8 @@ export function extractRollOrEmail(transcript: string): string {
   const digitSeqMatch = text.match(/\d[\d\s]*/);
   if (digitSeqMatch) {
     const cleanDigits = digitSeqMatch[0].replace(/\s+/g, '');
-    if (cleanDigits.length >= 1) {
+    const hasRollKeyword = /(?:roll\s*no|roll|candidate\s*id|student\s*id|रोल\s*नंबर|रोल)/i.test(text);
+    if (hasRollKeyword && cleanDigits.length >= 3) {
       return cleanDigits;
     }
   }
@@ -363,7 +430,8 @@ export function extractPassword(transcript: string): string {
   // If candidate is purely talking about roll number with NO password keyword, do not treat as password
   const hasPassWord = /(?:password|passwoard|passward|passcode|pass|pin|पिन|पासवर्ड|पासकोड)/i.test(norm);
   const hasRollWord = /(?:roll\s*no|roll|रोल\s*नंबर|रोल)/i.test(norm);
-  if (hasRollWord && !hasPassWord) {
+  const hasEmailWord = /(?:email|gmail|ईमेल|जीमेल|mail|googlemail)/i.test(norm);
+  if ((hasRollWord || hasEmailWord) && !hasPassWord) {
     return '';
   }
 

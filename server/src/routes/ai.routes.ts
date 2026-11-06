@@ -104,19 +104,17 @@ function isWhisperHallucination(raw: string): boolean {
   const PHANTOM_TOKENS = new Set([
     'so', 'sau', 'sou', 'sow', 'su', 'सौ', 'सो',
     'you', 'the', 'a', 'an', 'um', 'uh', 'ah', 'hmm', 'oh',
-    'haan', 'हूँ', 'हाँ', 'हूं', 'ok', 'okay', 'huh', 'shh',
-    'thank you', 'thanks', 'dhanyawad', 'dhanyavaad', 'धन्यवाद',
-    'namaste', 'नमस्ते', 'alvida', 'अलविदा', 'bye', 'goodbye',
+    'huh', 'shh',
   ]);
   if (PHANTOM_TOKENS.has(cleaned)) return true;
 
   // Video outro / channel / subscription hallucination patterns
   if (
-    /^(thank you|thanks)(\s+(for watching|so much|very much|a lot|everyone))?[.!]?$/i.test(cleaned) ||
-    /^(please\s+)?(subscribe|like and subscribe)(\s+to\s+(my|the|this)?\s*channel)?[.!]?$/i.test(cleaned) ||
-    /^(see you(\s+(next time|in the next video|soon|later))?|goodbye|bye(\s+bye)?)[.!]?$/i.test(cleaned) ||
-    /^(subtitles?(\s+by)?|transcribed by|captioned by|translated by|amara\.org|dotsub|opensubtitles)[.!]?$/i.test(cleaned) ||
-    /^(देखने के लिए धन्यवाद|सब्सक्राइब करें|लाइक करें|शुभ रात्रि)[.!]?$/i.test(cleaned)
+    /^(?:thank you|thanks)\s+(?:for watching|for listening|everyone)[.!]?$/i.test(cleaned) ||
+    /^(?:please\s+)?(?:subscribe|like and subscribe)(?:\s+to\s+(?:my|the|this)?\s*channel)?[.!]?$/i.test(cleaned) ||
+    /^(?:see you)\s+(?:next time|in the next video|soon|later)[.!]?$/i.test(cleaned) ||
+    /^(?:subtitles?(\s+by)?|transcribed by|captioned by|translated by|amara\.org|dotsub|opensubtitles)[.!]?$/i.test(cleaned) ||
+    /^(?:देखने के लिए धन्यवाद|सब्सक्राइब करें|लाइक करें|शुभ रात्रि)[.!]?$/i.test(cleaned)
   ) {
     return true;
   }

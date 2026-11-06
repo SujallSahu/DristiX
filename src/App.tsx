@@ -184,6 +184,7 @@ export const App: React.FC = () => {
     };
 
     window.addEventListener('dristix:catalog-updated', handleCatalogRefresh);
+    window.addEventListener('dristix:notification-broadcast', handleCatalogRefresh);
     window.addEventListener('dristix:submission-updated', handleSubmissionsRefresh);
     window.addEventListener('dristix:submission-deleted', handleSubmissionsRefresh);
     window.addEventListener('dristix:submission-cleared', handleSubmissionsRefresh);
@@ -191,6 +192,7 @@ export const App: React.FC = () => {
 
     return () => {
       window.removeEventListener('dristix:catalog-updated', handleCatalogRefresh);
+      window.removeEventListener('dristix:notification-broadcast', handleCatalogRefresh);
       window.removeEventListener('dristix:submission-updated', handleSubmissionsRefresh);
       window.removeEventListener('dristix:submission-deleted', handleSubmissionsRefresh);
       window.removeEventListener('dristix:submission-cleared', handleSubmissionsRefresh);

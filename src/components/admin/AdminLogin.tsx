@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useAnnouncerStore } from '../../store/useAnnouncerStore';
+import { soundEffects } from '../../utils/soundEffects';
 import { ShieldCheck, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { ForgotPasswordModal } from '../auth/ForgotPasswordModal';
 
@@ -18,6 +20,30 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onReturnToStudent }) => 
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+
+  useEffect(() => {
+    useAnnouncerStore
+      .getState()
+      .announce(
+        'DristiX Admin Studio login. Enter administrator username and password, or press Escape to return to Candidate Portal.',
+        'assertive',
+        true
+      );
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' && (username || password)) {
+          return;
+        }
+        e.preventDefault();
+        soundEffects.playNavigate();
+        onReturnToStudent();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onReturnToStudent, username, password]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

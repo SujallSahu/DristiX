@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { voiceRecognition } from '../../utils/voiceRecognition';
 import type { VoiceLangMode } from '../../utils/voiceRecognition';
 
@@ -226,8 +226,8 @@ export const VoiceAssistantOrb: React.FC = () => {
 
       setMessages((prev) => [...prev, assistantMsg]);
 
-      // Ensure speech announcement is made if speechEngine is not already actively speaking (e.g. for fallback NLP or typed query)
-      if (!speechEngine.isSpeaking()) {
+      // Ensure speech announcement is made if not already announced by local NLP
+      if (result !== localResult && !speechEngine.isSpeaking()) {
         useAnnouncerStore.getState().announce(result.assistantReply, 'assertive', true);
       }
     }
@@ -383,10 +383,10 @@ export const VoiceAssistantOrb: React.FC = () => {
   const suggestionChips = (() => {
     if (activeView === 'catalog') {
       return [
+        'Read notifications',
         'List available exams',
         'Start SSC CGL test',
         'Go to Practice Arena',
-        'What is my best score?',
       ];
     } else if (activeView === 'exam') {
       return [

@@ -1,4 +1,4 @@
-import { geminiVoiceService } from './geminiVoiceService';
+﻿import { geminiVoiceService } from './geminiVoiceService';
 import { processVoiceCommand, isPhantomNoise } from './voiceCommandProcessor';
 import type { CommandProcessResult } from './voiceCommandProcessor';
 import { speechEngine } from './speechEngine';
@@ -395,13 +395,13 @@ export class GeminiLiveVoiceSession {
         } else {
           this.speechConsecutiveFrames = 0;
           if (this.hasSpokenInCurrentChunk) {
-            // User was speaking and is now silent: start silence countdown (1500ms)
+            // User was speaking and is now silent: start silence countdown (700ms for fast conversational response)
             if (!this.silenceTimer) {
               this.silenceTimer = setTimeout(() => {
                 if (this.hasSpokenInCurrentChunk && this.isRunning) {
                   this.commitCurrentUtterance();
                 }
-              }, 1500);
+              }, 700);
             }
           }
         }
@@ -453,7 +453,7 @@ export class GeminiLiveVoiceSession {
     //    fallback below, because it receives no audio when Google's speech
     //    service is unreachable.
     let capturedTranscript = this.currentSpeechTranscript.trim();
-    if (isPhantomNoise(capturedTranscript)) {
+    if (isPhantomNoise(capturedTranscript) || speechEngine.isTextEcho(capturedTranscript)) {
       capturedTranscript = '';
     }
 
@@ -480,7 +480,7 @@ export class GeminiLiveVoiceSession {
         capturedTranscript = result.text.trim();
         console.log('[Live Voice] server transcription:', capturedTranscript);
         if (capturedTranscript) {
-          if (isPhantomNoise(capturedTranscript)) {
+          if (isPhantomNoise(capturedTranscript) || speechEngine.isTextEcho(capturedTranscript)) {
             console.log('[Live Voice] Filtered phantom noise token from server transcription:', capturedTranscript);
             capturedTranscript = '';
           } else {

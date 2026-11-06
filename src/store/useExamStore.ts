@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { type Exam, type QuestionItem, hasValidAiExplanation } from '../../shared/types';
+import { type Exam, type ExamSummary, type QuestionItem, type NotificationTestDetails, hasValidAiExplanation } from '../../shared/types';
 import { soundEffects } from '../utils/soundEffects';
 import { useAnnouncerStore } from './useAnnouncerStore';
 import { verbalizeMath, verbalizeForSpeech } from '../utils/mathVerbalizer';
@@ -16,6 +16,7 @@ import {
 import { getDataSource } from '../services/dataSource';
 import { dispatchAccessibilityEvent } from '../accessibility';
 import { offlinePracticeStorage } from '../services/offlinePracticeStorage';
+import { resolveNotificationTestDetails } from './useNotificationStore';
 import type { GradeResult, StartAttemptResult } from '../../shared/types';
 
 export interface SectionDiagnostic {
@@ -197,7 +198,10 @@ interface ExamState {
   selectExam: (
     examId: string,
     forceMode?: 'exam' | 'practice',
-    options?: { announce?: boolean }
+    options?: {
+      announce?: boolean;
+      testDetails?: NotificationTestDetails | null;
+    }
   ) => Promise<void>;
   /** Pushes the current progress to the server. Debounced internally. */
   persistState: () => void;
@@ -206,12 +210,12 @@ interface ExamState {
   addNewExam: (
     newExam: Exam,
     mode: 'exam' | 'practice'
-  ) => Promise<{ ok: boolean; message?: string }>;
+  ) => Promise<{ ok: boolean; message?: string; exam?: ExamSummary }>;
   updateExistingExam: (
     examId: string,
     updatedExam: Exam,
     mode: 'exam' | 'practice'
-  ) => Promise<{ ok: boolean; message?: string }>;
+  ) => Promise<{ ok: boolean; message?: string; exam?: ExamSummary }>;
   loadExamForEdit: (examId: string) => Promise<Exam | null>;
   deleteCustomExam: (examId: string) => Promise<void>;
 
@@ -785,7 +789,10 @@ export const useExamStore = create<ExamState>((set, get) => ({
   selectExam: async (
     examId: string,
     forceMode?: 'exam' | 'practice',
-    options?: { announce?: boolean }
+    options?: {
+      announce?: boolean;
+      testDetails?: NotificationTestDetails | null;
+    }
   ) => {
     const { activeView, isSubmitted, currentExam } = get();
 
@@ -809,33 +816,123 @@ export const useExamStore = create<ExamState>((set, get) => ({
       ...availablePracticeDrills,
       ...offlinePracticeStorage.bundledDrills,
     ];
-    const exam =
-      allAvailable.find((e) => e.id === examId || (e.code && e.code === examId)) ||
-      allAvailable[0];
-    if (!exam || !exam.id) {
-      useAnnouncerStore
-        .getState()
-        .announce('No examinations are available yet. Please contact your administrator.', 'assertive', true);
-      return;
+
+    const testDetails =
+      options?.testDetails ||
+      resolveNotificationTestDetails({
+        title: examId,
+        message: examId,
+      });
+
+    const targetKey = (examId || '').trim();
+    const targetLower = targetKey.toLowerCase();
+    const cleanKey = targetKey
+      .replace(/^new\s+(?:mock\s+test|practice\s+test|test)\s+published:\s*/i, '')
+      .replace(/^(?:mock\s+test|practice\s+test|test):\s*/i, '')
+      .trim();
+
+    const dtId = (testDetails?.testId || '').trim();
+    const dtCode = (testDetails?.code || '').trim();
+    const dtTitle = (testDetails?.testTitle || '').trim();
+
+    // Universal hierarchical matching that prioritizes exact matches across catalog
+    const matchInList = (list: Exam[]): Exam | null => {
+      // 1. Exact ID Match (MongoDB _id or custom id)
+      if (dtId) {
+        const found = list.find(
+          (e) =>
+            e.id.toLowerCase() === dtId.toLowerCase() ||
+            String((e as any)._id).toLowerCase() === dtId.toLowerCase()
+        );
+        if (found) return found;
+      }
+      if (targetLower) {
+        const found = list.find(
+          (e) =>
+            e.id.toLowerCase() === targetLower ||
+            String((e as any)._id).toLowerCase() === targetLower
+        );
+        if (found) return found;
+      }
+
+      // 2. Exact Code Match (case-insensitive & whitespace/hyphen agnostic)
+      const codeCandidates = [dtCode, targetKey, cleanKey].filter(Boolean);
+      for (const candidate of codeCandidates) {
+        const candNorm = candidate.toLowerCase().replace(/[-_\s]+/g, '');
+        if (candNorm.length < 2) continue;
+        const found = list.find((e) => {
+          if (!e.code) return false;
+          const eNorm = e.code.toLowerCase().replace(/[-_\s]+/g, '');
+          return e.code.toLowerCase() === candidate.toLowerCase() || eNorm === candNorm;
+        });
+        if (found) return found;
+      }
+
+      // 3. Exact Title Match (case-insensitive & trimmed)
+      const titleCandidates = [dtTitle, cleanKey, targetKey].filter((t) => t && t.length >= 2);
+      for (const candidate of titleCandidates) {
+        const candLower = candidate.toLowerCase().trim();
+        const found = list.find((e) => e.title && e.title.toLowerCase().trim() === candLower);
+        if (found) return found;
+      }
+
+      // 4. Substring Title Match (title contains candidate or candidate contains title)
+      for (const candidate of titleCandidates) {
+        const candLower = candidate.toLowerCase().trim();
+        if (candLower.length >= 3) {
+          const found = list.find((e) => {
+            if (!e.title) return false;
+            const eLower = e.title.toLowerCase().trim();
+            return eLower.includes(candLower) || candLower.includes(eLower);
+          });
+          if (found) return found;
+        }
+      }
+
+      return null;
+    };
+
+    let exam: Exam | null = matchInList(allAvailable);
+
+    // If not found in current memory cache, refresh catalog from server and search again
+    if (!exam) {
+      await get().loadCatalog();
+      const freshAll = [
+        ...get().availableExams,
+        ...get().availablePracticeDrills,
+        ...offlinePracticeStorage.bundledDrills,
+      ];
+      exam = matchInList(freshAll);
     }
-    const isPractice =
+
+    // Determine target mode
+    const isPracticeMode =
       forceMode === 'practice' ||
-      availablePracticeDrills.some((e) => e.id === exam.id || e.code === exam.code) ||
-      offlinePracticeStorage.bundledDrills.some((e) => e.id === exam.id || e.code === exam.code) ||
-      (exam.code && (exam.code.startsWith('PRACTICE-') || exam.code.startsWith('DI-'))) ||
-      exam.negativeMarking === 'No negative marking (Practice)' ||
-      String(exam.negativeMarking) === '0';
+      testDetails?.testType === 'practice' ||
+      Boolean(
+        exam &&
+        (get().availablePracticeDrills.some((e) => e.id === exam!.id || e.code === exam!.code) ||
+          offlinePracticeStorage.bundledDrills.some((e) => e.id === exam!.id || e.code === exam!.code) ||
+          (exam.id && (exam.id.includes('drill') || exam.id.includes('practice'))) ||
+          (exam.code &&
+            (exam.code.startsWith('PRACTICE-') ||
+              exam.code.startsWith('DI-') ||
+              exam.code.includes('DRILL') ||
+              exam.code.includes('PO-02'))) ||
+          exam.negativeMarking === 'No negative marking (Practice)' ||
+          String(exam.negativeMarking) === '0')
+      );
 
-    const targetMode = forceMode || (isPractice ? 'practice' : 'exam');
+    const targetMode: 'exam' | 'practice' = forceMode || (isPracticeMode ? 'practice' : 'exam');
 
-    const launchOfflineDrill = async (drillQuestions: QuestionItem[]) => {
-      const durationSec = (exam.durationMinutes || 30) * 60;
+    const launchOfflineDrill = async (drillExam: Exam, drillQuestions: QuestionItem[]) => {
+      const durationSec = (drillExam.durationMinutes || 30) * 60;
       const h = String(Math.floor(durationSec / 3600)).padStart(2, '0');
       const m = String(Math.floor((durationSec % 3600) / 60)).padStart(2, '0');
       const s = String(durationSec % 60).padStart(2, '0');
 
       set({
-        currentExam: { ...exam, questions: drillQuestions },
+        currentExam: { ...drillExam, questions: drillQuestions },
         questions: drillQuestions,
         attemptId: null,
         expiresAtMs: null,
@@ -861,46 +958,83 @@ export const useExamStore = create<ExamState>((set, get) => ({
       useAnnouncerStore
         .getState()
         .announce(
-          `Starting Offline Practice Drill: ${exam.title}. Total ${drillQuestions.length} questions. Offline hints and solutions enabled. Question 1 loaded.`,
+          `Starting Offline Practice Drill: ${drillExam.title}. Total ${drillQuestions.length} questions. Offline hints and solutions enabled. Question 1 loaded.`,
           'assertive',
           true
         );
     };
 
     // If completely offline in Practice mode, launch straight into offline practice without network delay
-    if (isPractice && typeof navigator !== 'undefined' && !navigator.onLine) {
+    if (isPracticeMode && typeof navigator !== 'undefined' && !navigator.onLine && exam) {
       const cached = await offlinePracticeStorage.getCachedDrillQuestions(exam.id, exam.code);
       if (cached && cached.length > 0) {
-        await launchOfflineDrill(cached);
+        await launchOfflineDrill(exam, cached);
         return;
       }
     }
 
-    // Start (or resume) the attempt through the data source. In api mode this
-    // is where the server hands over the question set and the deadline, and
-    // where the answer key is withheld.
+    // Determine the exact ID to send to server startAttempt
+    // The verified exam from the catalog has the authoritative MongoDB id!
+    const targetExamId =
+      exam?.id ||
+      (dtId && dtId.length === 24 ? dtId : null) ||
+      exam?.code ||
+      dtCode ||
+      exam?.title ||
+      dtTitle ||
+      cleanKey ||
+      examId;
+
+    const requestOptions = {
+      code: exam?.code || dtCode || undefined,
+      title: exam?.title || dtTitle || undefined,
+    };
+
     let started: StartAttemptResult;
     try {
-      started = await getDataSource().exams.startAttempt(exam.id, targetMode);
-      if (isPractice && started.questions?.length) {
-        void offlinePracticeStorage.cacheDrillQuestions(exam.id, started.questions as unknown as QuestionItem[]);
-        if (exam.code) {
-          void offlinePracticeStorage.cacheDrillQuestions(exam.code, started.questions as unknown as QuestionItem[]);
+      started = await getDataSource().exams.startAttempt(targetExamId, targetMode, requestOptions);
+      if (targetMode === 'practice' && started.questions?.length) {
+        void offlinePracticeStorage.cacheDrillQuestions(targetExamId, started.questions as unknown as QuestionItem[]);
+        if (started.exam?.code) {
+          void offlinePracticeStorage.cacheDrillQuestions(started.exam.code, started.questions as unknown as QuestionItem[]);
         }
       }
     } catch (err) {
-      if (isPractice) {
+      // If server could not start this exam, try offline cached practice if applicable
+      if (targetMode === 'practice' && exam) {
         const cachedQuestions = await offlinePracticeStorage.getCachedDrillQuestions(exam.id, exam.code);
         if (cachedQuestions && cachedQuestions.length > 0) {
-          await launchOfflineDrill(cachedQuestions);
+          await launchOfflineDrill(exam, cachedQuestions);
           return;
         }
       }
 
+      // Check if user made a generic "mock test" request (not a specific test name/id)
+      const isGenericRequest =
+        !cleanKey ||
+        cleanKey === 'mock' ||
+        cleanKey === 'mock test' ||
+        cleanKey === 'test' ||
+        cleanKey === 'new test' ||
+        cleanKey === 'latest' ||
+        cleanKey === 'latest test' ||
+        cleanKey === 'new mock test';
+
+      if (isGenericRequest && !testDetails) {
+        const fallbackList =
+          targetMode === 'practice'
+            ? [...get().availablePracticeDrills, ...offlinePracticeStorage.bundledDrills]
+            : get().availableExams;
+        if (fallbackList.length > 0 && fallbackList[0].id !== targetExamId) {
+          return get().selectExam(fallbackList[0].id, targetMode, options);
+        }
+      }
+
+      soundEffects.playTimerAlert();
       useAnnouncerStore
         .getState()
         .announce(
-          err instanceof Error ? err.message : 'Could not start this examination.',
+          err instanceof Error ? err.message : 'Could not start the requested examination.',
           'assertive',
           true
         );
@@ -923,15 +1057,32 @@ export const useExamStore = create<ExamState>((set, get) => ({
       useAnnouncerStore
         .getState()
         .announce(
-          `${exam.title} has no questions yet. Please contact your administrator.`,
+          `${started.exam?.title || exam?.title || 'This examination'} has no questions yet. Please contact your administrator.`,
           'assertive',
           true
         );
       return;
     }
 
+    // The authoritative exam is the one started by the server!
+    const effectiveExam: Exam = {
+      ...(started.exam as unknown as Exam),
+      questions,
+    };
+
+    // If this exam wasn't in availableExams / availablePracticeDrills, add it now
+    if (targetMode === 'practice') {
+      if (!get().availablePracticeDrills.some((e) => e.id === effectiveExam.id)) {
+        set((state) => ({ availablePracticeDrills: [effectiveExam, ...state.availablePracticeDrills] }));
+      }
+    } else {
+      if (!get().availableExams.some((e) => e.id === effectiveExam.id)) {
+        set((state) => ({ availableExams: [effectiveExam, ...state.availableExams] }));
+      }
+    }
+
     set({
-      currentExam: { ...exam, questions },
+      currentExam: effectiveExam,
       questions,
       attemptId: started.attemptId,
       expiresAtMs: new Date(started.clock.expiresAt).getTime(),
@@ -957,8 +1108,8 @@ export const useExamStore = create<ExamState>((set, get) => ({
     const mode = get().examMode;
     const speechMsg =
       mode === 'practice'
-        ? `Starting Practice Drill: ${exam.title}. Total ${questions.length} questions. Helpful Hints and Step-by-Step Solutions are enabled. Question 1 loaded.`
-        : `Starting ${exam.title}. Total ${questions.length} questions. Time limit: ${exam.durationMinutes} minutes. Question 1 loaded.`;
+        ? `Starting Practice Drill: ${effectiveExam.title}. Total ${questions.length} questions. Helpful Hints and Step-by-Step Solutions are enabled. Question 1 loaded.`
+        : `Starting ${effectiveExam.title}. Total ${questions.length} questions. Time limit: ${effectiveExam.durationMinutes} minutes. Question 1 loaded.`;
 
     // Skipped when the caller has already said its own piece. Every
     // announcement interrupts the last, so two of them for one action means the
@@ -1257,10 +1408,11 @@ export const useExamStore = create<ExamState>((set, get) => ({
   },
 
   addNewExam: async (newExam: Exam, mode: 'exam' | 'practice') => {
+    let created: ExamSummary | undefined;
     try {
       // The data source decides where this lands. Publishing has to go through
       // the server or no student would ever see the exam.
-      await getDataSource().exams.createExam(newExam, mode);
+      created = await getDataSource().exams.createExam(newExam, mode);
       await get().loadCatalog();
     } catch (err) {
       // The caller needs this text, not just a boolean: "it may already exist,
@@ -1276,13 +1428,13 @@ export const useExamStore = create<ExamState>((set, get) => ({
     try {
       authBroadcastChannel?.postMessage({
         type: 'CATALOG_UPDATED',
-        examId: newExam.id,
+        examId: created?.id || newExam.id,
         timestamp: Date.now(),
       });
     } catch {}
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent('dristix:catalog-updated', { detail: { examId: newExam.id } })
+        new CustomEvent('dristix:catalog-updated', { detail: { examId: created?.id || newExam.id } })
       );
     }
 
@@ -1290,7 +1442,7 @@ export const useExamStore = create<ExamState>((set, get) => ({
     useAnnouncerStore
       .getState()
       .announce(`New examination "${newExam.title}" published successfully.`, 'assertive', true);
-    return { ok: true };
+    return { ok: true, exam: created };
   },
 
   loadExamForEdit: async (examId: string) => {
@@ -1305,8 +1457,9 @@ export const useExamStore = create<ExamState>((set, get) => ({
   },
 
   updateExistingExam: async (examId: string, updatedExam: Exam, mode: 'exam' | 'practice') => {
+    let updated: ExamSummary | undefined;
     try {
-      await getDataSource().exams.updateExam(examId, updatedExam, mode);
+      updated = await getDataSource().exams.updateExam(examId, updatedExam, mode);
       await get().loadCatalog();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'The server rejected the examination update.';
@@ -1333,7 +1486,7 @@ export const useExamStore = create<ExamState>((set, get) => ({
     useAnnouncerStore
       .getState()
       .announce(`Examination "${updatedExam.title}" updated successfully.`, 'assertive', true);
-    return { ok: true };
+    return { ok: true, exam: updated };
   },
 
   deleteCustomExam: async (examId: string) => {
@@ -1793,4 +1946,8 @@ if (typeof window !== 'undefined') {
   window.addEventListener('dristix:catalog-updated', () => {
     void useExamStore.getState().loadCatalog();
   });
+}
+
+if (typeof window !== 'undefined') {
+  (window as any).__dristix_exam_store = useExamStore;
 }

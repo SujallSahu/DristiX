@@ -21,6 +21,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { voiceRecognition } from '../../utils/voiceRecognition';
 import type { VoiceState } from '../../utils/voiceRecognition';
 import { soundEffects } from '../../utils/soundEffects';
+import { StudentNotificationDropdown } from '../notifications/StudentNotificationDropdown';
 
 export const Header: React.FC = () => {
   const {
@@ -47,9 +48,9 @@ export const Header: React.FC = () => {
 
   useEffect(() => {
     const unsub = voiceRecognition.addListener({
-      onTranscript: () => {},
+      onTranscript: () => { },
       onStateChange: (state) => setVoiceState(state),
-      onError: () => {},
+      onError: () => { },
     });
     return unsub;
   }, []);
@@ -69,9 +70,9 @@ export const Header: React.FC = () => {
   return (
     <header
       role="banner"
-      className="p-3 sm:p-4 border-b-2 border-theme-border/80 dx-glass transition-colors sticky top-0 z-30 shadow-md backdrop-blur-md"
+      className="p-3 sm:p-4 border-b-2 border-theme-border/80 dx-glass transition-colors sticky top-0 z-30 shadow-md backdrop-blur-md overflow-visible"
     >
-      <div className="max-w-[1700px] w-full mx-auto flex flex-nowrap justify-between items-center gap-2 overflow-x-auto">
+      <div className="max-w-[1700px] w-full mx-auto flex flex-nowrap justify-between items-center gap-2 overflow-visible">
         {/* Portal Branding and Exam Switcher */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2.5">
@@ -89,9 +90,8 @@ export const Header: React.FC = () => {
                 {activeView === 'exam' && (
                   <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-theme-border/50 text-theme-text border border-theme-border">
                     <span
-                      className={`font-mono ${
-                        examMode === 'practice' ? 'text-emerald-500' : 'text-theme-primary'
-                      }`}
+                      className={`font-mono ${examMode === 'practice' ? 'text-emerald-500' : 'text-theme-primary'
+                        }`}
                     >
                       {examMode === 'practice' ? '💡 ' : ''}
                       {currentExam.code}:
@@ -106,8 +106,8 @@ export const Header: React.FC = () => {
                 {activeView === 'analytics'
                   ? 'Student Performance & Score Analytics'
                   : activeView === 'catalog'
-                  ? 'Accessible Examination & Practice Portal'
-                  : `${currentExam.questions.length} Questions • ${currentExam.durationMinutes} min`}
+                    ? 'Accessible Examination & Practice Portal'
+                    : `${currentExam.questions.length} Questions • ${currentExam.durationMinutes} min`}
               </span>
             </div>
           </div>
@@ -166,11 +166,10 @@ export const Header: React.FC = () => {
                 role="radio"
                 aria-checked={examMode === 'exam'}
                 onClick={() => setExamMode('exam')}
-                className={`px-2.5 py-1 text-xs font-extrabold rounded-lg flex items-center gap-1.5 transition-all ${
-                  examMode === 'exam'
-                    ? 'bg-theme-primary text-theme-primary-text shadow-xs'
-                    : 'text-theme-text hover:bg-theme-surface'
-                }`}
+                className={`px-2.5 py-1 text-xs font-extrabold rounded-lg flex items-center gap-1.5 transition-all ${examMode === 'exam'
+                  ? 'bg-theme-primary text-theme-primary-text shadow-xs'
+                  : 'text-theme-text hover:bg-theme-surface'
+                  }`}
               >
                 <Award className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Exam</span>
@@ -180,11 +179,10 @@ export const Header: React.FC = () => {
                 role="radio"
                 aria-checked={examMode === 'practice'}
                 onClick={() => setExamMode('practice')}
-                className={`px-2.5 py-1 text-xs font-extrabold rounded-lg flex items-center gap-1.5 transition-all ${
-                  examMode === 'practice'
-                    ? 'bg-theme-primary text-theme-primary-text shadow-xs'
-                    : 'text-theme-text hover:bg-theme-surface'
-                }`}
+                className={`px-2.5 py-1 text-xs font-extrabold rounded-lg flex items-center gap-1.5 transition-all ${examMode === 'practice'
+                  ? 'bg-theme-primary text-theme-primary-text shadow-xs'
+                  : 'text-theme-text hover:bg-theme-surface'
+                  }`}
               >
                 <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Practice</span>
@@ -205,11 +203,10 @@ export const Header: React.FC = () => {
               onClick={handleAnnounceTime}
               title="Click or press T to speak remaining time"
               aria-label={`Time Remaining: ${formattedTime}. Click or press T to read aloud.`}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 font-mono font-bold text-base transition ${
-                isTimeCritical
-                  ? 'border-red-600 bg-red-950/20 text-red-500 animate-pulse'
-                  : 'border-theme-border bg-theme-bg text-theme-text hover:border-theme-focus-ring'
-              }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 font-mono font-bold text-base transition ${isTimeCritical
+                ? 'border-red-600 bg-red-950/20 text-red-500 animate-pulse'
+                : 'border-theme-border bg-theme-bg text-theme-text hover:border-theme-focus-ring'
+                }`}
             >
               <Clock className="w-4 h-4 text-theme-focus-ring" aria-hidden="true" />
               <span>
@@ -248,35 +245,38 @@ export const Header: React.FC = () => {
           {/* Student Analytics / Performance View Button */}
           {activeView !== 'exam' && (
             activeView === 'analytics' ? (
-            <button
-              type="button"
-              onClick={returnToCatalog}
-              title="Return to Test Catalog (Shortcut: B or Esc)"
-              aria-label="Return to Test Catalog (Shortcut: B or Esc)"
-              className="px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-bg hover:border-theme-primary text-theme-text text-xs font-bold flex items-center gap-1.5 transition focus:outline-none focus:ring-4 focus:ring-yellow-400"
-            >
-              <ArrowLeft className="w-4 h-4 text-theme-primary" aria-hidden="true" />
-              <span>Back to Tests</span>
-              <kbd className="hidden sm:inline-block text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border border-theme-border bg-theme-surface">
-                B
-              </kbd>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={openAnalytics}
-              title="My Performance & Score Analytics (Shortcut: D)"
-              aria-label="My Performance and Score Analytics (Shortcut: D)"
-              className="px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-bg hover:border-emerald-500 text-theme-text text-xs font-bold flex items-center gap-1.5 transition focus:outline-none focus:ring-4 focus:ring-yellow-400"
-            >
-              <TrendingUp className="w-4 h-4 text-emerald-500" aria-hidden="true" />
-              <span className="hidden sm:inline">Analytics</span>
-              <kbd className="hidden sm:inline-block text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border border-theme-border bg-theme-surface">
-                D
-              </kbd>
-            </button>
-          )
+              <button
+                type="button"
+                onClick={returnToCatalog}
+                title="Return to Test Catalog (Shortcut: B or Esc)"
+                aria-label="Return to Test Catalog (Shortcut: B or Esc)"
+                className="px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-bg hover:border-theme-primary text-theme-text text-xs font-bold flex items-center gap-1.5 transition focus:outline-none focus:ring-4 focus:ring-yellow-400"
+              >
+                <ArrowLeft className="w-4 h-4 text-theme-primary" aria-hidden="true" />
+                <span>Back to Tests</span>
+                <kbd className="hidden sm:inline-block text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border border-theme-border bg-theme-surface">
+                  B
+                </kbd>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={openAnalytics}
+                title="My Performance & Score Analytics (Shortcut: D)"
+                aria-label="My Performance and Score Analytics (Shortcut: D)"
+                className="px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-bg hover:border-emerald-500 text-theme-text text-xs font-bold flex items-center gap-1.5 transition focus:outline-none focus:ring-4 focus:ring-yellow-400"
+              >
+                <TrendingUp className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+                <span className="hidden sm:inline">Analytics</span>
+                <kbd className="hidden sm:inline-block text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border border-theme-border bg-theme-surface">
+                  D
+                </kbd>
+              </button>
+            )
           )}
+
+          {/* Student Notifications (Rule 2) */}
+          {currentStudent && <StudentNotificationDropdown />}
 
           {/* AI Conversational Voice Assistant Button */}
           <button
@@ -295,11 +295,10 @@ export const Header: React.FC = () => {
                 : 'Activate AI Voice Assistant. Speak or control test via voice. Press V'
             }
             aria-pressed={voiceState === 'listening'}
-            className={`p-2 rounded-lg border-2 transition flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 ${
-              voiceState === 'listening'
-                ? 'bg-rose-600 border-rose-400 text-white shadow-lg animate-pulse'
-                : 'border-theme-border bg-theme-bg text-theme-text hover:border-teal-400 hover:text-teal-400'
-            }`}
+            className={`p-2 rounded-lg border-2 transition flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 ${voiceState === 'listening'
+              ? 'bg-rose-600 border-rose-400 text-white shadow-lg animate-pulse'
+              : 'border-theme-border bg-theme-bg text-theme-text hover:border-teal-400 hover:text-teal-400'
+              }`}
           >
             {voiceState === 'listening' ? (
               <Mic className="w-5 h-5 text-white" aria-hidden="true" />
@@ -310,11 +309,10 @@ export const Header: React.FC = () => {
               {voiceState === 'listening' ? 'Listening...' : 'Voice AI'}
             </span>
             <kbd
-              className={`hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border ${
-                voiceState === 'listening'
-                  ? 'border-white/50 bg-slate-900 text-white'
-                  : 'border-theme-border bg-theme-surface text-theme-text'
-              }`}
+              className={`hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border ${voiceState === 'listening'
+                ? 'border-white/50 bg-slate-900 text-white'
+                : 'border-theme-border bg-theme-surface text-theme-text'
+                }`}
             >
               V
             </kbd>
@@ -334,9 +332,8 @@ export const Header: React.FC = () => {
             title={ttsEnabled ? 'Disable TTS Speech Output' : 'Enable TTS Speech Output'}
             aria-label={ttsEnabled ? 'Built-in Speech is ON. Click to disable.' : 'Built-in Speech is OFF. Click to enable.'}
             aria-pressed={ttsEnabled}
-            className={`p-2 rounded-lg border-2 border-theme-border transition ${
-              ttsEnabled ? 'bg-theme-primary text-theme-primary-text' : 'bg-theme-bg text-theme-text'
-            }`}
+            className={`p-2 rounded-lg border-2 border-theme-border transition ${ttsEnabled ? 'bg-theme-primary text-theme-primary-text' : 'bg-theme-bg text-theme-text'
+              }`}
           >
             {ttsEnabled ? (
               <Volume2 className="w-5 h-5" aria-hidden="true" />

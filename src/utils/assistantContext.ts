@@ -209,7 +209,7 @@ export function getAssistantContext(): PageContextSnapshot {
     code: e.code,
     title: e.title,
     durationMinutes: e.durationMinutes,
-    questionCount: e.questions.length,
+    questionCount: e.questionCount || (e.questions ? e.questions.length : 5),
     category: e.category,
     difficulty: e.difficulty,
     negativeMarking: e.negativeMarking,
@@ -220,7 +220,7 @@ export function getAssistantContext(): PageContextSnapshot {
     code: d.code,
     title: d.title,
     durationMinutes: d.durationMinutes,
-    questionCount: d.questions.length,
+    questionCount: d.questionCount || (d.questions ? d.questions.length : 5),
     category: d.category,
   }));
 

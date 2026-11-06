@@ -70,6 +70,10 @@ const schema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   GROQ_API_KEY: z.string().optional(),
 
+  /** Optional administrative account credentials from environment */
+  ADMIN_USERNAME: z.string().optional(),
+  ADMIN_PASSWORD: z.string().optional(),
+
   /** Serve the built frontend from ./dist in production. */
   SERVE_STATIC: envBoolean(false),
 

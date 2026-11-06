@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useAuthStore, type StudentProfile, type ExamSubmission, deduplicateSubmissions } from '../../store/useAuthStore';
+import { useAuthStore, type StudentProfile, type ExamSubmission, deduplicateSubmissions, authBroadcastChannel } from '../../store/useAuthStore';
 import { useExamStore } from '../../store/useExamStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import { soundEffects } from '../../utils/soundEffects';
@@ -10,6 +10,7 @@ import { extractQuestionsFromFile, extractAndStripImageUrls } from '../../utils/
 import { extractQuestionsFromPdf } from '../../utils/pdfImport';
 import { MathEquation } from '../common/MathEquation';
 import { AdminGraphBuilder } from './AdminGraphBuilder';
+import { AdminNotificationManager } from './AdminNotificationManager';
 import { InteractiveSonificationGraph } from '../sonification/InteractiveSonificationGraph';
 import { usePreferencesStore, type TextScale } from '../../store/usePreferencesStore';
 import type { Exam, QuestionItem } from '../../../shared/types';
@@ -41,7 +42,7 @@ import {
   LayoutDashboard,
   BookOpen,
   HelpCircle,
-  Bell,
+  Megaphone,
   Moon,
   Sun,
   Mic,
@@ -117,7 +118,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
   const { announce } = useAnnouncerStore();
 
   const { fontSize, setFontSize, theme, setTheme } = usePreferencesStore();
-  const [activeAdminTab, setActiveAdminTab] = useState<'dashboard' | 'manage' | 'create' | 'students' | 'submissions'>('dashboard');
+  const [activeAdminTab, setActiveAdminTab] = useState<'dashboard' | 'manage' | 'create' | 'students' | 'submissions' | 'notifications'>('dashboard');
   const [manageSubTab, setManageSubTab] = useState<'exams' | 'practice'>('exams');
   const [globalSearch, setGlobalSearch] = useState('');
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -138,15 +139,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
         if (e.key === 'Escape') {
           target.blur();
           setIsCommandPaletteOpen(false);
-          setIsNotificationDropdownOpen(false);
-        }
+                  }
         return;
       }
 
       if (e.key === 'Escape') {
         setIsCommandPaletteOpen(false);
-        setIsNotificationDropdownOpen(false);
-      } else if (e.key === '/') {
+              } else if (e.key === '/') {
         e.preventDefault();
         searchInputRef.current?.focus();
         soundEffects.playSelect();
@@ -154,29 +153,53 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
         e.preventDefault();
         setActiveAdminTab('dashboard');
         soundEffects.playSelect();
+        announce('Admin Dashboard (Tab 1). Total mock exams, student enrollments, and real-time exam attempts overview.', 'assertive', true);
       } else if (e.key === '2' || e.key === 'q' || e.key === 'Q') {
         e.preventDefault();
         setActiveAdminTab('manage');
         soundEffects.playSelect();
+        announce('Manage Papers (Tab 2). View published mock exams, question counts, and edit or delete test papers.', 'assertive', true);
       } else if (e.key === '3' || e.key === 'c' || e.key === 'C') {
         e.preventDefault();
         setEditingExamId(null);
         setActiveAdminTab('create');
         soundEffects.playSelect();
+        announce('Paper Creator Studio (Tab 3). Create new mock exams, import DOCX or JSON questions, and set duration and negative marking.', 'assertive', true);
       } else if (e.key === '4' || e.key === 's' || e.key === 'S') {
         e.preventDefault();
         setActiveAdminTab('students');
         soundEffects.playSelect();
+        announce('Student Directory (Tab 4). View all registered students, Google Mail accounts, and individual exam history.', 'assertive', true);
       } else if (e.key === '5' || e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         setActiveAdminTab('submissions');
         soundEffects.playSelect();
+        announce('Submissions and Results (Tab 5). Real-time student test attempts, scores, accuracy percentages, and exam review.', 'assertive', true);
+      } else if (e.key === '6' || e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        setActiveAdminTab('notifications');
+        soundEffects.playSelect();
+        announce('Student Notification Broadcaster (Tab 6). Broadcast announcements and published mock test alerts directly to student dashboards.', 'assertive', true);
+      } else if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        soundEffects.playNavigate();
+        announce('Returning to Candidate Portal.', 'assertive', true);
+        onReturnToStudent();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [announce, onReturnToStudent]);
+
+  // Initial spoken announcement upon entering Admin Studio
+  useEffect(() => {
+    announce(
+      'Welcome to DristiX Admin Studio. Use number keys 1 to 6 to switch tabs, or press B to return to the Student Portal.',
+      'assertive',
+      true
+    );
+  }, [announce]);
 
   // Refresh the cohort's results & student roster from the server on mount, tab change,
   // cross-tab submission events, focus events, and gentle background polling
@@ -225,14 +248,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState('');
-  const [notifications, setNotifications] = useState([
-    { id: '1', title: 'MongoDB Atlas Active', detail: 'Real-time synchronization active with cluster.', time: 'Just now', unread: true },
-    { id: '2', title: 'AI Sonification Engine Online', detail: 'Tone generators & KaTeX math verbalizer ready.', time: '5m ago', unread: true },
-    { id: '3', title: 'Candidate Submissions Graded', detail: 'All recent test submissions auto-evaluated.', time: '12m ago', unread: false },
-    { id: '4', title: 'Curriculum Repository Intact', detail: 'All practice drills and timed mocks active.', time: '1h ago', unread: false },
-  ]);
 
   const handleManualSync = async () => {
     setIsSyncing(true);
@@ -1187,6 +1203,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
     );
     soundEffects.playSuccess();
 
+    // Trigger real-time cross-tab & cross-window notification and catalog sync for students
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('dristix:notification-broadcast'));
+    }
+    try {
+      authBroadcastChannel?.postMessage({
+        type: 'NOTIFICATION_BROADCAST',
+        timestamp: Date.now(),
+      });
+    } catch {}
+
     // Reset creator form and exit edit mode
     setEditingExamId(null);
     setTitle('');
@@ -1449,6 +1476,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 </kbd>
               </div>
             </button>
+
+            {/* Send Notifications (Rule 4) */}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeAdminTab === 'notifications'}
+              onClick={() => {
+                setActiveAdminTab('notifications');
+                setIsMobileSidebarOpen(false);
+                soundEffects.playSelect();
+              }}
+              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
+                activeAdminTab === 'notifications'
+                  ? 'bg-gradient-to-r from-[#008f7a] to-[#007a68] text-white shadow-md font-extrabold'
+                  : 'text-slate-300 hover:text-white hover:bg-[#083038]'
+              }`}
+            >
+              {activeAdminTab === 'notifications' && (
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-teal-300 rounded-r-full shadow-[0_0_8px_#5eead4]" />
+              )}
+              <div className="flex items-center gap-3">
+                <Megaphone className="w-4 h-4 shrink-0 text-teal-200 group-hover:scale-110 transition-transform" aria-hidden="true" />
+                <span>Send Notifications</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <kbd className="hidden sm:inline-block px-1 py-0.5 rounded text-[9px] font-mono font-bold bg-black/25 text-teal-200/60">
+                  6
+                </kbd>
+              </div>
+            </button>
           </nav>
 
           {/* Live Connectivity Badge */}
@@ -1606,90 +1663,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               <span className="capitalize">{theme === 'dark' ? 'Dark' : 'Light'}</span>
             </button>
 
-            {/* Notification Bell with Floating Center */}
-            <div className="relative">
-              <button
-                type="button"
-                className="relative p-2 rounded-xl border border-theme-border bg-theme-surface text-theme-text hover:bg-theme-border/30 transition shadow-2xs"
-                aria-label="Admin Notifications"
-                onClick={() => {
-                  setIsNotificationDropdownOpen((prev) => !prev);
-                  soundEffects.playSelect();
-                }}
-              >
-                <Bell className="w-4 h-4" />
-                {notifications.some((n) => n.unread) && (
-                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                )}
-              </button>
 
-              {/* Notification Popover Dropdown */}
-              {isNotificationDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-30"
-                    onClick={() => setIsNotificationDropdownOpen(false)}
-                  />
-                  <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-[#031d22] border border-theme-border shadow-2xl p-4 z-40 space-y-3 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="flex items-center justify-between pb-2 border-b border-theme-border">
-                      <div className="flex items-center gap-2">
-                        <Bell className="w-4 h-4 text-[#008f7a]" />
-                        <span className="text-xs sm:text-sm font-extrabold text-theme-text">System Alerts & Telemetry</span>
-                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#008f7a]/15 text-[#008f7a] dark:text-teal-300">
-                          {notifications.filter((n) => n.unread).length} new
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setNotifications(notifications.map((n) => ({ ...n, unread: false })));
-                          soundEffects.playSuccess();
-                        }}
-                        className="text-[11px] font-bold text-[#008f7a] hover:underline"
-                      >
-                        Mark all read
-                      </button>
-                    </div>
-
-                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                      {notifications.map((n) => (
-                        <div
-                          key={n.id}
-                          className={`p-2.5 rounded-xl border text-xs transition ${
-                            n.unread
-                              ? 'bg-theme-bg/80 border-[#008f7a]/30'
-                              : 'bg-theme-surface/50 border-theme-border/40 opacity-75'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between font-bold text-theme-text">
-                            <span className="flex items-center gap-1.5">
-                              {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-[#008f7a]" />}
-                              {n.title}
-                            </span>
-                            <span className="text-[10px] font-mono text-theme-text/50">{n.time}</span>
-                          </div>
-                          <p className="text-theme-text/70 mt-1 leading-snug">{n.detail}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="pt-2 border-t border-theme-border flex items-center justify-between text-[11px] font-semibold text-theme-text/60">
-                      <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                        Live Services Healthy
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setIsNotificationDropdownOpen(false)}
-                        className="text-theme-text hover:text-[#008f7a] font-bold"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
 
             {/* Admin Profile Chip */}
             <div className="flex items-center gap-2.5 pl-2.5 border-l border-theme-border">
@@ -2152,6 +2126,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         <div className="text-xs sm:text-sm font-black text-theme-text leading-tight">View Reports</div>
                         <div className="text-xs text-theme-text/60 mt-0.5">Live submissions</div>
                       </div>
+                    </button>
+
+                    {/* Action 5: Send Notification */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveAdminTab('notifications');
+                        soundEffects.playSelect();
+                      }}
+                      className="col-span-2 p-3 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/25 text-left transition flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-[#008f7a] text-white flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition">
+                          <Megaphone className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs sm:text-sm font-black text-theme-text leading-tight">Send Notification</div>
+                          <div className="text-xs text-theme-text/60 mt-0.5">Broadcast message to candidates</div>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
                 </div>
@@ -4503,6 +4498,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               </form>
             </section>
           )}
+
+          {/* 6. Send Notifications View (Rule 4) */}
+          {activeAdminTab === 'notifications' && (
+            <section role="tabpanel" aria-label="Send Notifications Management">
+              <AdminNotificationManager />
+            </section>
+          )}
         </div>
 
         {/* STUDENT PREVIEW MODAL */}
@@ -4648,6 +4650,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       { id: 'create', label: 'Question Bank & Authoring Studio', key: '3 / C', icon: HelpCircle },
                       { id: 'students', label: 'Student Cohort Roster & Accommodations', key: '4 / S', icon: Users },
                       { id: 'submissions', label: 'Candidate Submissions & Graded Reports', key: '5 / R', icon: Award },
+                      { id: 'notifications', label: 'Broadcast Notifications to Students', key: '6 / N', icon: Megaphone },
                     ]
                       .filter((tab) => !paletteQuery || tab.label.toLowerCase().includes(paletteQuery.toLowerCase()))
                       .map((tab) => (

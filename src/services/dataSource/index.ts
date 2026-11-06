@@ -25,4 +25,5 @@ export type {
   AuthDataSource,
   DataSource,
   ExamDataSource,
+  NotificationDataSource,
 } from './types';

@@ -12,6 +12,7 @@ import type {
   StartAttemptResult,
   TranscribeResult,
   UserProfile,
+  AppNotification,
 } from '../../../shared/types';
 import type {
   AiDataSource,
@@ -19,6 +20,7 @@ import type {
   DataSource,
   ExamDataSource,
   ExplainDiagramPayload,
+  NotificationDataSource,
 } from './types';
 
 /**
@@ -407,10 +409,19 @@ const apiExams: ExamDataSource = {
     return exams;
   },
 
-  async startAttempt(examId, mode): Promise<StartAttemptResult> {
+  async startAttempt(
+    examId: string,
+    mode: 'exam' | 'practice',
+    options?: { code?: string; title?: string }
+  ): Promise<StartAttemptResult> {
     return request<StartAttemptResult>('/attempts', {
       method: 'POST',
-      body: JSON.stringify({ examId, mode }),
+      body: JSON.stringify({
+        examId,
+        mode,
+        code: options?.code,
+        title: options?.title,
+      }),
     });
   },
 
@@ -452,7 +463,7 @@ const apiExams: ExamDataSource = {
     return attempts;
   },
 
-  async listAllSubmissions(): Promise<AttemptSummary[]>{
+  async listAllSubmissions(): Promise<AttemptSummary[]> {
     const { submissions } = await request<{ submissions: AttemptSummary[] }>(
       '/admin/submissions'
     );
@@ -571,9 +582,286 @@ const apiAi: AiDataSource = {
   },
 };
 
+const NOTIFS_STORAGE_KEY = 'dristix_notifications_store_v1';
+
+// Seed sample published test notifications and welcome announcement
+// so existing students always have their active tests available,
+// while newly registered students (registered at T > T_seed) start with an empty inbox.
+const SEED_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'seed-mock-ssc-cgl',
+    title: 'New Mock Test Published: SSC CGL Tier-1 Comprehensive Mock Test',
+    message: 'Full-length simulation test covering Quantitative Aptitude, Logical Reasoning, Verbal English Ability, and General Awareness according to the latest SSC CGL pattern.',
+    type: 'TEST_PUBLISHED',
+    testDetails: {
+      testId: 'mock-01',
+      testTitle: 'SSC CGL Tier-1 Comprehensive Mock Test',
+      testType: 'exam',
+      code: 'SSC-CGL-01',
+      durationMinutes: 60,
+      totalMarks: 200,
+    },
+    targetType: 'ALL_STUDENTS',
+    senderRole: 'ADMIN',
+    senderName: 'DristiX Administrator',
+    createdAt: new Date('2026-03-01T00:00:00.000Z').toISOString(),
+    isRead: false,
+  },
+  {
+    id: 'seed-drill-ibps-po',
+    title: 'New Practice Test Published: IBPS PO Quantitative Aptitude Speed Drill',
+    message: 'High-yield mathematical drill covering quadratic equations, arithmetic time-speed-distance, and percentages with LaTeX math support.',
+    type: 'TEST_PUBLISHED',
+    testDetails: {
+      testId: 'drill-02',
+      testTitle: 'IBPS PO Quantitative Aptitude Speed Drill',
+      testType: 'practice',
+      code: 'IBPS-PO-02',
+      durationMinutes: 20,
+      totalMarks: 35,
+    },
+    targetType: 'ALL_STUDENTS',
+    senderRole: 'ADMIN',
+    senderName: 'DristiX Administrator',
+    createdAt: new Date('2026-03-01T01:00:00.000Z').toISOString(),
+    isRead: false,
+  },
+  {
+    id: 'seed-announcement-welcome',
+    title: 'Welcome to DristiX Examination Portal',
+    message: 'Accessible mock examinations and practice arena are now live. Screen reader navigation, high-contrast modes, and AI audio assistance are enabled for all candidates.',
+    type: 'ANNOUNCEMENT',
+    testDetails: null,
+    targetType: 'ALL_STUDENTS',
+    senderRole: 'ADMIN',
+    senderName: 'DristiX Administrator',
+    createdAt: new Date('2026-03-01T02:00:00.000Z').toISOString(),
+    isRead: false,
+  },
+];
+
+function getStoredNotifications(): AppNotification[] {
+  try {
+    const raw = localStorage.getItem(NOTIFS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    localStorage.setItem(NOTIFS_STORAGE_KEY, JSON.stringify(SEED_NOTIFICATIONS));
+    return SEED_NOTIFICATIONS;
+  } catch {
+    return SEED_NOTIFICATIONS;
+  }
+}
+
+function saveStoredNotifications(notifs: AppNotification[]): void {
+  try {
+    localStorage.setItem(NOTIFS_STORAGE_KEY, JSON.stringify(notifs));
+  } catch { }
+}
+
+function getReadStorageKey(userId?: string): string {
+  if (userId) return `dristix_read_notifications_v1_${userId}`;
+  const user = getStoredSessionUser();
+  if (user?.id) return `dristix_read_notifications_v1_${user.id}`;
+  if (user?.email) return `dristix_read_notifications_v1_${user.email.toLowerCase()}`;
+  return 'dristix_read_notifications_v1';
+}
+
+function getStoredReadIds(userId?: string): string[] {
+  try {
+    const raw = localStorage.getItem(getReadStorageKey(userId));
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredReadIds(ids: string[], userId?: string): void {
+  try {
+    localStorage.setItem(getReadStorageKey(userId), JSON.stringify(ids));
+  } catch { }
+}
+
+function getStudentRegistrationTimestamp(sessionUser: UserProfile | null): number {
+  if (!sessionUser) return 0;
+
+  // 1. If user object has createdAt property
+  if (sessionUser.createdAt) {
+    const t = new Date(sessionUser.createdAt).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+
+  // 2. Check if this student registered anew in this browser session
+  if (typeof window !== 'undefined') {
+    const keysToCheck = [
+      sessionUser.id ? `dristix_user_registered_at_${sessionUser.id}` : null,
+      sessionUser.email ? `dristix_user_registered_at_${sessionUser.email.toLowerCase()}` : null,
+      sessionUser.rollNumber ? `dristix_user_registered_at_${sessionUser.rollNumber.toLowerCase()}` : null,
+    ].filter(Boolean) as string[];
+
+    for (const key of keysToCheck) {
+      const val = localStorage.getItem(key);
+      if (val) {
+        const t = new Date(val).getTime();
+        if (!isNaN(t) && t > 0) return t;
+      }
+    }
+  }
+
+  // 3. For existing students who registered previously, baseline is 0,
+  // ensuring all published mock tests and admin announcements remain accessible across logins.
+  return 0;
+}
+
+const apiNotifications: NotificationDataSource = {
+  async getStudentNotifications() {
+    const sessionUser = getStoredSessionUser();
+    if (sessionUser && (sessionUser as any).role === 'ADMIN') {
+      return { notifications: [], unreadCount: 0 };
+    }
+
+    try {
+      const data = await request<{ notifications: AppNotification[]; unreadCount: number }>(
+        '/notifications'
+      );
+      if (Array.isArray(data.notifications)) {
+        const sortedNotifs = [...data.notifications].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        const stored = getStoredNotifications();
+        const map = new Map<string, AppNotification>();
+        for (const n of sortedNotifs) {
+          map.set(n.id, n);
+        }
+        for (const n of stored) {
+          if (!map.has(n.id)) map.set(n.id, n);
+        }
+        const combined = Array.from(map.values()).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        saveStoredNotifications(combined);
+        return {
+          notifications: sortedNotifs,
+          unreadCount: data.unreadCount ?? sortedNotifs.filter((n) => !n.isRead).length,
+        };
+      }
+      return data;
+    } catch {
+      // Resilient local fallback (e.g. offline or pending cloud redeployment)
+      const stored = getStoredNotifications();
+      const readIds = new Set(getStoredReadIds(sessionUser?.id));
+      const userRegTime = getStudentRegistrationTimestamp(sessionUser);
+
+      // Rule 5: User Registration and Login Notification Logic
+      // Newly registered students only see notifications published on or after their registration.
+      // Existing registered students see all previously delivered and newly published notifications.
+      const filtered = stored.filter(
+        (n) => new Date(n.createdAt).getTime() >= userRegTime
+      );
+
+      const notifications = filtered
+        .map((n) => ({
+          ...n,
+          isRead: readIds.has(n.id) || Boolean(n.isRead),
+        }))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      const unreadCount = notifications.filter((n) => !n.isRead).length;
+      return { notifications, unreadCount };
+    }
+  },
+
+  async markNotificationRead(notificationId: string) {
+    const sessionUser = getStoredSessionUser();
+    const readIds = new Set(getStoredReadIds(sessionUser?.id));
+    readIds.add(notificationId);
+    saveStoredReadIds(Array.from(readIds), sessionUser?.id);
+
+    try {
+      await request(`/notifications/${notificationId}/read`, { method: 'PATCH' });
+    } catch {
+      // fallback saved locally
+    }
+  },
+
+  async markAllNotificationsRead() {
+    const sessionUser = getStoredSessionUser();
+    const stored = getStoredNotifications();
+    const readIds = new Set(getStoredReadIds(sessionUser?.id));
+    for (const n of stored) {
+      readIds.add(n.id);
+    }
+    saveStoredReadIds(Array.from(readIds), sessionUser?.id);
+
+    try {
+      await request('/notifications/read-all', { method: 'PATCH' });
+    } catch {
+      // fallback saved locally
+    }
+  },
+
+  async sendAdminNotification(payload) {
+    try {
+      const res = await request<{ ok: boolean; message: string; notification: AppNotification }>(
+        '/admin/notifications',
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        }
+      );
+      const stored = getStoredNotifications();
+      const filtered = stored.filter((n) => n.id !== res.notification.id);
+      filtered.unshift(res.notification);
+      saveStoredNotifications(filtered);
+      return res;
+    } catch {
+      const notif: AppNotification = {
+        id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        title: payload.title,
+        message: payload.message,
+        type: payload.type || 'CUSTOM',
+        testDetails: payload.testDetails || null,
+        targetType: 'ALL_STUDENTS',
+        senderRole: 'ADMIN',
+        senderName: 'DristiX Administrator',
+        createdAt: new Date().toISOString(),
+        isRead: false,
+      };
+      const stored = getStoredNotifications();
+      const filtered = stored.filter((n) => n.id !== notif.id);
+      filtered.unshift(notif);
+      saveStoredNotifications(filtered);
+      return {
+        ok: true,
+        message: 'Notification successfully sent to all registered students.',
+        notification: notif,
+      };
+    }
+  },
+
+  async getAdminSentNotifications() {
+    try {
+      return await request<{ notifications: AppNotification[] }>('/admin/notifications');
+    } catch {
+      const stored = getStoredNotifications();
+      return { notifications: stored };
+    }
+  },
+
+  async deleteAdminNotification(notificationId: string) {
+    try {
+      await request(`/admin/notifications/${notificationId}`, { method: 'DELETE' });
+    } catch { }
+    const stored = getStoredNotifications().filter((n) => n.id !== notificationId);
+    saveStoredNotifications(stored);
+  },
+};
+
 export const apiDataSource: DataSource = {
   mode: 'api',
   auth: apiAuth,
   exams: apiExams,
   ai: apiAi,
+  notifications: apiNotifications,
 };

@@ -55,6 +55,10 @@ const userSchema = new Schema(
       sparse: true,
       index: true,
     },
+    readNotificationIds: {
+      type: [{ type: Schema.Types.ObjectId, ref: 'Notification' }],
+      default: [],
+    },
   },
   { timestamps: true }
 );

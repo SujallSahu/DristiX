@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useExamStore } from '../../store/useExamStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
+import { useNotificationStore } from '../../store/useNotificationStore';
 import { soundEffects } from '../../utils/soundEffects';
 import { EXAM_CATEGORIES } from '../../data/examCategories';
 import type { Exam } from '../../../shared/types';
@@ -55,6 +56,24 @@ export const ExamCatalogScreen: React.FC = () => {
       return matchesCategory && matchesSearch;
     });
   }, [activeExamsList, selectedCategory, searchQuery]);
+
+  // Spoken arrival orientation and voice suggestions for visually impaired candidates
+  const hasAnnouncedCatalogRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (!hasAnnouncedCatalogRef.current && activeExamsList.length > 0 && !isCatalogLoading) {
+      hasAnnouncedCatalogRef.current = true;
+      const count = activeExamsList.length;
+      const topNames = activeExamsList.slice(0, 2).map((e) => e.title).join(', ');
+      const msg = `Examination Catalog. ${count} ${
+        portalTab === 'practice' ? 'practice drills' : 'mock examinations'
+      } available, including ${topNames}. Say "Start" followed by any test name to begin, or use arrow keys and press Enter. Press N for notifications, or V for voice assistant.`;
+      
+      const timer = setTimeout(() => {
+        announce(msg, 'polite', true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [activeExamsList, isCatalogLoading, portalTab, announce]);
 
   // Reset focus when tab or filter changes
   useEffect(() => {
@@ -139,7 +158,13 @@ export const ExamCatalogScreen: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const store = useExamStore.getState();
       // If full modal dialogs are open, or not in catalog view, DO NOT intercept keys
-      if (store.isSettingsOpen || store.isShortcutsOpen || store.activeView !== 'catalog') {
+      if (
+        store.isSettingsOpen ||
+        store.isShortcutsOpen ||
+        store.activeView !== 'catalog' ||
+        useNotificationStore.getState().isOpen ||
+        Boolean(useNotificationStore.getState().activeNotification)
+      ) {
         return;
       }
 

@@ -399,7 +399,7 @@ authRouter.post(
 
     // New candidate: auto-provision Google-authenticated student account
     const candidateName = tokenInfo.name || tokenInfo.given_name || 'Google Candidate';
-    
+
     // Generate unique roll number: DX-G + 4 random digits
     let assignedRoll = `DX-G` + crypto.randomInt(1000, 9999);
     while (await User.findOne({ rollNumber: assignedRoll }).select('_id').lean().exec()) {
@@ -541,27 +541,10 @@ authRouter.post(
     const cleanUser = username.trim().toLowerCase();
 
     // Query exclusively from MongoDB by lowercase admin username and role
-    let user = await User.findOne({
+    const user = await User.findOne({
       username: cleanUser,
       role: 'ADMIN',
     }).exec();
-
-    // If administrator was deleted from MongoDB and the authoritative admin credentials
-    // are entered, restore the single authoritative administrator account in MongoDB so it is verified from MongoDB.
-    if (!user && cleanUser === 'dristix-admin' && password === 'DristixAdmin@143') {
-      const adminCount = await User.countDocuments({ role: 'ADMIN' });
-      if (adminCount === 0) {
-        user = await User.create({
-          name: 'DristiX Administrator',
-          rollNumber: 'ADMIN-001',
-          email: 'admin@dristix.edu',
-          username: 'dristix-admin',
-          passwordHash: await hashPassword('DristixAdmin@143'),
-          role: 'ADMIN',
-          emailVerified: true,
-        });
-      }
-    }
 
     const DUMMY = '$2a$12$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidinv';
     const ok = user ? await verifyPassword(password, user.passwordHash ?? DUMMY) : false;
@@ -610,6 +593,7 @@ authRouter.post(
   authLimiter,
   asyncHandler(async (req, res) => {
     const { identifier, portal } = z
+
       .object({
         identifier: z.string().trim().min(1, 'Identifier (email, roll number, or username) is required.'),
         portal: z.enum(['student', 'admin']).default('student'),

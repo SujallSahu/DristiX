@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { Attempt, Exam, User } from '../models/index.js';
+import { Attempt, Exam, User, Notification } from '../models/index.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { requireAdmin, requireAuth } from '../middleware/requireAuth.js';
 import { toAttemptSummary, toExamSummary } from '../services/attempt.service.js';
@@ -104,6 +104,7 @@ adminRouter.get(
     const exam = await Exam.findById(id).exec();
     if (!exam) throw new HttpError(404, 'not_found', 'Exam not found.');
 
+
     res.json({
       exam: {
         id: String(exam._id),
@@ -179,6 +180,38 @@ adminRouter.post(
       })),
     });
 
+    // Automatic Notifications for New Tests (Rule 3)
+    if (exam.published) {
+      const isPractice =
+        exam.durationMinutes === 0 ||
+        exam.negativeMarking === 0 ||
+        String(exam.negativeMarking).toLowerCase().includes('practice') ||
+        exam.category === 'Practice';
+      const testTypeLabel = isPractice ? 'Practice Test' : 'Mock Test';
+      const typeMode = isPractice ? 'practice' : 'exam';
+
+      try {
+        await Notification.create({
+          title: `New ${testTypeLabel} Published: ${exam.title}`,
+          message: `A new ${testTypeLabel.toLowerCase()} "${exam.title}" (${exam.code}) has been published. Duration: ${exam.durationMinutes} mins, Questions: ${exam.questions.length}, Total Marks: ${exam.totalMarks}. ${exam.description}`,
+          type: 'TEST_PUBLISHED',
+          testDetails: {
+            testId: String(exam._id),
+            testTitle: exam.title,
+            testType: typeMode,
+            code: exam.code,
+            durationMinutes: exam.durationMinutes,
+            totalMarks: exam.totalMarks,
+          },
+          targetType: 'ALL_STUDENTS',
+          senderRole: 'ADMIN',
+          senderName: req.user?.name || 'DristiX Administrator',
+        });
+      } catch (err) {
+        console.warn('[dristix-notifications] Auto test publication notification warning:', err);
+      }
+    }
+
     res.status(201).json({ exam: toExamSummary(exam) });
   })
 );
@@ -192,6 +225,7 @@ adminRouter.put(
 
     const exam = await Exam.findById(id).exec();
     if (!exam) throw new HttpError(404, 'not_found', 'Exam not found.');
+
 
     // Check code collision only if code changed
     if (exam.code !== body.code.toUpperCase()) {
@@ -225,6 +259,7 @@ adminRouter.put(
     exam.totalMarks = body.totalMarks;
     exam.negativeMarking = body.negativeMarking;
     exam.difficulty = body.difficulty;
+    const wasPublished = Boolean(exam.published);
     exam.published = body.published;
     exam.questions = body.questions.map((q, i) => ({
       id: q.id || `q-${i + 1}-${Date.now().toString(36)}`,
@@ -233,6 +268,38 @@ adminRouter.put(
     })) as any;
 
     await exam.save();
+
+    // If test was unpublished/draft and is now published, notify students
+    if (!wasPublished && exam.published) {
+      const isPractice =
+        exam.durationMinutes === 0 ||
+        exam.negativeMarking === 0 ||
+        String(exam.negativeMarking).toLowerCase().includes('practice') ||
+        exam.category === 'Practice';
+      const testTypeLabel = isPractice ? 'Practice Test' : 'Mock Test';
+      const typeMode = isPractice ? 'practice' : 'exam';
+
+      try {
+        await Notification.create({
+          title: `New ${testTypeLabel} Published: ${exam.title}`,
+          message: `A new ${testTypeLabel.toLowerCase()} "${exam.title}" (${exam.code}) has been published. Duration: ${exam.durationMinutes} mins, Questions: ${exam.questions.length}, Total Marks: ${exam.totalMarks}. ${exam.description}`,
+          type: 'TEST_PUBLISHED',
+          testDetails: {
+            testId: String(exam._id),
+            testTitle: exam.title,
+            testType: typeMode,
+            code: exam.code,
+            durationMinutes: exam.durationMinutes,
+            totalMarks: exam.totalMarks,
+          },
+          targetType: 'ALL_STUDENTS',
+          senderRole: 'ADMIN',
+          senderName: req.user?.name || 'DristiX Administrator',
+        });
+      } catch (err) {
+        console.warn('[dristix-notifications] Auto test publication notification warning:', err);
+      }
+    }
     res.json({ exam: toExamSummary(exam) });
   })
 );
@@ -410,5 +477,136 @@ adminRouter.delete(
       ).exec();
       res.json({ ok: true, attemptsCleared: result.modifiedCount, clearedForAdmin: true });
     }
+  })
+);
+
+// ── Admin Custom Notifications (Rule 4) ─────────────────────────────
+
+/** POST /api/admin/notifications — broadcast custom notification to all registered students */
+adminRouter.post(
+  '/notifications',
+  asyncHandler(async (req, res) => {
+    const schema = z.object({
+      title: z.string().trim().min(1, 'Notification title is required').max(200),
+      message: z.string().trim().min(1, 'Notification message is required').max(2000),
+      type: z.enum(['CUSTOM', 'ANNOUNCEMENT', 'SYSTEM', 'TEST_PUBLISHED']).default('CUSTOM'),
+      testDetails: z
+        .object({
+          testId: z.string().optional().nullable(),
+          testTitle: z.string().optional().nullable(),
+          testType: z.string().optional().nullable(),
+          code: z.string().optional().nullable(),
+          durationMinutes: z.number().optional().nullable(),
+          totalMarks: z.number().optional().nullable(),
+        })
+        .optional()
+        .nullable(),
+    });
+
+    const body = schema.parse(req.body);
+
+    let attachedDetails = body.testDetails ?? null;
+    if (!attachedDetails || (!attachedDetails.testId && !attachedDetails.code && !attachedDetails.testTitle)) {
+      // Auto-detect if title or message references an existing published exam
+      const cleanTitle = body.title
+        .replace(/^new\s+(?:mock\s+test|practice\s+test|test)\s+published:\s*/i, '')
+        .replace(/^(?:mock\s+test|practice\s+test|test):\s*/i, '')
+        .trim();
+      const codeMatch = body.message.match(/\(([A-Za-z0-9_\-]{2,20})\)/);
+      const codeCandidate = codeMatch?.[1]?.toUpperCase();
+
+      const orChecks: any[] = [];
+      if (codeCandidate) {
+        orChecks.push({ code: codeCandidate });
+      }
+      if (cleanTitle.length >= 3) {
+        orChecks.push({ title: new RegExp(`^${cleanTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+      }
+
+      if (orChecks.length > 0) {
+        const candidate = await Exam.findOne({
+          published: true,
+          $or: orChecks,
+        }).exec();
+
+        if (candidate) {
+          const isPractice =
+            candidate.durationMinutes === 0 ||
+            candidate.negativeMarking === 0 ||
+            String(candidate.negativeMarking).toLowerCase().includes('practice') ||
+            candidate.category === 'Practice';
+          attachedDetails = {
+            testId: String(candidate._id),
+            testTitle: candidate.title,
+            testType: isPractice ? 'practice' : 'exam',
+            code: candidate.code,
+            durationMinutes: candidate.durationMinutes,
+            totalMarks: candidate.totalMarks,
+          };
+        }
+      }
+    }
+
+    const doc = await Notification.create({
+      title: body.title,
+      message: body.message,
+      type: body.type,
+      testDetails: attachedDetails,
+      targetType: 'ALL_STUDENTS',
+      senderRole: 'ADMIN',
+      senderName: req.user?.name || 'DristiX Administrator',
+    });
+
+    res.status(201).json({
+      ok: true,
+      message: 'Notification successfully sent to all registered students.',
+      notification: {
+        id: String(doc._id),
+        title: doc.title,
+        message: doc.message,
+        type: doc.type,
+        testDetails: doc.testDetails,
+        targetType: doc.targetType,
+        senderRole: doc.senderRole,
+        senderName: doc.senderName,
+        createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : new Date().toISOString(),
+      },
+    });
+  })
+);
+
+/** GET /api/admin/notifications — list notifications sent by Admin */
+adminRouter.get(
+  '/notifications',
+  asyncHandler(async (_req, res) => {
+    const items = await Notification.find()
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean()
+      .exec();
+
+    res.json({
+      notifications: items.map((doc: any) => ({
+        id: String(doc._id),
+        title: doc.title,
+        message: doc.message,
+        type: doc.type,
+        testDetails: doc.testDetails || null,
+        targetType: doc.targetType,
+        senderRole: doc.senderRole,
+        senderName: doc.senderName,
+        createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : new Date().toISOString(),
+      })),
+    });
+  })
+);
+
+/** DELETE /api/admin/notifications/:id — delete a notification */
+adminRouter.delete(
+  '/notifications/:id',
+  asyncHandler(async (req, res) => {
+    const { id } = z.object({ id: z.string().min(1) }).parse(req.params);
+    await Notification.findByIdAndDelete(id).exec();
+    res.json({ ok: true, message: 'Notification deleted.' });
   })
 );

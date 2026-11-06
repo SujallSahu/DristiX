@@ -11,6 +11,9 @@ import type {
   StartAttemptResult,
   TranscribeResult,
   UserProfile,
+  AppNotification,
+  NotificationTestDetails,
+  NotificationType,
 } from '../../../shared/types';
 
 /**
@@ -112,7 +115,11 @@ export interface ExamDataSource {
    */
   getFullCatalog(): Promise<{ exams: Exam[]; drills: Exam[] }>;
   listExams(): Promise<ExamSummary[]>;
-  startAttempt(examId: string, mode: 'exam' | 'practice'): Promise<StartAttemptResult>;
+  startAttempt(
+    examId: string,
+    mode: 'exam' | 'practice',
+    options?: { code?: string; title?: string }
+  ): Promise<StartAttemptResult>;
   getQuestions(attemptId: string): Promise<{ questions: PublicQuestion[]; clock: AttemptClock }>;
   saveState(
     attemptId: string,
@@ -177,9 +184,24 @@ export interface AiDataSource {
   isConfigured(): boolean;
 }
 
+export interface NotificationDataSource {
+  getStudentNotifications(): Promise<{ notifications: AppNotification[]; unreadCount: number }>;
+  markNotificationRead(notificationId: string): Promise<void>;
+  markAllNotificationsRead(): Promise<void>;
+  sendAdminNotification(payload: {
+    title: string;
+    message: string;
+    type?: NotificationType;
+    testDetails?: NotificationTestDetails | null;
+  }): Promise<{ ok: boolean; message: string; notification: AppNotification }>;
+  getAdminSentNotifications(): Promise<{ notifications: AppNotification[] }>;
+  deleteAdminNotification(notificationId: string): Promise<void>;
+}
+
 export interface DataSource {
   mode: 'api';
   auth: AuthDataSource;
   exams: ExamDataSource;
   ai: AiDataSource;
+  notifications: NotificationDataSource;
 }

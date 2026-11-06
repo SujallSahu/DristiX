@@ -1,4 +1,4 @@
-import { speechEngine } from './speechEngine';
+﻿import { speechEngine } from './speechEngine';
 import { isPhantomNoise, isIntentionalVoiceCommand } from './voiceCommandProcessor';
 
 export type VoiceState = 'idle' | 'listening' | 'processing' | 'speaking' | 'error';
@@ -58,7 +58,7 @@ class VoiceRecognitionService {
         setTimeout(() => {
           if (this.isListeningActive && !speechEngine.isSpeaking()) {
             this.setState('listening');
-            this.scheduleRestart(80);
+
           }
         }, 150);
       }
@@ -154,6 +154,10 @@ class VoiceRecognitionService {
       };
 
       rec.onresult = (event: any) => {
+        // If TTS is currently speaking or finished within 450ms, drop speaker echo
+        if (speechEngine.isSpeaking() || speechEngine.isEchoGuardActive()) {
+          return;
+        }
         // Any recognised audio proves the mic is live
         this.lastTranscriptAt = Date.now();
         this.consecutiveSilentRestarts = 0;
@@ -291,17 +295,27 @@ class VoiceRecognitionService {
 
     // If candidate gave an explicit command (e.g. "Yes, Final Submit", "Continue to Exam", "Option 2"),
     // immediately silence TTS and dispatch with zero delay!
-    if (isCommand) {
+    const isAuthOrCredential =
+      /@|gmail|googlemail|email|mail|dot\s*com|एट|जीमेल|ईमेल|डाट\s*काम|password|passcode|pass|pin|पिन|पासवर्ड|पासकोड|student\d+|dx-\d+/i.test(transcript) ||
+      (alternatives && alternatives.some((alt) => /@|gmail|googlemail|email|mail|dot\s*com|एट|जीमेल|ईमेल|डाट\s*काम|password|passcode|pass|pin|पिन|पासवर्ड|पासकोड|student\d+|dx-\d+/i.test(alt)));
+
+    // Suppress if the transcript is an echo of the assistant's own voice or within echo guard window
+    if (speechEngine.isSpeaking() || speechEngine.isEchoGuardActive() || speechEngine.isTextEcho(transcript)) {
+      const cleanLower = transcript.trim().toLowerCase();
+      const isExplicitStop = /^(?:stop|ruko|chup|pause|wait)$/i.test(cleanLower);
+      if (isExplicitStop && !speechEngine.isTextEcho(transcript)) {
+        speechEngine.stop();
+        return;
+      }
+      console.log('Suppressed acoustic speaker echo transcript:', transcript);
+      return;
+    }
+
+    if (isCommand || isAuthOrCredential) {
       if (speechEngine.isSpeaking()) {
         speechEngine.stop();
       }
       this.listeners.forEach((cb) => cb.onTranscript(transcript, isFinal, alternatives));
-      return;
-    }
-
-    // Suppress if the transcript is an echo of the assistant's own voice or within echo guard window
-    if (speechEngine.isSpeaking() || speechEngine.isEchoGuardActive() || speechEngine.isTextEcho(transcript)) {
-      console.log('🔇 Suppressed acoustic speaker echo transcript:', transcript);
       return;
     }
 

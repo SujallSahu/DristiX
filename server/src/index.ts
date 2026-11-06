@@ -27,6 +27,7 @@ import { attemptRouter } from './routes/attempts.routes.js';
 import { authRouter } from './routes/auth.routes.js';
 import { examRouter } from './routes/exams.routes.js';
 import { feedbackRouter } from './routes/feedback.routes.js';
+import { notificationRouter } from './routes/notification.routes.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimit.js';
 
@@ -107,6 +108,7 @@ app.use('/api/attempts', attemptRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/feedback', feedbackRouter);
+app.use('/api/notifications', notificationRouter);
 
 // ── Optional: serve the built frontend as a single deployable unit ──
 if (env.SERVE_STATIC) {
@@ -133,46 +135,42 @@ async function start(): Promise<void> {
   try {
     await connectDb();
 
-    // Ensure default administrator account is synced with authoritative credentials
+    // Verify administrator accounts in MongoDB (without hardcoded credentials)
     try {
-      const adminUsername = 'dristix-admin';
-      const adminPassword = 'DristixAdmin@143';
-      const adminHash = await hashPassword(adminPassword);
+      const envAdminUsername = (env.ADMIN_USERNAME || process.env.ADMIN_USERNAME || '').trim().toLowerCase();
+      const envAdminPassword = (env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || '').trim();
 
-      // Remove any legacy admin accounts so only one authoritative admin account exists in MongoDB
-      await User.deleteMany({
-        role: 'ADMIN',
-        username: { $ne: adminUsername },
-      }).exec();
-
-      const existingAdmin = await User.findOne({
-        username: adminUsername,
-        role: 'ADMIN',
-      }).exec();
-
-      if (existingAdmin) {
-        existingAdmin.passwordHash = adminHash;
-        existingAdmin.role = 'ADMIN';
-        if (!existingAdmin.name) existingAdmin.name = 'DristiX Administrator';
-        if (!existingAdmin.rollNumber) existingAdmin.rollNumber = 'ADMIN-001';
-        if (!existingAdmin.email) existingAdmin.email = 'admin@dristix.edu';
-        existingAdmin.emailVerified = true;
-        await existingAdmin.save();
-        console.log(`  [dristix-auth] Authoritative administrator account verified in MongoDB: ${adminUsername}`);
-      } else {
-        await User.create({
-          name: 'DristiX Administrator',
-          rollNumber: 'ADMIN-001',
-          email: 'admin@dristix.edu',
-          username: adminUsername,
-          passwordHash: adminHash,
+      if (envAdminUsername && envAdminPassword) {
+        const existingAdmin = await User.findOne({
+          username: envAdminUsername,
           role: 'ADMIN',
-          emailVerified: true,
-        });
-        console.log(`  [dristix-auth] Authoritative administrator account created in MongoDB: ${adminUsername}`);
+        }).exec();
+
+        if (existingAdmin) {
+          console.log(`  [dristix-auth] Administrator account verified in MongoDB: ${envAdminUsername}`);
+        } else {
+          const adminHash = await hashPassword(envAdminPassword);
+          await User.create({
+            name: 'DristiX Administrator',
+            rollNumber: 'ADMIN-001',
+            email: 'admin@dristix.edu',
+            username: envAdminUsername,
+            passwordHash: adminHash,
+            role: 'ADMIN',
+            emailVerified: true,
+          });
+          console.log(`  [dristix-auth] Initial administrator account created from environment: ${envAdminUsername}`);
+        }
+      } else {
+        const adminCount = await User.countDocuments({ role: 'ADMIN' }).exec();
+        if (adminCount > 0) {
+          console.log(`  [dristix-auth] Administrator authentication verified with ${adminCount} admin account(s) in MongoDB.`);
+        } else {
+          console.log('  [dristix-auth] Note: No administrator accounts in MongoDB. Set ADMIN_USERNAME and ADMIN_PASSWORD in environment to bootstrap.');
+        }
       }
     } catch (syncErr) {
-      console.warn('[dristix-auth] Could not auto-sync admin account on startup:', syncErr);
+      console.warn('[dristix-auth] Could not check admin account on startup:', syncErr);
     }
   } catch (err) {
     console.error('\n❌ Could not connect to MongoDB.');

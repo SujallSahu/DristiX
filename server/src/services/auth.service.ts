@@ -93,5 +93,6 @@ export function toUserProfile(user: UserDoc): UserProfile {
       (user.accessibilityPreference as UserProfile['accessibilityPreference']) ?? null,
     isGoogleAuthenticated: Boolean(user.isGoogleAuthenticated),
     emailVerified: Boolean(user.emailVerified),
+    createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : undefined,
   };
 }

@@ -139,6 +139,31 @@ export interface UserProfile {
   accessibilityPreference: AccessibilityPreference | null;
   isGoogleAuthenticated?: boolean;
   emailVerified?: boolean;
+  createdAt?: string;
+}
+
+export type NotificationType = 'TEST_PUBLISHED' | 'CUSTOM' | 'ANNOUNCEMENT' | 'SYSTEM';
+
+export interface NotificationTestDetails {
+  testId?: string | null;
+  testTitle?: string | null;
+  testType?: 'exam' | 'practice' | 'Mock Test' | 'Practice Test' | null;
+  code?: string | null;
+  durationMinutes?: number | null;
+  totalMarks?: number | null;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  testDetails?: NotificationTestDetails | null;
+  targetType: 'ALL_STUDENTS' | 'SPECIFIC_STUDENTS';
+  senderRole: 'ADMIN' | 'SYSTEM';
+  senderName: string;
+  createdAt: string;
+  isRead?: boolean;
 }
 
 export interface AuthTokens {

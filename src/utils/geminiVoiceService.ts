@@ -11,6 +11,8 @@ import { matchExamFromQuery } from './examMatcher';
 import { isPracticeTabNavigation } from './practiceTabNavigation';
 import { getDataSource } from '../services/dataSource';
 import { isHindiPreferred, voiceRecognition } from './voiceRecognition';
+import { useNotificationStore } from '../store/useNotificationStore';
+import type { Exam } from '../../shared/types';
 
 const API_KEY_STORAGE = 'dristix_gemini_api_key';
 const GROQ_API_KEY_STORAGE = 'dristix_groq_api_key';
@@ -545,6 +547,8 @@ ${languageRule}
 - "CLOSE_SETTINGS": Close Accessibility Preferences modal (e.g. "close settings", "settings band karo", "close accessibility", "एक्सेसिबिलिटी बंद करो").
 - "OPEN_SHORTCUTS": Open Keyboard Shortcuts Reference Guide (e.g. "open shortcuts", "keyboard shortcuts", "help guide", "shortcuts guide", "कीबोर्ड शॉर्टकट", "मदद").
 - "CLOSE_SHORTCUTS": Close Keyboard Shortcuts Guide (e.g. "close shortcuts", "shortcuts band karo", "शॉर्टकट बंद करो").
+- "NOTIFICATIONS": User asks for notifications, announcements, alerts, or messages (e.g. "open notifications", "read notifications", "check notifications", "any notifications", "show notifications", "what notifications do I have", "past notifications", "previous notifications", "नोटिफिकेशन पढ़ो", "नोटिफिकेशन खोलो", "सूचना").
+- "CLOSE_NOTIFICATIONS": Close notification panel (e.g. "close notifications", "notification band karo", "नोटिफिकेशन बंद करो").
 - "EXAM_INTEGRITY_REFUSAL": Triggered when user asks to solve or reveal answers in test
 - "GENERAL_QUERY": General conversation or help
 
@@ -931,8 +935,11 @@ Return ONLY a valid JSON object matching this schema:
     const all = [...examStore.availableExams, ...examStore.availablePracticeDrills];
     const matchedRequestedExam = matchExamFromQuery(rawQuery, parsed.param, all);
 
-    // List Available Exams / Tests Interceptor
-    // MUST BE EVALUATED BEFORE isReturnCatalogIntent so "list mock tests" or "which tests are available" or "is page par kon kon se test available hai" lists test details instead of silently returning to catalog!
+    // =========================================================
+    // 1. LIST AVAILABLE EXAMS / DRILLS (CONCISE & ACCURATE)
+    // Evaluated with priority so asking for available tests lists test details
+    // concisely with the real question count instead of full monologues or 0 questions.
+    // =========================================================
     const isListExamsIntent =
       !matchedRequestedExam &&
       (
@@ -966,10 +973,24 @@ Return ONLY a valid JSON object matching this schema:
       );
 
     if (isListExamsIntent) {
+      if (context.activeView !== 'catalog') {
+        examStore.returnToCatalog();
+        examStore.setPortalTab('exams');
+      }
+
       if (context.portalTab === 'practice' && !queryLower.includes('mock')) {
         const drills = context.availableDrills;
-        const names = drills.map((d, idx) => `${idx + 1}. ${d.title}`).join('; ');
-        const reply = `On this practice page, there are ${drills.length} Practice Drills available: ${names}. Say "Start Practice Drill" to begin.`;
+        const topDrills = drills.slice(0, 4);
+        const names = topDrills
+          .map((d, idx) => {
+            const qCount = d.questionCount || (d as any).totalQuestions || 5;
+            return `${idx + 1}. ${d.title} (${d.durationMinutes} ${isHindi ? 'मिनट' : 'mins'}, ${qCount} ${isHindi ? 'प्रश्न' : 'questions'})`;
+          })
+          .join('; ');
+        const moreCount = drills.length > 4 ? (isHindi ? ` तथा ${drills.length - 4} अन्य अभ्यास।` : ` plus ${drills.length - 4} more drills.`) : '';
+        const reply = isHindi
+          ? `प्रैक्टिस एरिना में कुल ${drills.length} अभ्यास उपलब्ध हैं: ${names}${moreCount}। शुरू करने के लिए अभ्यास का नाम बोलें।`
+          : `The Practice Arena contains ${drills.length} practice drills: ${names}${moreCount}. Say "Start" followed by a drill name to begin.`;
         useAnnouncerStore.getState().announce(reply, 'assertive', true);
         return {
           success: true,
@@ -981,10 +1002,17 @@ Return ONLY a valid JSON object matching this schema:
       }
 
       const exams = context.availableExams;
-      const names = exams
-        .map((e, idx) => `${idx + 1}. ${e.title} (${e.durationMinutes} mins, ${e.questionCount} questions)`)
+      const topExams = exams.slice(0, 4);
+      const names = topExams
+        .map((e, idx) => {
+          const qCount = e.questionCount || (e as any).totalQuestions || 5;
+          return `${idx + 1}. ${e.title} (${e.durationMinutes} ${isHindi ? 'मिनट' : 'mins'}, ${qCount} ${isHindi ? 'प्रश्न' : 'questions'})`;
+        })
         .join('; ');
-      const reply = `On this page, there are ${exams.length} Mock Examinations available: ${names}. Say "Start SSC CGL" or "Start Exam 1" to begin.`;
+      const moreCount = exams.length > 4 ? (isHindi ? ` तथा ${exams.length - 4} अन्य टेस्ट।` : ` plus ${exams.length - 4} more tests.`) : '';
+      const reply = isHindi
+        ? `वर्तमान में कुल ${exams.length} मॉक टेस्ट उपलब्ध हैं: ${names}${moreCount}। शुरू करने के लिए टेस्ट का नाम बोलें या "पहला टेस्ट शुरू करो" कहें।`
+        : `There are ${exams.length} mock tests available: ${names}${moreCount}. Say "Start" followed by a test name or say "Start Test 1" to begin.`;
       useAnnouncerStore.getState().announce(reply, 'assertive', true);
       return {
         success: true,
@@ -992,6 +1020,200 @@ Return ONLY a valid JSON object matching this schema:
         userQuery: rawQuery,
         assistantReply: reply,
         actionExecuted: 'Listed Available Mock Exams',
+      };
+    }
+
+    // =========================================================
+    // 2. TOP-LEVEL TAB & WORKSPACE NAVIGATION INTERCEPTORS
+    // Switch between Analytics, Practice Arena, Mock Exams catalog.
+    // =========================================================
+
+    // 2a. Analytics / Performance Dashboard Tab
+    const isAnalyticsNavIntent =
+      actionUpper === 'ANALYTICS' ||
+      actionUpper === 'VIEW_ANALYTICS' ||
+      actionUpper === 'OPEN_ANALYTICS' ||
+      (
+        (
+          queryLower.includes('analytics') ||
+          queryLower.includes('एनालिटिक्स') ||
+          queryLower.includes('performance') ||
+          queryLower.includes('परफॉरमेंस') ||
+          queryLower.includes('score page') ||
+          queryLower.includes('meri report') ||
+          queryLower.includes('my stats') ||
+          queryLower.includes('report tab') ||
+          queryLower.includes('stats tab') ||
+          (queryLower.includes('score') && (queryLower.includes('tab') || queryLower.includes('page') || queryLower.includes('dikhao') || queryLower.includes('kholo') || queryLower.includes('open') || queryLower.includes('go to')))
+        ) &&
+        !queryLower.includes('history') &&
+        !queryLower.includes('accuracy') &&
+        !queryLower.includes('best score') &&
+        !queryLower.includes('questions solved')
+      );
+
+    if (isAnalyticsNavIntent) {
+      if (context.activeView === 'exam' && !examStore.isSubmitted) {
+        examStore.setSubmitModalOpen(true);
+        soundEffects.playTimerAlert();
+        const reply = isHindi
+          ? 'परीक्षा सबमिट किए बिना आप एनालिटिक्स नहीं देख सकते। कृपया पहले अपनी परीक्षा सबमिट करें।'
+          : 'You cannot leave the exam before submitting it. Submit confirmation dialog is open. Please submit your test first.';
+        useAnnouncerStore.getState().announce(reply, 'assertive', true);
+        return {
+          success: true,
+          intent: 'SUBMIT_EXAM',
+          userQuery: rawQuery,
+          assistantReply: reply,
+          actionExecuted: 'Opened Submit Modal (Exit Prevented)',
+        };
+      }
+
+      examStore.openAnalytics();
+      soundEffects.playSelect();
+      const reply = isHindi
+        ? `परफॉरमेंस एनालिटिक्स डैशबोर्ड खुल गया है। यहाँ आपके कुल ${context.totalSubmissions || 0} टेस्टों का रिकॉर्ड उपलब्ध है। अपनी समरी सुनने के लिए "समरी पढ़ो" बोलें, या टेस्ट पर लौटने के लिए "वापस जाओ" कहें।`
+        : `Switched to Performance Analytics Dashboard. Here you can review your ${context.totalSubmissions || 0} completed tests. Say "Listen to summary" to hear your statistics, or "Back to tests" to return.`;
+      useAnnouncerStore.getState().announce(reply, 'assertive', true);
+      return {
+        success: true,
+        intent: 'VIEW_ANALYTICS',
+        userQuery: rawQuery,
+        assistantReply: reply,
+        actionExecuted: 'Switched to Analytics Dashboard',
+      };
+    }
+
+    // 2b. Practice Arena Tab Navigation
+    const isPracticeTabIntent =
+      isPracticeTabNavigation(rawQuery) ||
+      actionUpper === 'PRACTICE_TAB' ||
+      actionUpper === 'PRACTICE_PAGE' ||
+      actionUpper === 'PRACTICE_ARENA' ||
+      actionUpper === 'SWITCH_PRACTICE' ||
+      actionUpper === 'NAVIGATE_PRACTICE';
+
+    if (isPracticeTabIntent) {
+      if (context.activeView === 'exam' && !examStore.isSubmitted) {
+        examStore.setSubmitModalOpen(true);
+        soundEffects.playTimerAlert();
+        const safeReply = isHindi
+          ? 'परीक्षा सबमिट किए बिना आप बाहर नहीं जा सकते। सबमिट पुष्टि विंडो खुल गई है। कृपया पहले अपनी परीक्षा सबमिट करें।'
+          : 'You cannot leave the exam before submitting it. The submit confirmation window is now open. Please submit your test first.';
+        useAnnouncerStore.getState().announce(safeReply, 'assertive', true);
+        return {
+          success: true,
+          intent: 'SUBMIT_EXAM',
+          userQuery: rawQuery,
+          assistantReply: safeReply,
+          actionExecuted: 'Opened Submit Modal (Exit Prevented)',
+        };
+      }
+
+      examStore.returnToCatalog();
+      examStore.setPortalTab('practice');
+      soundEffects.playSuccess();
+
+      const drills = context.availableDrills;
+      const topDrills = drills.slice(0, 4);
+      const names = topDrills
+        .map((d, idx) => {
+          const qCount = d.questionCount || (d as any).totalQuestions || 5;
+          return `${idx + 1}. ${d.title} (${d.durationMinutes} ${isHindi ? 'मिनट' : 'mins'}, ${qCount} ${isHindi ? 'प्रश्न' : 'questions'})`;
+        })
+        .join('; ');
+      const moreCount = drills.length > 4 ? (isHindi ? ` तथा ${drills.length - 4} अन्य अभ्यास।` : ` plus ${drills.length - 4} more drills.`) : '';
+      const reply = drills.length
+        ? (isHindi
+            ? `प्रैक्टिस एरिना टैब पर आ गए हैं। कुल ${drills.length} अभ्यास उपलब्ध हैं: ${names}${moreCount}। शुरू करने के लिए अभ्यास का नाम बोलें।`
+            : `Switched to the Practice Arena tab. ${drills.length} practice drills are available: ${names}${moreCount}. Say "Start" followed by a drill name to begin.`)
+        : (isHindi
+            ? 'प्रैक्टिस एरिना टैब पर आ गए हैं। अभी कोई अभ्यास उपलब्ध नहीं है।'
+            : 'Switched to the Practice Arena tab. No practice drills are available right now. Say "Go to mock test page" to see the mock examinations.');
+
+      useAnnouncerStore.getState().announce(reply, 'assertive', true);
+      return {
+        success: true,
+        intent: 'PRACTICE_TAB',
+        userQuery: rawQuery,
+        assistantReply: reply,
+        actionExecuted: 'Opened Practice Tab (No Drill Started)',
+      };
+    }
+
+    // 2c. Mock Tests / Examinations Catalog Tab Navigation
+    const isExamsCatalogIntent =
+      actionUpper === 'RETURN_CATALOG' ||
+      actionUpper === 'CATALOG' ||
+      actionUpper === 'EXAMS_TAB' ||
+      actionUpper === 'MOCK_TESTS_TAB' ||
+      queryLower === 'mock tests' ||
+      queryLower === 'mock test' ||
+      queryLower === 'exams' ||
+      queryLower === 'tests' ||
+      queryLower.includes('mock test tab') ||
+      queryLower.includes('mock test page') ||
+      queryLower.includes('mock test section') ||
+      queryLower.includes('switch to mock') ||
+      queryLower.includes('switch to exam') ||
+      queryLower.includes('go to mock') ||
+      queryLower.includes('go to exam') ||
+      queryLower.includes('open mock') ||
+      queryLower.includes('choose another exam') ||
+      queryLower.includes('choose another test') ||
+      queryLower.includes('back to tests') ||
+      queryLower.includes('back to exam') ||
+      queryLower.includes('test catalog') ||
+      queryLower.includes('exam catalog') ||
+      queryLower.includes('मॉक टेस्ट पेज') ||
+      queryLower.includes('मॉक टेस्ट टैब') ||
+      queryLower.includes('टेस्ट पेज पर जाओ');
+
+    if (isExamsCatalogIntent) {
+      if (context.activeView === 'exam' && !examStore.isSubmitted) {
+        examStore.setSubmitModalOpen(true);
+        soundEffects.playTimerAlert();
+        const safeReply = isHindi
+          ? 'परीक्षा सबमिट किए बिना आप बाहर नहीं जा सकते। सबमिट पुष्टि विंडो खुल गई है। कृपया पहले अपनी परीक्षा सबमिट करें।'
+          : 'You cannot leave the exam before submitting it. Submit confirmation dialog is open. Please submit your test first.';
+        useAnnouncerStore.getState().announce(safeReply, 'assertive', true);
+        return {
+          success: true,
+          intent: 'SUBMIT_EXAM',
+          userQuery: rawQuery,
+          assistantReply: safeReply,
+          actionExecuted: 'Opened Submit Modal (Exit Prevented)',
+        };
+      }
+
+      examStore.returnToCatalog();
+      examStore.setPortalTab('exams');
+      soundEffects.playSuccess();
+
+      const exams = context.availableExams;
+      const topExams = exams.slice(0, 4);
+      const names = topExams
+        .map((e, idx) => {
+          const qCount = e.questionCount || (e as any).totalQuestions || 5;
+          return `${idx + 1}. ${e.title} (${e.durationMinutes} ${isHindi ? 'मिनट' : 'mins'}, ${qCount} ${isHindi ? 'प्रश्न' : 'questions'})`;
+        })
+        .join('; ');
+      const moreCount = exams.length > 4 ? (isHindi ? ` तथा ${exams.length - 4} अन्य टेस्ट।` : ` plus ${exams.length - 4} more tests.`) : '';
+      const reply = exams.length
+        ? (isHindi
+            ? `मॉक टेस्ट कैटलॉग खुल गया है। कुल ${exams.length} टेस्ट उपलब्ध हैं: ${names}${moreCount}। शुरू करने के लिए टेस्ट का नाम बोलें।`
+            : `Switched to Mock Examinations Catalog. ${exams.length} tests available: ${names}${moreCount}. Say "Start" followed by a test name to begin.`)
+        : (isHindi
+            ? 'मॉक टेस्ट कैटलॉग खुल गया है। अभी कोई टेस्ट उपलब्ध नहीं है।'
+            : 'Switched to Mock Examinations Catalog. No tests available right now.');
+
+      useAnnouncerStore.getState().announce(reply, 'assertive', true);
+      return {
+        success: true,
+        intent: 'RETURN_CATALOG',
+        userQuery: rawQuery,
+        assistantReply: reply,
+        actionExecuted: 'Navigated to Mock Examinations Catalog',
       };
     }
 
@@ -1115,6 +1337,113 @@ Return ONLY a valid JSON object matching this schema:
       };
     }
 
+    // Notifications Interceptor (Evaluated BEFORE catalog navigation so "catalog notifications" never returns to catalog!)
+    const isNotificationIntent =
+      actionUpper === 'NOTIFICATIONS' ||
+      actionUpper === 'READ_NOTIFICATIONS' ||
+      actionUpper === 'OPEN_NOTIFICATIONS' ||
+      actionUpper === 'CLOSE_NOTIFICATIONS' ||
+      queryLower.includes('notification') ||
+      queryLower.includes('notif') ||
+      queryLower.includes('नोटिफिकेशन') ||
+      queryLower.includes('सूचना');
+
+    if (isNotificationIntent) {
+      const isClose =
+        actionUpper === 'CLOSE_NOTIFICATIONS' ||
+        queryLower.includes('close') ||
+        queryLower.includes('band') ||
+        queryLower.includes('hatao') ||
+        queryLower.includes('dismiss');
+
+      if (isClose) {
+        useNotificationStore.getState().toggleOpen(false);
+        useNotificationStore.getState().closeNotificationDetail();
+        soundEffects.playSelect();
+        const reply = isHindi
+          ? 'नोटिफिकेशन पैनल बंद कर दिया गया है।'
+          : 'Notification panel closed.';
+        useAnnouncerStore.getState().announce(reply, 'assertive', true);
+        return {
+          success: true,
+          intent: 'CLOSE_NOTIFICATIONS',
+          userQuery: rawQuery,
+          assistantReply: reply,
+          actionExecuted: 'Closed Notifications',
+        };
+      }
+
+      useNotificationStore.getState().toggleOpen(true);
+      soundEffects.playSelect();
+
+      const notifStore = useNotificationStore.getState();
+      const notifs = notifStore.notifications;
+
+      if (!notifs || notifs.length === 0) {
+        const reply = isHindi
+          ? 'नोटिफिकेशन पैनल खुल गया है। वर्तमान में आपके पास कोई नया या पुराना नोटिफिकेशन नहीं है।'
+          : 'Notifications panel opened. You have no notifications at this time.';
+        useAnnouncerStore.getState().announce(reply, 'assertive', true);
+        return {
+          success: true,
+          intent: 'READ_NOTIFICATIONS',
+          userQuery: rawQuery,
+          assistantReply: reply,
+          actionExecuted: 'Opened Notifications (Empty)',
+        };
+      }
+
+      const unreadNotifs = notifs.filter((n) => !n.isRead);
+      const pastNotifs = notifs.filter((n) => n.isRead);
+
+      let speech = isHindi ? 'नोटिफिकेशन पैनल खुल गया है। ' : 'Notifications panel opened. ';
+
+      if (unreadNotifs.length > 0) {
+        speech += isHindi
+          ? `आपके पास ${unreadNotifs.length} नए अपठित नोटिफिकेशन हैं: `
+          : `You have ${unreadNotifs.length} unread notification${unreadNotifs.length > 1 ? 's' : ''}: `;
+
+        unreadNotifs.forEach((n, idx) => {
+          const testAttached = n.testDetails?.testTitle
+            ? (isHindi
+                ? ` जुड़ा हुआ टेस्ट: "${n.testDetails.testTitle}"। शुरू करने के लिए "टेस्ट शुरू करो" बोलें।`
+                : ` Attached test: "${n.testDetails.testTitle}". Say "Start test" to begin.`)
+            : '';
+          speech += `${idx + 1}. ${n.title} - ${n.message}.${testAttached} `;
+        });
+      } else {
+        speech += isHindi ? 'कोई नया अपठित नोटिफिकेशन नहीं है। ' : 'You have no new unread notifications. ';
+      }
+
+      if (pastNotifs.length > 0) {
+        speech += isHindi ? 'पुराने पढ़े हुए नोटिफिकेशन: ' : 'Previously read past notifications: ';
+        pastNotifs.slice(0, 3).forEach((n, idx) => {
+          const testAttached = n.testDetails?.testTitle
+            ? (isHindi ? ` (टेस्ट: ${n.testDetails.testTitle})` : ` (Test: ${n.testDetails.testTitle})`)
+            : '';
+          speech += `${idx + 1}. ${n.title}${testAttached}। `;
+        });
+        if (pastNotifs.length > 3) {
+          speech += isHindi
+            ? `तथा ${pastNotifs.length - 3} अन्य पुराने नोटिफिकेशन। `
+            : `plus ${pastNotifs.length - 3} older notifications. `;
+        }
+      }
+
+      speech += isHindi
+        ? 'टेस्ट शुरू करने के लिए "टेस्ट शुरू करो" बोलें या बंद करने के लिए "नोटिफिकेशन बंद करो" बोलें।'
+        : 'Say "Start test" to begin any attached examination, or "Close notification" to close.';
+
+      useAnnouncerStore.getState().announce(speech.trim(), 'assertive', true);
+      return {
+        success: true,
+        intent: 'READ_NOTIFICATIONS',
+        userQuery: rawQuery,
+        assistantReply: speech.trim(),
+        actionExecuted: 'Read Notifications Aloud',
+      };
+    }
+
     // Return to Catalog / Mock Test Page / Choose Another Exam Interceptor
     // MUST BE EVALUATED BEFORE isListExamsIntent & isStartExamIntent so phrases like "back to mock examination page",
     // "open mock test page" or "go on mocktest page" navigate to catalog!
@@ -1124,6 +1453,9 @@ Return ONLY a valid JSON object matching this schema:
       !isFinalSubmitIntent &&
       !queryLower.includes('to exam') &&
       !queryLower.includes('to test') &&
+      !queryLower.includes('notification') &&
+      !queryLower.includes('notif') &&
+      !queryLower.includes('सूचना') &&
       (
         actionUpper === 'RETURN_CATALOG' ||
         actionUpper === 'RETURN' ||
@@ -1229,61 +1561,6 @@ Return ONLY a valid JSON object matching this schema:
       };
     }
 
-
-    // Practice Tab navigation interceptor
-    // MUST BE EVALUATED BEFORE isStartExamIntent: matchExamFromQuery() resolves the bare
-    // word "practice" to the first Practice Drill (examMatcher rule 9), so "go on the
-    // practice tab" would otherwise be executed as START_EXAM and launch a live drill
-    // instead of just switching tabs. The candidate is taken to the Practice Arena and
-    // told which drills are listed; a later "Start <drill name>" opens one.
-    const isPracticeTabIntent =
-      isPracticeTabNavigation(rawQuery) ||
-      actionUpper === 'PRACTICE_TAB' ||
-      actionUpper === 'PRACTICE_PAGE' ||
-      actionUpper === 'PRACTICE_ARENA' ||
-      actionUpper === 'SWITCH_PRACTICE' ||
-      actionUpper === 'NAVIGATE_PRACTICE';
-
-    if (isPracticeTabIntent) {
-      if (context.activeView === 'exam' && !examStore.isSubmitted) {
-        examStore.setSubmitModalOpen(true);
-        soundEffects.playTimerAlert();
-        const safeReply = isHindi
-          ? 'परीक्षा सबमिट किए बिना आप बाहर नहीं जा सकते। सबमिट पुष्टि विंडो खुल गई है। कृपया पहले अपनी परीक्षा सबमिट करें।'
-          : 'You cannot leave the exam before submitting it. The submit confirmation window is now open. Please submit your test first.';
-        useAnnouncerStore.getState().announce(safeReply, 'assertive', true);
-        return {
-          success: true,
-          intent: 'SUBMIT_EXAM',
-          userQuery: rawQuery,
-          assistantReply: safeReply,
-          actionExecuted: 'Opened Submit Modal (Exit Prevented)',
-        };
-      }
-
-      examStore.returnToCatalog();
-      examStore.setPortalTab('practice');
-
-      const drills = context.availableDrills;
-      const names = drills.map((d, idx) => `${idx + 1}. ${d.title}`).join('; ');
-      const reply = drills.length
-        ? (isHindi
-            ? `प्रैक्टिस एरिना टैब पर आ गए हैं। आपकी स्क्रीन पर कुल ${drills.length} अभ्यास उपलब्ध हैं: ${names}। शुरू करने के लिए किसी भी अभ्यास का नाम बोलें।`
-            : `Switched to the Practice Arena tab. ${drills.length} practice drills are now listed on your screen: ${names}. Say "Start" followed by a drill name to open one.`)
-        : (isHindi
-            ? 'प्रैक्टिस एरिना टैब पर आ गए हैं। अभी कोई अभ्यास उपलब्ध नहीं है।'
-            : 'Switched to the Practice Arena tab. No practice drills are available right now. Say "Go to mock test page" to see the mock examinations.');
-
-      soundEffects.playSuccess();
-      useAnnouncerStore.getState().announce(reply, 'assertive', true);
-      return {
-        success: true,
-        intent: 'PRACTICE_TAB',
-        userQuery: rawQuery,
-        assistantReply: reply,
-        actionExecuted: 'Opened Practice Tab (No Drill Started)',
-      };
-    }
 
     // Handle Accessibility Settings & Shortcuts with priority so they are never hijacked by exam starts
     const isSettingsOrA11yIntent =
@@ -1676,7 +1953,76 @@ Return ONLY a valid JSON object matching this schema:
         };
       }
 
-      const target = matchedRequestedExam || all[0];
+      const notifStore = useNotificationStore.getState();
+      const activeTest =
+        notifStore.activeNotification?.testDetails ||
+        notifStore.notifications.find((n) => n.testDetails?.testId || n.testDetails?.code || n.testDetails?.testTitle)?.testDetails;
+
+      const isNotificationContext = Boolean(
+        notifStore.isOpen ||
+        Boolean(notifStore.activeNotification) ||
+        queryLower.includes('notification') ||
+        queryLower.includes('notif') ||
+        queryLower.includes('suchna') ||
+        queryLower.includes('new test') ||
+        queryLower.includes('naya test') ||
+        queryLower.includes('naya mock') ||
+        queryLower.includes('latest test')
+      );
+
+      let target: Exam | null = null;
+      if (isNotificationContext && activeTest) {
+        const dtId = (activeTest.testId || '').toLowerCase();
+        const dtCode = (activeTest.code || '').toLowerCase();
+        const dtTitle = (activeTest.testTitle || '').toLowerCase();
+
+        target =
+          all.find(
+            (e) =>
+              (dtId && (e.id.toLowerCase() === dtId || String((e as any)._id).toLowerCase() === dtId)) ||
+              (dtCode && e.code && e.code.toLowerCase() === dtCode) ||
+              (dtTitle && e.title && e.title.toLowerCase() === dtTitle) ||
+              (dtTitle && e.title && e.title.toLowerCase().includes(dtTitle))
+          ) || null;
+
+        if (!target) {
+          target = {
+            id: activeTest.testId || activeTest.code || activeTest.testTitle || 'exam-unknown',
+            code: activeTest.code || 'TEST',
+            title: activeTest.testTitle || activeTest.code || 'Examination',
+            description: '',
+            category: activeTest.testType === 'practice' ? 'Practice' : 'Mock Examination',
+            durationMinutes: activeTest.durationMinutes || 60,
+            totalMarks: activeTest.totalMarks || 100,
+            negativeMarking:
+              activeTest.testType === 'practice'
+                ? 'No negative marking (Practice)'
+                : '0.50 marks per incorrect response',
+            difficulty: 'Moderate',
+            sections: [],
+            questions: [],
+            questionCount: 0,
+          };
+        }
+      } else {
+        target = matchedRequestedExam || (all.length > 0 ? all[0] : null);
+      }
+
+      if (!target) {
+        return {
+          success: false,
+          intent: 'START_EXAM',
+          userQuery: rawQuery,
+          assistantReply: isHindi ? 'कोई परीक्षा उपलब्ध नहीं है।' : 'No examinations are available right now.',
+          actionExecuted: 'No Exam Available',
+        };
+      }
+
+      // Close notifications panel/detail if open
+      if (notifStore.isOpen || notifStore.activeNotification) {
+        notifStore.toggleOpen(false);
+        notifStore.closeNotificationDetail();
+      }
 
       // If user is on /admin route, ensure we navigate back to main student app
       if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
@@ -1686,9 +2032,22 @@ Return ONLY a valid JSON object matching this schema:
 
       // The confirmation reply spoken just below stands in for the store's own
       // "Starting…" announcement, which would otherwise cut it off.
-      void examStore.selectExam(target.id, target.id.includes('practice') ? 'practice' : 'exam', {
-        announce: false,
-      });
+      const isPracticeMode =
+        (activeTest && activeTest.testType === 'practice') ||
+        target.id.includes('drill') ||
+        target.id.includes('practice') ||
+        (target.code && (target.code.startsWith('PRACTICE-') || target.code.includes('PO-02'))) ||
+        target.negativeMarking === 'No negative marking (Practice)';
+
+      const launchId = activeTest?.testId || target?.id || activeTest?.code || activeTest?.testTitle || '';
+      void examStore.selectExam(
+        launchId,
+        isPracticeMode ? 'practice' : 'exam',
+        {
+          announce: false,
+          testDetails: activeTest || null,
+        }
+      );
       soundEffects.playSuccess();
       actionExecuted = `Started ${target.title}`;
 

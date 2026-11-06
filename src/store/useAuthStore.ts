@@ -52,6 +52,20 @@ if (authBroadcastChannel) {
       if (useAuthStore.getState().isAdminAuthenticated) {
         void useAuthStore.getState().fetchStudents();
       }
+    } else if (data === 'NOTIFICATION_BROADCAST' || data?.type === 'NOTIFICATION_BROADCAST') {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('dristix:notification-broadcast', { detail: data?.notification })
+        );
+      }
+      const currentStudent = useAuthStore.getState().currentStudent;
+      if (currentStudent) {
+        soundEffects.playSuccess();
+        const title = data?.notification?.title || 'Notice';
+        useAnnouncerStore
+          .getState()
+          .announce(`New notification received from Administrator: ${title}. Press N to open.`, 'assertive', true);
+      }
     }
   };
 }
@@ -458,7 +472,18 @@ export const useAuthStore = create<AuthState>((set, get) => {
           accessibilityPreference: preference ?? undefined,
           verificationToken,
         });
-        set({ currentStudent: user, isAdminAuthenticated: false });
+
+        // Rule 5: User Registration and Login Notification Logic
+        // Record registration timestamp so newly registered candidate starts with empty inbox
+        const regTimestamp = user.createdAt || new Date().toISOString();
+        if (typeof window !== 'undefined') {
+          if (user.id) localStorage.setItem(`dristix_user_registered_at_${user.id}`, regTimestamp);
+          if (user.email) localStorage.setItem(`dristix_user_registered_at_${user.email.toLowerCase()}`, regTimestamp);
+          if (user.rollNumber) localStorage.setItem(`dristix_user_registered_at_${user.rollNumber.toLowerCase()}`, regTimestamp);
+        }
+
+        const studentProfile = { ...user, createdAt: regTimestamp };
+        set({ currentStudent: studentProfile, isAdminAuthenticated: false });
         sessionStorage.removeItem('dristix_admin_auth');
         if (typeof window !== 'undefined') {
           localStorage.removeItem('dristix_admin_auth');

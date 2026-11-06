@@ -16,7 +16,11 @@ export function isPracticeTabNavigation(rawQuery: string): boolean {
   const q = (rawQuery || '').toLowerCase().trim();
   if (!q) return false;
 
-  // "practice", "practical", ASR-mangled "pratic", देवनागरी "प्रैक्टिस", "अभ्यास", "drill", "ड्रिल"
+  // Never match if starting an actual test by title or explicit "start"
+  if (/(?:start|shuru|launch|take)\s+(?:drill|test|practice|exam)?/i.test(q)) {
+    return false;
+  }
+
   const mentionsPractice =
     q.includes('practice') ||
     q.includes('practic') ||
@@ -28,16 +32,26 @@ export function isPracticeTabNavigation(rawQuery: string): boolean {
 
   if (!mentionsPractice) return false;
 
-  // Only an explicit tab/page/arena cue turns the request into navigation.
+  // Explicit tab/page/navigation cues
   return (
     q.includes('tab') ||
     q.includes('page') ||
-    q.includes('टैब') ||
-    q.includes('पेज') ||
     q.includes('arena') ||
     q.includes('dashboard') ||
     q.includes('screen') ||
+    q.includes('section') ||
+    q.includes('switch') ||
+    q.includes('open') ||
+    q.includes('show') ||
+    q.includes('go to') ||
+    q.includes('view') ||
+    q.includes('टैब') ||
+    q.includes('पेज') ||
     q.includes('अरीना') ||
-    q.includes('डैशबोर्ड')
+    q.includes('डैशबोर्ड') ||
+    q.includes('खोलो') ||
+    q.includes('दिखाओ') ||
+    q.includes('जाओ') ||
+    /^(?:practice|practice arena|drills|practice drills|अभ्यास)$/i.test(q)
   );
 }

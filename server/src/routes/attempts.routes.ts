@@ -19,6 +19,8 @@ export const attemptsRouter = attemptRouter;
 
 const startSchema = z.object({
   examId: z.string().min(1),
+  code: z.string().optional(),
+  title: z.string().optional(),
   mode: z.enum(['exam', 'practice']).default('exam'),
 });
 
@@ -75,7 +77,69 @@ attemptRouter.post(
     const body = startSchema.parse(req.body);
     const studentId = req.user!.id;
 
-    const exam = await Exam.findOne({ _id: body.examId, published: true }).exec();
+    const rawKey = body.examId.trim();
+    const cleanKey = rawKey
+      .replace(/^new\s+(?:mock\s+test|practice\s+test|test)\s+published:\s*/i, '')
+      .replace(/^(?:mock\s+test|practice\s+test|test):\s*/i, '')
+      .trim();
+
+    const searchKeys = Array.from(
+      new Set(
+        [
+          rawKey,
+          cleanKey,
+          body.code?.trim(),
+          body.title?.trim(),
+        ].filter(Boolean) as string[]
+      )
+    );
+
+    // Tier 1: Exact match by ObjectId (highest priority)
+    let exam: (typeof Exam extends { new (...args: any[]): infer U } ? U : any) | null = null;
+    for (const key of searchKeys) {
+      if (mongoose.isValidObjectId(key)) {
+        exam = await Exam.findOne({ _id: new mongoose.Types.ObjectId(key), published: true }).exec();
+        if (exam) break;
+      }
+    }
+
+    // Tier 2: Exact match by code (case-insensitive)
+    if (!exam) {
+      for (const key of searchKeys) {
+        const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        exam = await Exam.findOne({
+          published: true,
+          code: new RegExp(`^${escaped}$`, 'i'),
+        }).exec();
+        if (exam) break;
+      }
+    }
+
+    // Tier 3: Exact match by full title (case-insensitive)
+    if (!exam) {
+      for (const key of searchKeys) {
+        const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        exam = await Exam.findOne({
+          published: true,
+          title: new RegExp(`^${escaped}$`, 'i'),
+        }).exec();
+        if (exam) break;
+      }
+    }
+
+    // Tier 4: Fallback substring match only if no exact match was found, newest first
+    if (!exam && cleanKey.length >= 3) {
+      const escaped = cleanKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      exam = await Exam.findOne({
+        published: true,
+        $or: [
+          { code: new RegExp(escaped, 'i') },
+          { title: new RegExp(escaped, 'i') },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .exec();
+    }
     if (!exam) throw new HttpError(404, 'not_found', 'Exam not found.');
     if (!exam.questions || exam.questions.length === 0) {
       throw new HttpError(409, 'empty_exam', 'This exam has no questions yet.');

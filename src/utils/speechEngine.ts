@@ -1,4 +1,4 @@
-import { verbalizeForSpeech } from './mathVerbalizer';
+﻿import { verbalizeForSpeech } from './mathVerbalizer';
 
 /**
  * Built-in Web Speech API Controller for visually impaired candidates
@@ -456,57 +456,39 @@ class SpeechEngine {
    */
   public isEchoGuardActive(): boolean {
     if (this.isSpeaking()) return true;
-    return Date.now() - this.lastSpeechEndTime < 850;
+    return Date.now() - this.lastSpeechEndTime < 1100;
   }
 
   /**
-   * Checks if candidate recognized transcript is just an acoustic echo of what the assistant just spoke aloud.
+   * Checks if candidate recognized transcript is an acoustic echo of what the assistant spoke aloud.
    */
   public isTextEcho(candidateText: string): boolean {
     if (!candidateText || !this.lastSpokenText) return false;
 
-    // Acoustic speaker echo is physically impossible if assistant is not currently speaking
-    // and has not spoken within the last 900ms.
-    const isRecentlySpeaking = this.internalSpeaking || (Date.now() - this.lastSpeechEndTime < 900);
+    // Acoustic speaker echo can only occur if assistant is currently speaking or spoke within 2500ms
+    const isRecentlySpeaking = this.internalSpeaking || (Date.now() - this.lastSpeechEndTime < 2500);
     if (!isRecentlySpeaking) {
       return false;
     }
 
-    // Never suppress if candidate text contains digits (e.g., roll numbers, pins, questions, dates)
-    if (/\d/.test(candidateText)) {
-      return false;
-    }
-
     const normCand = candidateText.toLowerCase().replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
-    const normSpoken = this.lastSpokenText.replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
+    const normSpoken = this.lastSpokenText.toLowerCase().replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
     if (!normCand || !normSpoken) return false;
 
-    // Never suppress if candidate text mentions specific identification or passwords
-    if (/\b(?:dx|roll|password|student)\b/i.test(normCand) || /रोल|पासवर्ड/i.test(normCand)) {
-      return false;
-    }
-
-    // Direct match or substring
-    // Never classify intentional commands as echoes, even if the assistant recently mentioned them in instructions
-    if (
-      /^(?:yes[, ]+final\s+submit|yes\s+final\s+submit|final\s+submit|yes\s+submit|confirm\s+submit|submit\s+final|confirm\s+submission|final\s+submission|yes\s+submit\s+exam|yes\s+final|yes|haan|ha|confirm|submit|submit\s+exam|submit\s+test|finish|finish\s+exam|jama\s*karo|enter)$/i.test(normCand) ||
-      /^(?:continue\s+to\s+exam|continue\s+the\s+exam|continue\s+exam|continue\s+test|continue|resume\s+exam|resume\s+the\s+exam|resume\s+test|resume|return\s+to\s+exam|back\s+to\s+exam|cancel\s+submit|cancel|no|nahi|nahin|wapas|escape)$/i.test(normCand) ||
-      /^(?:next|next\s+question|agla\s+sawal|aage|previous|prev|previous\s+question|pichhla\s+sawal|read\s+question|repeat\s+question|sawal\s+padho|clear\s+option|unselect|check\s+timer|time\s+remaining|time\s+left|samay\s+batao|kitna\s+time|stop|ruko|pause|chup)$/i.test(normCand) ||
-      /^(?:option|select\s+option|vikalp)\s+[1-4a-d]$/i.test(normCand)
-    ) {
-      return false;
-    }
-
+    // 1. Direct match: identical text
     if (normSpoken === normCand) return true;
-    if (normSpoken.includes(normCand) && normCand.length > 5) return true;
-    if (normCand.includes(normSpoken) && normSpoken.length > 5) return true;
 
-    // Word overlap: if within 2.5s of assistant finishing speaking, check if candidate words were in spoken reply
+    // 2. Substring match: recognized text is contained in what was just spoken
+    // (e.g. assistant said "You can say Start SSC CGL" and mic heard "Start SSC CGL")
+    if (normSpoken.includes(normCand) && normCand.length >= 4) return true;
+    if (normCand.includes(normSpoken) && normSpoken.length >= 4) return true;
+
+    // 3. Word overlap: if candidate words appear heavily in spoken reply
     const timeSinceSpoken = Date.now() - this.lastSpeechEndTime;
     const candWords = normCand.split(/\s+/).filter((w) => w.length > 2);
-    if (candWords.length >= 3) {
+    if (candWords.length >= 2) {
       const matchWords = candWords.filter((w) => normSpoken.includes(w));
-      const overlapThreshold = timeSinceSpoken < 2500 ? 0.35 : 0.6;
+      const overlapThreshold = timeSinceSpoken < 1200 ? 0.50 : 0.75;
       if (matchWords.length / candWords.length >= overlapThreshold) return true;
     }
 

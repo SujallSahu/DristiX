@@ -16,7 +16,7 @@ import { hashPassword } from './services/auth.service.js';
 import { CATALOG_SEED } from './catalogSeed.js';
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@dristix.edu';
-const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'DristixAdmin@143';
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
 const ADMIN_USERNAME = process.env.SEED_ADMIN_USERNAME ?? 'DristiX-Admin';
 const STUDENT_PASSWORD = process.env.SEED_STUDENT_PASSWORD ?? 'student123';
 
@@ -26,8 +26,9 @@ async function main(): Promise<void> {
   console.log('Seeding DristiX database...\n');
 
   // ── Admin ──────────────────────────────────────────────────────────
-  const adminHash = await hashPassword(ADMIN_PASSWORD);
-  await User.deleteMany({ role: 'ADMIN', username: { $ne: ADMIN_USERNAME.toLowerCase() } }).exec();
+  if (ADMIN_PASSWORD) {
+    const adminHash = await hashPassword(ADMIN_PASSWORD);
+    await User.deleteMany({ role: 'ADMIN', username: { $ne: ADMIN_USERNAME.toLowerCase() } }).exec();
   await User.findOneAndUpdate(
     { username: ADMIN_USERNAME.toLowerCase() },
     {
@@ -43,7 +44,10 @@ async function main(): Promise<void> {
     },
     { upsert: true, new: true }
   ).exec();
-  console.log(`  admin      ${ADMIN_EMAIL}`);
+    console.log(`  admin      ${ADMIN_EMAIL}`);
+  } else {
+    console.log('  admin      [Skipped - Set SEED_ADMIN_PASSWORD in environment to seed admin]');
+  }
 
   // ── Students ───────────────────────────────────────────────────────
   const students = [
