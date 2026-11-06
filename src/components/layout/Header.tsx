@@ -436,16 +436,15 @@ export const Header: React.FC = () => {
                 ? `Text size ${fontSize}% increased. Tab once to increase, tab twice to reset to normal.`
                 : 'Text size 100% normal. Tab once to increase, tab twice to reset.'
             }
-            className={`p-2 rounded-lg border-2 border-theme-border transition flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 ${
-              fontSize > 100
+            className={`p-2 rounded-lg border-2 border-theme-border transition flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 ${fontSize > 100
                 ? 'bg-theme-primary text-theme-primary-text border-theme-primary'
                 : 'bg-theme-bg text-theme-text hover:bg-theme-surface'
-            }`}
+              }`}
           >
             <Type className="w-5 h-5" aria-hidden="true" />
-            <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-white text-black leading-tight shadow-xs">
-              {fontSize}%
-            </kbd>
+              <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-white text-black leading-tight shadow-xs">
+                {fontSize}%
+              </kbd>
           </button>
 
           {/* Accessibility Settings */}
