@@ -51,6 +51,8 @@ export const A11ySettingsModal: React.FC = () => {
   type SectionIdentifier = 1 | 2 | 3 | 4 | 5 | 'close' | 'done';
 
   const currentFocusedSectionRef = useRef<SectionIdentifier | null>(null);
+  const currentFocusedSubcategoryRef = useRef<string | null>(null);
+  const lastSectionShiftTimeRef = useRef<number>(0);
   const isInitialOpenRef = useRef<boolean>(false);
   const suppressSectionAnnounceRef = useRef<boolean>(false);
 
@@ -59,6 +61,8 @@ export const A11ySettingsModal: React.FC = () => {
     if (currentFocusedSectionRef.current === sectionId) return;
 
     currentFocusedSectionRef.current = sectionId;
+    currentFocusedSubcategoryRef.current = null;
+    lastSectionShiftTimeRef.current = Date.now();
     soundEffects.playNavigate();
 
     const inHindi = isHindiPreferred();
@@ -67,43 +71,66 @@ export const A11ySettingsModal: React.FC = () => {
     switch (sectionId) {
       case 1:
         announcement = inHindi
-          ? 'सेक्शन 1: डायनामिक कंट्रास्ट थीम्स। थीम बदलने के लिए एरो कीज़ या 1 से 4 नंबर दबाएं।'
-          : 'Shifted to Section 1: Dynamic Contrast Themes. Use arrow keys or numbers 1 to 4 to switch themes.';
+          ? 'सेक्शन 1: डायनामिक कंट्रास्ट थीम्स। इसमें 4 उच्च कंट्रास्ट रंग थीम शामिल हैं: टील एंड क्रीम, लिक्विड ग्लास, चारकोल डार्क, और हाई कंट्रास्ट ब्लैक एंड येलो। थीम बदलने के लिए एरो कीज़ या 1 से 4 नंबर दबाएं।'
+          : 'Shifted to Section 1: Dynamic Contrast Themes. Features 4 high-contrast color palettes: Teal and Cream, Liquid Glass, Charcoal Dark, and High Contrast Black and Yellow. Use arrow keys or numbers 1 to 4 to switch themes.';
         break;
       case 2:
         announcement = inHindi
-          ? 'सेक्शन 2: टेक्स्ट और यूआई स्केलिंग। मैग्निफिकेशन बदलने के लिए एरो कीज़ या 1 से 5 नंबर दबाएं।'
-          : 'Shifted to Section 2: Text & UI Scaling. Use arrow keys or numbers 1 to 5 to change magnification.';
+          ? 'सेक्शन 2: टेक्स्ट और यूआई स्केलिंग। इसमें दो प्रमुख फीचर्स हैं: 100 से 200 प्रतिशत टेक्स्ट मैग्निफिकेशन, और डिस्लेक्सिया व लो-विज़न के लिए एन्हांस्ड लेटर स्पेसिंग। मैग्निफिकेशन के लिए एरो कीज़ या 1 से 5 नंबर दबाएं, या स्पेसिंग टॉगल के लिए Tab दबाएं।'
+          : 'Shifted to Section 2: Text and UI Scaling. Features include text magnification presets from 100 to 200 percent, and enhanced letter spacing for dyslexia and low-vision. Use arrow keys or numbers 1 to 5 to change magnification, or Tab for dyslexia spacing.';
         break;
       case 3:
         announcement = inHindi
-          ? 'सेक्शन 3: इंटीग्रेटेड स्पीच सिंथेसिस। आवाज़ की गति, पिच और स्पीच इंजन कॉन्फ़िगर करें।'
-          : 'Shifted to Section 3: Integrated Speech Synthesis. Configure speech rate, pitch, and voice engine.';
+          ? 'सेक्शन 3: इंटीग्रेटेड स्पीच सिंथेसिस। इसमें शामिल हैं: बिल्ट-इन टेक्स्ट-टू-स्पीच रीडर, ऑटो-रीड ऑन नेविगेट, स्पीच गति और पिच स्लाइडर्स, माइक्रोसॉफ्ट एज न्यूरल वॉइस सेलेक्टर, और ऑडियो टेस्ट बटन्स।'
+          : 'Shifted to Section 3: Integrated Speech Synthesis. Features include: built-in text-to-speech reader, auto-read on navigate, speech rate and pitch sliders, Microsoft Edge Neural voice engine selector, and live speech test buttons.';
         break;
       case 4:
         announcement = inHindi
-          ? 'सेक्शन 4: मल्टी-सेंसरी एक्सेसिबिलिटी कोर। इयरकॉन्स, अकौस्टिक स्टेजिंग और हैप्टिक्स टॉगल करें।'
-          : 'Shifted to Section 4: Multi-Sensory Accessibility Core. Toggle earcons, acoustic staging, and haptics.';
+          ? 'सेक्शन 4: मल्टी-सेंसरी एक्सेसिबिलिटी कोर। इसमें 5 संवेदी फीचर्स हैं: मास्टर ऑडियो टॉगल, हार्मोनिक इयरकॉन्स, अकौस्टिक स्टेजिंग कैडेंस, हैप्टिक वाइब्रेशन, और एक्सेसिबिलिटी इवेंट लॉगर।'
+          : 'Shifted to Section 4: Multi-Sensory Accessibility Core. Features 5 auditory and tactile tools: master audio toggle, non-speech harmonic earcons, acoustic staging cadence, haptic vibration pulses, and accessibility developer event logging.';
         break;
       case 5:
         announcement = inHindi
-          ? 'सेक्शन 5: एआई डुअल इंजन। गूगल जेमिनी और ग्रोक एललामा एपीआई कीज़ कॉन्फ़िगर करें।'
-          : 'Shifted to Section 5: AI Dual Engine. Configure Google Gemini and Groq LLaMA API keys.';
+          ? 'सेक्शन 5: एआई डुअल इंजन। इसमें दो फीचर्स हैं: प्राइमरी गूगल जेमिनी एआई की इनपुट, और 500 टोकन प्रति सेकंड हाई-स्पीड ग्रोक एललामा बैकअप की कॉन्फ़िगरेशन।'
+          : 'Shifted to Section 5: AI Dual Engine. Features include: primary Google Gemini AI key configuration, and failover high-speed Groq LLaMA key setup for 500 tokens per second resilient failover.';
         break;
       case 'done':
         announcement = inHindi
-          ? 'डन और सेव प्रेफरेंसेस बटन। सहेजने और बंद करने के लिए Enter दबाएं।'
-          : 'Shifted to Done and Save Preferences button. Press Enter to save and close.';
+          ? 'डन और सेव प्रेफरेंसेस बटन। सभी एक्सेसिबिलिटी सेटिंग्स सहेजने और बंद करने के लिए Enter दबाएं।'
+          : 'Shifted to Done and Save Preferences button. Press Enter or Space to save all accessibility preferences and close.';
         break;
       case 'close':
         announcement = inHindi
-          ? 'क्लोज़ सेटिंग्स बटन। बंद करने के लिए Enter दबाएं।'
-          : 'Shifted to Close Accessibility Settings button. Press Enter to close.';
+          ? 'क्लोज़ एक्सेसिबिलिटी सेटिंग्स बटन। बंद करने के लिए Enter दबाएं, या आगे बढ़ने के लिए Tab दबाएं।'
+          : 'Shifted to Close Accessibility Settings button. Press Enter to close, or Tab to navigate to Section 1.';
         break;
     }
 
     if (announcement) {
       useAnnouncerStore.getState().announce(announcement, 'assertive', true, true);
+    }
+  };
+
+  const handleSubcategoryFocus = (
+    subcategoryId: string,
+    englishText: string,
+    hindiText?: string,
+    isFirstSectionItem: boolean = false
+  ) => {
+    if (isInitialOpenRef.current || suppressSectionAnnounceRef.current) return;
+    // If we just entered this section within the last 1800ms and this is the first item, let the section overview speech finish
+    if (isFirstSectionItem && Date.now() - lastSectionShiftTimeRef.current < 1800) {
+      currentFocusedSubcategoryRef.current = subcategoryId;
+      return;
+    }
+    if (currentFocusedSubcategoryRef.current === subcategoryId) return;
+
+    currentFocusedSubcategoryRef.current = subcategoryId;
+
+    const inHindi = isHindiPreferred();
+    const announcement = inHindi && hindiText ? hindiText : englishText;
+    if (announcement) {
+      useAnnouncerStore.getState().announce(announcement, 'polite', true, true);
     }
   };
 
@@ -601,6 +628,14 @@ export const A11ySettingsModal: React.FC = () => {
                     role="radio"
                     aria-checked={isSelected}
                     tabIndex={0}
+                    onFocus={() => {
+                      handleSubcategoryFocus(
+                        `theme-${t.id}`,
+                        `Sub-category: ${t.label} theme. ${t.desc}. ${isSelected ? 'Currently active.' : 'Press Space to apply.'}`,
+                        `सब-कैटेगरी: ${t.label} थीम। ${isSelected ? 'सक्रिय है।' : 'लागू करने के लिए Space दबाएं।'}`,
+                        idx === 0
+                      );
+                    }}
                     onClick={() => {
                       setTheme(t.id);
                       soundEffects.playSelect();
@@ -723,6 +758,14 @@ export const A11ySettingsModal: React.FC = () => {
                     aria-checked={isSelected}
                     aria-label={`${scale} percent magnification (Press ${idx + 1})`}
                     tabIndex={0}
+                    onFocus={() => {
+                      handleSubcategoryFocus(
+                        `scale-${scale}`,
+                        `Sub-category: Text magnification ${scale} percent preset. ${isSelected ? 'Currently active.' : 'Press Space to apply.'}`,
+                        `सब-कैटेगरी: टेक्स्ट मैग्निफिकेशन ${scale} प्रतिशत। ${isSelected ? 'सक्रिय है।' : 'लागू करने के लिए Space दबाएं।'}`,
+                        idx === 0
+                      );
+                    }}
                     onClick={() => {
                       setFontSize(scale);
                       soundEffects.playSelect();
@@ -749,6 +792,13 @@ export const A11ySettingsModal: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={dyslexicFont}
+                  onFocus={() => {
+                    handleSubcategoryFocus(
+                      'dyslexic-font',
+                      `Sub-category: Enhanced Letter Spacing & Line Height for dyslexia and low vision. Currently ${dyslexicFont ? 'Enabled' : 'Disabled'}. Press Space to toggle.`,
+                      `सब-कैटेगरी: डिस्लेक्सिया और कम दृष्टि के लिए एन्हांस्ड लेटर स्पेसिंग। वर्तमान में ${dyslexicFont ? 'सक्रिय' : 'निष्क्रिय'}। बदलने के लिए Space दबाएं।`
+                    );
+                  }}
                   onChange={(e) => {
                     setDyslexicFont(e.target.checked);
                     soundEffects.playSelect();
@@ -797,6 +847,14 @@ export const A11ySettingsModal: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={ttsEnabled}
+                  onFocus={() => {
+                    handleSubcategoryFocus(
+                      'tts-master',
+                      `Sub-category: Built-in Text-to-Speech master reader. Internal reader for candidates without screen readers. Currently ${ttsEnabled ? 'Enabled' : 'Disabled'}. Press Space to toggle.`,
+                      `सब-कैटेगरी: बिल्ट-इन टेक्स्ट-टू-स्पीच मास्टर रीडर। वर्तमान में ${ttsEnabled ? 'सक्रिय' : 'निष्क्रिय'}। टॉगल करने के लिए Space दबाएं।`,
+                      true
+                    );
+                  }}
                   onChange={(e) => {
                     setTtsEnabled(e.target.checked);
                     soundEffects.playSelect();
@@ -828,6 +886,13 @@ export const A11ySettingsModal: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={autoReadOnNavigate}
+                      onFocus={() => {
+                        handleSubcategoryFocus(
+                          'auto-read',
+                          `Sub-category: Automatically read questions on navigate. Currently ${autoReadOnNavigate ? 'Enabled' : 'Disabled'}. Press Space to toggle.`,
+                          `सब-कैटेगरी: ऑटो-रीड ऑन नेविगेट। प्रश्न बदलते ही स्वतः वाचन। वर्तमान में ${autoReadOnNavigate ? 'सक्रिय' : 'निष्क्रिय'}। टॉगल करने के लिए Space दबाएं।`
+                        );
+                      }}
                       onChange={(e) => {
                         setAutoReadOnNavigate(e.target.checked);
                         soundEffects.playSelect();
@@ -852,6 +917,13 @@ export const A11ySettingsModal: React.FC = () => {
                       max="2.5"
                       step="0.1"
                       value={ttsRate}
+                      onFocus={() => {
+                        handleSubcategoryFocus(
+                          'tts-rate',
+                          `Sub-category: Speech Rate slider. Currently set to ${ttsRate.toFixed(1)}x speed. Use Left and Right arrow keys to adjust between 0.5x and 2.5x.`,
+                          `सब-कैटेगरी: स्पीच गति स्लाइडर। वर्तमान में ${ttsRate.toFixed(1)}x गति। बदलने के लिए लेफ्ट और राइट एरो कीज़ दबाएं।`
+                        );
+                      }}
                       onChange={(e) => setTtsRate(parseFloat(e.target.value))}
                       className="w-full accent-yellow-400 cursor-pointer focus:outline-none focus:ring-4 focus:ring-yellow-400 rounded"
                     />
@@ -870,6 +942,13 @@ export const A11ySettingsModal: React.FC = () => {
                       max="1.5"
                       step="0.1"
                       value={ttsPitch}
+                      onFocus={() => {
+                        handleSubcategoryFocus(
+                          'tts-pitch',
+                          `Sub-category: Voice Pitch slider. Currently set to ${ttsPitch.toFixed(1)}. Use Left and Right arrow keys to adjust between 0.5 and 1.5.`,
+                          `सब-कैटेगरी: वॉइस पिच स्लाइडर। वर्तमान में ${ttsPitch.toFixed(1)}। बदलने के लिए लेफ्ट और राइट एरो कीज़ दबाएं।`
+                        );
+                      }}
                       onChange={(e) => setTtsPitch(parseFloat(e.target.value))}
                       className="w-full accent-yellow-400 cursor-pointer focus:outline-none focus:ring-4 focus:ring-yellow-400 rounded"
                     />
@@ -883,6 +962,13 @@ export const A11ySettingsModal: React.FC = () => {
                     <select
                       id="tts-voice-select"
                       value={ttsVoice}
+                      onFocus={() => {
+                        handleSubcategoryFocus(
+                          'tts-voice',
+                          `Sub-category: Speech voice engine selector. Currently set to ${ttsVoice || 'Microsoft Edge Neural TTS'}. Use Up and Down arrow keys to change voice.`,
+                          `सब-कैटेगरी: स्पीच वॉइस इंजन चयन। वर्तमान में ${ttsVoice || 'माइक्रोसॉफ्ट एज न्यूरल वॉइस'}। बदलने के लिए अप और डाउन एरो कीज़ दबाएं।`
+                        );
+                      }}
                       onChange={(e) => setTtsVoice(e.target.value)}
                       className="w-full p-2.5 rounded-xl border-2 border-theme-border bg-theme-surface text-theme-text font-medium text-sm focus:outline-none focus:ring-4 focus:ring-yellow-400"
                     >
@@ -925,6 +1011,13 @@ export const A11ySettingsModal: React.FC = () => {
                           </div>
                           <button
                             type="button"
+                            onFocus={() => {
+                              handleSubcategoryFocus(
+                                'test-voice-hindi',
+                                'Sub-category: Test Hindi Devanagari voice with Microsoft Madhur neural voice. Press Enter to listen.',
+                                'सब-कैटेगरी: टेस्ट हिंदी वॉइस। माइक्रोसॉफ्ट मधुर आवाज़ सुनने के लिए Enter दबाएं।'
+                              );
+                            }}
                             onClick={() => handleTestVoice('hindi')}
                             className="mt-2 text-[10px] font-sans font-semibold text-yellow-400 hover:underline flex items-center gap-1 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
                           >
@@ -939,6 +1032,13 @@ export const A11ySettingsModal: React.FC = () => {
                           </div>
                           <button
                             type="button"
+                            onFocus={() => {
+                              handleSubcategoryFocus(
+                                'test-voice-hinglish',
+                                'Sub-category: Test Hinglish Roman Hindi voice with Microsoft Neerja neural voice. Press Enter to listen.',
+                                'सब-कैटेगरी: टेस्ट हिंग्लिश वॉइस। माइक्रोसॉफ्ट नीरजा आवाज़ सुनने के लिए Enter दबाएं।'
+                              );
+                            }}
                             onClick={() => handleTestVoice('hinglish')}
                             className="mt-2 text-[10px] font-sans font-semibold text-yellow-400 hover:underline flex items-center gap-1 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
                           >
@@ -953,6 +1053,13 @@ export const A11ySettingsModal: React.FC = () => {
                           </div>
                           <button
                             type="button"
+                            onFocus={() => {
+                              handleSubcategoryFocus(
+                                'test-voice-english',
+                                'Sub-category: Test English voice with Microsoft Ava neural voice. Press Enter to listen.',
+                                'सब-कैटेगरी: टेस्ट अंग्रेज़ी वॉइस। माइक्रोसॉफ्ट आवा आवाज़ सुनने के लिए Enter दबाएं।'
+                              );
+                            }}
                             onClick={() => handleTestVoice('english')}
                             className="mt-2 text-[10px] font-sans font-semibold text-yellow-400 hover:underline flex items-center gap-1 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
                           >
@@ -967,6 +1074,13 @@ export const A11ySettingsModal: React.FC = () => {
                   <div className="pt-2 flex justify-start">
                     <button
                       type="button"
+                      onFocus={() => {
+                        handleSubcategoryFocus(
+                          'test-speech-output',
+                          'Sub-category: Test Speech Output button. Tests current speech rate, pitch, and voice settings. Press Enter to play.',
+                          'सब-कैटेगरी: टेस्ट स्पीच आउटपुट बटन। वर्तमान सेटिंग्स की जांच के लिए Enter दबाएं।'
+                        );
+                      }}
                       onClick={handleTestSpeech}
                       className="px-4 py-2 font-bold rounded-xl border-2 border-theme-border bg-theme-surface hover:bg-theme-bg text-theme-text text-sm flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400"
                     >
@@ -1009,6 +1123,14 @@ export const A11ySettingsModal: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={audioFeedbackEnabled}
+                      onFocus={() => {
+                        handleSubcategoryFocus(
+                          'master-audio',
+                          `Sub-category: Master Audio Feedback toggle. Controls all application-wide speech, auditory earcons, and system audio alerts. Currently ${audioFeedbackEnabled ? 'ON' : 'OFF'}. Press Space to toggle.`,
+                          `सब-कैटेगरी: मास्टर ऑडियो फीडबैक। सभी आवाज़, इयरकॉन्स और सिस्टम अलर्ट्स को नियंत्रित करता है। वर्तमान में ${audioFeedbackEnabled ? 'चालू' : 'बंद'}। टॉगल करने के लिए Space दबाएं।`,
+                          true
+                        );
+                      }}
                       onChange={(e) => {
                         setAudioFeedbackEnabled(e.target.checked);
                         earconManager.playOptionSelected();
@@ -1034,6 +1156,13 @@ export const A11ySettingsModal: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={earconsEnabled}
+                    onFocus={() => {
+                      handleSubcategoryFocus(
+                        'earcons-toggle',
+                        `Sub-category: Non-Speech Auditory Cues Earcons. Harmonic frequency tones for option selection, review marking, and timer alerts. Currently ${earconsEnabled ? 'ON' : 'OFF'}. Press Space to toggle.`,
+                        `सब-कैटेगरी: नॉन-स्पीच हार्मोनिक इयरकॉन्स। विकल्प चयन और टाइमर अलर्ट के लिए टोन बजाता है। वर्तमान में ${earconsEnabled ? 'चालू' : 'बंद'}। टॉगल करने के लिए Space दबाएं।`
+                      );
+                    }}
                     onChange={(e) => {
                       setEarconsEnabled(e.target.checked);
                       earconManager.playOptionSelected();
@@ -1051,6 +1180,13 @@ export const A11ySettingsModal: React.FC = () => {
                 {earconsEnabled && (
                   <button
                     type="button"
+                    onFocus={() => {
+                      handleSubcategoryFocus(
+                        'test-earcon',
+                        'Sub-category: Play Sample Earcon button. Plays a harmonic chime used for review marking. Press Enter or Space to play.',
+                        'सब-कैटेगरी: सैंपल इयरकॉन बजाएं बटन। सुनने के लिए Enter दबाएं।'
+                      );
+                    }}
                     onClick={handleTestEarcon}
                     className="px-3 py-1.5 font-bold rounded-lg border-2 border-theme-border bg-theme-surface hover:bg-theme-bg text-theme-text text-xs focus:outline-none focus:ring-4 focus:ring-yellow-400 shrink-0"
                   >
@@ -1065,6 +1201,13 @@ export const A11ySettingsModal: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={acousticStagingEnabled}
+                    onFocus={() => {
+                      handleSubcategoryFocus(
+                        'acoustic-staging',
+                        `Sub-category: Acoustic Staging cognitive differentiation. Differentiates speech cadence and timbre between questions, options, and alerts to eliminate auditory fatigue. Currently ${acousticStagingEnabled ? 'ON' : 'OFF'}. Press Space to toggle.`,
+                        `सब-कैटेगरी: अकौस्टिक स्टेजिंग। सुनने की थकान कम करने के लिए प्रश्नों और विकल्पों की आवाज़ की लय अलग करता है। वर्तमान में ${acousticStagingEnabled ? 'चालू' : 'बंद'}।`
+                      );
+                    }}
                     onChange={(e) => {
                       setAcousticStagingEnabled(e.target.checked);
                       earconManager.playOptionSelected();
@@ -1086,6 +1229,13 @@ export const A11ySettingsModal: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={hapticEnabled}
+                    onFocus={() => {
+                      handleSubcategoryFocus(
+                        'haptic-feedback',
+                        `Sub-category: Haptic Vibration Feedback. Delivers tactile micro-vibrations for silent option selection and countdown alerts. Currently ${hapticEnabled ? 'ON' : 'OFF'}. Press Space to toggle.`,
+                        `सब-कैटेगरी: हैप्टिक वाइब्रेशन फीडबैक। शांत विकल्प चयन के लिए सूक्ष्म कंपन। वर्तमान में ${hapticEnabled ? 'चालू' : 'बंद'}।`
+                      );
+                    }}
                     onChange={(e) => {
                       setHapticEnabled(e.target.checked);
                       hapticManager.vibrateOptionSelected();
@@ -1114,6 +1264,13 @@ export const A11ySettingsModal: React.FC = () => {
                 {hapticEnabled && hapticManager.isSupported() && (
                   <button
                     type="button"
+                    onFocus={() => {
+                      handleSubcategoryFocus(
+                        'test-haptic',
+                        'Sub-category: Test Vibration button. Triggers a sample tactile vibration pulse. Press Enter or Space to test.',
+                        'सब-कैटेगरी: टेस्ट वाइब्रेशन बटन। कंपन की जांच के लिए Enter दबाएं।'
+                      );
+                    }}
                     onClick={handleTestHaptic}
                     className="px-3 py-1.5 font-bold rounded-lg border-2 border-theme-border bg-theme-surface hover:bg-theme-bg text-theme-text text-xs focus:outline-none focus:ring-4 focus:ring-yellow-400 shrink-0"
                   >
@@ -1128,6 +1285,13 @@ export const A11ySettingsModal: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={a11yDebugMode}
+                    onFocus={() => {
+                      handleSubcategoryFocus(
+                        'a11y-debug',
+                        `Sub-category: Accessibility Event Logger. Outputs real-time speech, earcon, and haptic event dispatches to browser developer console. Currently ${a11yDebugMode ? 'ON' : 'OFF'}. Press Space to toggle.`,
+                        `सब-कैटेगरी: एक्सेसिबिलिटी इवेंट लॉगर। कंसोल में इवेंट्स रिकॉर्ड करता है। वर्तमान में ${a11yDebugMode ? 'चालू' : 'बंद'}।`
+                      );
+                    }}
                     onChange={(e) => {
                       setA11yDebugMode(e.target.checked);
                       earconManager.playOptionSelected();
@@ -1197,11 +1361,26 @@ export const A11ySettingsModal: React.FC = () => {
                       defaultValue={geminiVoiceService.getApiKey()}
                       placeholder="Enter Google AI Studio Gemini API Key..."
                       id="gemini-key-input"
+                      onFocus={() => {
+                        handleSubcategoryFocus(
+                          'gemini-key',
+                          'Sub-category: Primary Google Gemini API Key password field. Type or paste your Google AI Studio Gemini key here for AI reasoning and explanations.',
+                          'सब-कैटेगरी: प्राइमरी गूगल जेमिनी एपीआई की पासवर्ड फ़ील्ड। जेमिनी की यहाँ दर्ज करें।',
+                          true
+                        );
+                      }}
                       className="w-full pl-9 pr-3 py-2 rounded-xl border-2 border-theme-border bg-theme-surface text-theme-text text-xs focus:outline-none focus:ring-4 focus:ring-yellow-400 font-mono"
                     />
                   </div>
                   <button
                     type="button"
+                    onFocus={() => {
+                      handleSubcategoryFocus(
+                        'save-gemini',
+                        'Sub-category: Save Google Gemini Key button. Saves and verifies your Gemini API key preference. Press Enter or Space to save.',
+                        'सब-कैटेगरी: सेव गूगल जेमिनी की बटन। सहेजने के लिए Enter दबाएं।'
+                      );
+                    }}
                     onClick={() => {
                       const el = document.getElementById('gemini-key-input') as HTMLInputElement;
                       if (el) {
@@ -1233,11 +1412,25 @@ export const A11ySettingsModal: React.FC = () => {
                       defaultValue={geminiVoiceService.getGroqApiKey()}
                       placeholder="Enter Groq API Key (gsk_...)"
                       id="groq-key-input"
+                      onFocus={() => {
+                        handleSubcategoryFocus(
+                          'groq-key',
+                          'Sub-category: Failover Groq Cloud API Key password field. Pre-configured for ultra-fast 500 tokens per second resilient failover if Gemini is slow.',
+                          'सब-कैटेगरी: फ़ेलओवर ग्रोक क्लाउड एपीआई की फ़ील्ड। 500 टोकन प्रति सेकंड बैकअप।'
+                        );
+                      }}
                       className="w-full pl-9 pr-3 py-2 rounded-xl border-2 border-theme-border bg-theme-surface text-theme-text text-xs focus:outline-none focus:ring-4 focus:ring-yellow-400 font-mono"
                     />
                   </div>
                   <button
                     type="button"
+                    onFocus={() => {
+                      handleSubcategoryFocus(
+                        'save-groq',
+                        'Sub-category: Save Groq Failover Key button. Saves your Groq Cloud failover preference. Press Enter or Space to save.',
+                        'सब-कैटेगरी: सेव ग्रोक फ़ेलओवर की बटन। सहेजने के लिए Enter दबाएं।'
+                      );
+                    }}
                     onClick={() => {
                       const el = document.getElementById('groq-key-input') as HTMLInputElement;
                       if (el) {
