@@ -48,6 +48,65 @@ export const A11ySettingsModal: React.FC = () => {
   const themeButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const fontButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  type SectionIdentifier = 1 | 2 | 3 | 4 | 5 | 'close' | 'done';
+
+  const currentFocusedSectionRef = useRef<SectionIdentifier | null>(null);
+  const isInitialOpenRef = useRef<boolean>(false);
+  const suppressSectionAnnounceRef = useRef<boolean>(false);
+
+  const handleSectionFocus = (sectionId: SectionIdentifier) => {
+    if (isInitialOpenRef.current || suppressSectionAnnounceRef.current) return;
+    if (currentFocusedSectionRef.current === sectionId) return;
+
+    currentFocusedSectionRef.current = sectionId;
+    soundEffects.playNavigate();
+
+    const inHindi = isHindiPreferred();
+    let announcement = '';
+
+    switch (sectionId) {
+      case 1:
+        announcement = inHindi
+          ? 'सेक्शन 1: डायनामिक कंट्रास्ट थीम्स। थीम बदलने के लिए एरो कीज़ या 1 से 4 नंबर दबाएं।'
+          : 'Shifted to Section 1: Dynamic Contrast Themes. Use arrow keys or numbers 1 to 4 to switch themes.';
+        break;
+      case 2:
+        announcement = inHindi
+          ? 'सेक्शन 2: टेक्स्ट और यूआई स्केलिंग। मैग्निफिकेशन बदलने के लिए एरो कीज़ या 1 से 5 नंबर दबाएं।'
+          : 'Shifted to Section 2: Text & UI Scaling. Use arrow keys or numbers 1 to 5 to change magnification.';
+        break;
+      case 3:
+        announcement = inHindi
+          ? 'सेक्शन 3: इंटीग्रेटेड स्पीच सिंथेसिस। आवाज़ की गति, पिच और स्पीच इंजन कॉन्फ़िगर करें।'
+          : 'Shifted to Section 3: Integrated Speech Synthesis. Configure speech rate, pitch, and voice engine.';
+        break;
+      case 4:
+        announcement = inHindi
+          ? 'सेक्शन 4: मल्टी-सेंसरी एक्सेसिबिलिटी कोर। इयरकॉन्स, अकौस्टिक स्टेजिंग और हैप्टिक्स टॉगल करें।'
+          : 'Shifted to Section 4: Multi-Sensory Accessibility Core. Toggle earcons, acoustic staging, and haptics.';
+        break;
+      case 5:
+        announcement = inHindi
+          ? 'सेक्शन 5: एआई डुअल इंजन। गूगल जेमिनी और ग्रोक एललामा एपीआई कीज़ कॉन्फ़िगर करें।'
+          : 'Shifted to Section 5: AI Dual Engine. Configure Google Gemini and Groq LLaMA API keys.';
+        break;
+      case 'done':
+        announcement = inHindi
+          ? 'डन और सेव प्रेफरेंसेस बटन। सहेजने और बंद करने के लिए Enter दबाएं।'
+          : 'Shifted to Done and Save Preferences button. Press Enter to save and close.';
+        break;
+      case 'close':
+        announcement = inHindi
+          ? 'क्लोज़ सेटिंग्स बटन। बंद करने के लिए Enter दबाएं।'
+          : 'Shifted to Close Accessibility Settings button. Press Enter to close.';
+        break;
+    }
+
+    if (announcement) {
+      useAnnouncerStore.getState().announce(announcement, 'assertive', true, true);
+    }
+  };
+
   const themes: Array<{
     id: ThemeMode;
     label: string;
@@ -126,13 +185,20 @@ export const A11ySettingsModal: React.FC = () => {
   // Initial focus and voice speech announcement
   useEffect(() => {
     if (isSettingsOpen) {
-      setTimeout(() => {
+      isInitialOpenRef.current = true;
+      currentFocusedSectionRef.current = 1;
+
+      const timer = setTimeout(() => {
         const activeThemeIdx = themes.findIndex((t) => t.id === theme);
         if (activeThemeIdx >= 0 && themeButtonRefs.current[activeThemeIdx]) {
           themeButtonRefs.current[activeThemeIdx]?.focus();
         } else {
           closeButtonRef.current?.focus();
         }
+
+        setTimeout(() => {
+          isInitialOpenRef.current = false;
+        }, 300);
       }, 60);
 
       const inHindi = isHindiPreferred();
@@ -146,6 +212,11 @@ export const A11ySettingsModal: React.FC = () => {
           true,
           true
         );
+
+      return () => clearTimeout(timer);
+    } else {
+      currentFocusedSectionRef.current = null;
+      isInitialOpenRef.current = false;
     }
   }, [isSettingsOpen]);
 
@@ -170,6 +241,11 @@ export const A11ySettingsModal: React.FC = () => {
 
   // Magnification Step Helper (Increases or Decreases scale and announces status)
   const stepFontSize = (direction: 'increase' | 'decrease') => {
+    suppressSectionAnnounceRef.current = true;
+    setTimeout(() => {
+      suppressSectionAnnounceRef.current = false;
+    }, 250);
+
     const currentIndex = fontSizes.indexOf(fontSize);
     let nextIndex = currentIndex;
 
@@ -232,6 +308,47 @@ export const A11ySettingsModal: React.FC = () => {
         e.preventDefault();
         e.stopPropagation();
         stepFontSize('decrease');
+        return;
+      }
+    }
+
+    // Direct Section Jump Shortcuts: Alt+1 through Alt+5
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      if (e.key === '1') {
+        e.preventDefault();
+        e.stopPropagation();
+        const activeThemeIdx = themes.findIndex((t) => t.id === theme);
+        themeButtonRefs.current[activeThemeIdx >= 0 ? activeThemeIdx : 0]?.focus();
+        return;
+      }
+      if (e.key === '2') {
+        e.preventDefault();
+        e.stopPropagation();
+        const activeFontIdx = fontSizes.indexOf(fontSize);
+        fontButtonRefs.current[activeFontIdx >= 0 ? activeFontIdx : 0]?.focus();
+        return;
+      }
+      if (e.key === '3') {
+        e.preventDefault();
+        e.stopPropagation();
+        const el =
+          (document.getElementById('tts-rate-slider') as HTMLElement) ||
+          (document.querySelector('[aria-labelledby="speech-heading"] input') as HTMLElement);
+        el?.focus();
+        return;
+      }
+      if (e.key === '4') {
+        e.preventDefault();
+        e.stopPropagation();
+        const el = document.querySelector('[aria-labelledby="sound-heading"] input') as HTMLElement;
+        el?.focus();
+        return;
+      }
+      if (e.key === '5') {
+        e.preventDefault();
+        e.stopPropagation();
+        const el = document.getElementById('gemini-key-input') as HTMLElement;
+        el?.focus();
         return;
       }
     }
@@ -422,6 +539,7 @@ export const A11ySettingsModal: React.FC = () => {
           <button
             ref={closeButtonRef}
             type="button"
+            onFocusCapture={() => handleSectionFocus('close')}
             onClick={() => setSettingsOpen(false)}
             aria-label="Close accessibility settings (Esc)"
             className="p-2 rounded-xl border-2 border-theme-border hover:bg-theme-surface transition focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400"
@@ -438,7 +556,7 @@ export const A11ySettingsModal: React.FC = () => {
         >
           <Keyboard className="w-4 h-4 text-yellow-400 shrink-0" aria-hidden="true" />
           <span>
-            <strong>Keyboard Navigation:</strong> Use <strong>Tab</strong> to move between sections,{' '}
+            <strong>Keyboard Navigation:</strong> Use <strong>Tab</strong> to move between sections (or <strong>Alt+1 to 5</strong>),{' '}
             <strong>Arrow keys (← ↑ → ↓)</strong> to pick themes & text size, <strong>Space</strong> to toggle, and{' '}
             <strong>Esc</strong> to close.
           </span>
@@ -447,11 +565,20 @@ export const A11ySettingsModal: React.FC = () => {
         {/* Modal Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1">
           {/* 1. Dynamic Contrast Theme */}
-          <section aria-labelledby="theme-heading">
-            <h3 id="theme-heading" className="text-base font-bold mb-2 flex items-center gap-2">
-              <Sun className="w-4 h-4 text-yellow-400" aria-hidden="true" />
-              <span>1. Dynamic Contrast Themes (WCAG 2.1 AA Compliant)</span>
-            </h3>
+          <section
+            id="a11y-section-1"
+            aria-labelledby="theme-heading"
+            onFocusCapture={() => handleSectionFocus(1)}
+          >
+            <div className="flex justify-between items-center mb-2">
+              <h3 id="theme-heading" className="text-base font-bold flex items-center gap-2">
+                <Sun className="w-4 h-4 text-yellow-400" aria-hidden="true" />
+                <span>1. Dynamic Contrast Themes (WCAG 2.1 AA Compliant)</span>
+              </h3>
+              <kbd className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-theme-bg border border-theme-border text-theme-text/70">
+                Alt+1
+              </kbd>
+            </div>
             <p className="text-xs text-theme-text/70 mb-3">
               Use Arrow keys (Left/Right or Up/Down) or keys 1–4 to immediately switch theme.
             </p>
@@ -553,15 +680,25 @@ export const A11ySettingsModal: React.FC = () => {
           </section>
 
           {/* 2. Text Resizing & Font Scaling */}
-          <section aria-labelledby="text-size-heading" className="pt-4 border-t border-theme-border">
+          <section
+            id="a11y-section-2"
+            aria-labelledby="text-size-heading"
+            className="pt-4 border-t border-theme-border"
+            onFocusCapture={() => handleSectionFocus(2)}
+          >
             <div className="flex justify-between items-center mb-2">
               <h3 id="text-size-heading" className="text-base font-bold flex items-center gap-2">
                 <Type className="w-4 h-4 text-yellow-400" aria-hidden="true" />
                 <span>2. Text & UI Scaling (No Horizontal Scroll Overflow)</span>
               </h3>
-              <span className="text-sm font-mono font-bold px-2 py-1 rounded-lg bg-theme-bg border-2 border-theme-border">
-                {fontSize}%
-              </span>
+              <div className="flex items-center gap-2">
+                <kbd className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-theme-bg border border-theme-border text-theme-text/70">
+                  Alt+2
+                </kbd>
+                <span className="text-sm font-mono font-bold px-2 py-1 rounded-lg bg-theme-bg border-2 border-theme-border">
+                  {fontSize}%
+                </span>
+              </div>
             </div>
             <p className="text-xs text-theme-text/70 mb-3">
               Use Arrow keys (Left/Right), + / - keys, or number keys 1–5 to change magnification.
@@ -639,11 +776,21 @@ export const A11ySettingsModal: React.FC = () => {
           </section>
 
           {/* 3. Integrated Speech Synthesis (Web Speech API) */}
-          <section aria-labelledby="speech-heading" className="pt-4 border-t border-theme-border">
-            <h3 id="speech-heading" className="text-base font-bold mb-3 flex items-center gap-2">
-              <Volume2 className="w-4 h-4 text-yellow-400" aria-hidden="true" />
-              <span>3. Integrated Speech Synthesis (Web Speech API Engine)</span>
-            </h3>
+          <section
+            id="a11y-section-3"
+            aria-labelledby="speech-heading"
+            className="pt-4 border-t border-theme-border"
+            onFocusCapture={() => handleSectionFocus(3)}
+          >
+            <div className="flex justify-between items-center mb-3">
+              <h3 id="speech-heading" className="text-base font-bold flex items-center gap-2">
+                <Volume2 className="w-4 h-4 text-yellow-400" aria-hidden="true" />
+                <span>3. Integrated Speech Synthesis (Web Speech API Engine)</span>
+              </h3>
+              <kbd className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-theme-bg border border-theme-border text-theme-text/70">
+                Alt+3
+              </kbd>
+            </div>
 
             <div className="space-y-4">
               <label className="flex items-center gap-3 p-3.5 rounded-xl border-2 border-theme-border bg-theme-bg cursor-pointer hover:border-yellow-400/60 focus-within:ring-4 focus-within:ring-yellow-400 focus-within:border-yellow-400 transition">
@@ -833,16 +980,26 @@ export const A11ySettingsModal: React.FC = () => {
           </section>
 
           {/* 4. Multi-Sensory Feedback (Audio, Earcons & Haptics) */}
-          <section aria-labelledby="sound-heading" className="pt-4 border-t border-theme-border">
-            <h3 id="sound-heading" className="text-base font-bold mb-3 flex items-center justify-between">
-              <span className="flex items-center gap-2">
+          <section
+            id="a11y-section-4"
+            aria-labelledby="sound-heading"
+            className="pt-4 border-t border-theme-border"
+            onFocusCapture={() => handleSectionFocus(4)}
+          >
+            <div className="flex justify-between items-center mb-3">
+              <h3 id="sound-heading" className="text-base font-bold flex items-center gap-2">
                 <Bell className="w-4 h-4 text-yellow-400" aria-hidden="true" />
                 <span>4. Multi-Sensory Accessibility Core (Earcons, Staging & Haptics)</span>
-              </span>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 font-bold">
-                Acoustic Engine Active
-              </span>
-            </h3>
+              </h3>
+              <div className="flex items-center gap-2">
+                <kbd className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-theme-bg border border-theme-border text-theme-text/70">
+                  Alt+4
+                </kbd>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 font-bold">
+                  Acoustic Engine Active
+                </span>
+              </div>
+            </div>
 
             <div className="space-y-3">
               {/* 4A. Master Audio Feedback Toggle */}
@@ -991,27 +1148,36 @@ export const A11ySettingsModal: React.FC = () => {
             </div>
           </section>
 
-          {/* 5. AI Voice Assistant & Gemini API */}
-          {/* 5. AI Voice Assistant & Gemini/Groq Dual API Engine */}
-          <section aria-labelledby="ai-heading" className="pt-4 border-t border-theme-border">
-            <h3 id="ai-heading" className="text-base font-bold mb-3 flex items-center justify-between">
-              <span className="flex items-center gap-2">
+          {/* 5. AI Dual Engine (Google Gemini + Groq LLaMA) */}
+          <section
+            id="a11y-section-5"
+            aria-labelledby="ai-heading"
+            className="pt-4 border-t border-theme-border"
+            onFocusCapture={() => handleSectionFocus(5)}
+          >
+            <div className="flex justify-between items-center mb-3">
+              <h3 id="ai-heading" className="text-base font-bold flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-yellow-400" aria-hidden="true" />
                 <span>5. AI Dual Engine (Google Gemini + Groq LLaMA)</span>
-              </span>
-              <div className="flex items-center gap-1.5">
-                {geminiVoiceService.getApiKey() && (
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
-                    Gemini 1st
-                  </span>
-                )}
-                {geminiVoiceService.getGroqApiKey() && (
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold">
-                    ⚡ Groq Active Fallback
-                  </span>
-                )}
+              </h3>
+              <div className="flex items-center gap-2">
+                <kbd className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-theme-bg border border-theme-border text-theme-text/70">
+                  Alt+5
+                </kbd>
+                <div className="flex items-center gap-1.5">
+                  {geminiVoiceService.getApiKey() && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
+                      Gemini 1st
+                    </span>
+                  )}
+                  {geminiVoiceService.getGroqApiKey() && (
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold">
+                      ⚡ Groq Active Fallback
+                    </span>
+                  )}
+                </div>
               </div>
-            </h3>
+            </div>
 
             <div className="p-4 rounded-xl border-2 border-theme-border bg-theme-bg space-y-4">
               <p className="text-xs text-theme-text/80 leading-relaxed">
@@ -1097,6 +1263,7 @@ export const A11ySettingsModal: React.FC = () => {
           <button
             ref={doneButtonRef}
             type="button"
+            onFocusCapture={() => handleSectionFocus('done')}
             onClick={() => {
               setSettingsOpen(false);
               soundEffects.playSelect();
