@@ -331,7 +331,7 @@ export const ExamCatalogScreen: React.FC = () => {
                 </div>
                 <p
                   className={`text-[11px] leading-snug font-medium ${
-                    portalTab === 'exams' ? 'text-white' : 'text-theme-text-secondary'
+                    portalTab === 'exams' ? 'text-theme-primary-text' : 'text-theme-text-secondary'
                   }`}
                 >
                   Timed Simulation Tests
@@ -348,7 +348,7 @@ export const ExamCatalogScreen: React.FC = () => {
                 onClick={() => setPortalTab('practice')}
                 className={`w-full p-2.5 rounded-xl font-bold text-left transition-all duration-200 border-2 focus:outline-none focus:ring-4 focus:ring-theme-focus ${
                   portalTab === 'practice'
-                    ? 'border-emerald-600 bg-emerald-600 text-white shadow-md scale-[1.01]'
+                    ? 'border-theme-primary bg-theme-primary text-theme-primary-text shadow-md scale-[1.01]'
                     : 'border-theme-border bg-theme-surface hover:bg-theme-surface-elevated text-theme-text'
                 }`}
               >
@@ -372,7 +372,7 @@ export const ExamCatalogScreen: React.FC = () => {
                 </div>
                 <p
                   className={`text-[11px] leading-snug font-medium ${
-                    portalTab === 'practice' ? 'text-white' : 'text-theme-text-secondary'
+                    portalTab === 'practice' ? 'text-theme-primary-text' : 'text-theme-text-secondary'
                   }`}
                 >
                   Hints &amp; Step-by-Step Solutions
@@ -438,8 +438,8 @@ export const ExamCatalogScreen: React.FC = () => {
                       className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
                         isSelected
                           ? portalTab === 'practice'
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-theme-primary text-white'
+                            ? 'bg-theme-primary text-theme-primary-text'
+                            : 'bg-theme-primary text-theme-primary-text'
                           : 'bg-theme-border/60 text-theme-text-secondary'
                       }`}
                     >
@@ -565,7 +565,7 @@ export const ExamCatalogScreen: React.FC = () => {
                       setSearchQuery('');
                       searchInputRef.current?.focus();
                     }}
-                    className="text-xs px-2 py-0.5 rounded bg-theme-border text-theme-text hover:bg-theme-primary hover:text-white"
+                    className="text-xs px-2 py-0.5 rounded bg-theme-border text-theme-text hover:bg-theme-primary hover:text-theme-primary-text"
                     aria-label="Clear search query"
                   >
                     Clear
@@ -661,7 +661,7 @@ export const ExamCatalogScreen: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => void loadCatalog()}
-                      className="px-4 py-2 rounded-lg bg-theme-primary text-white font-bold text-sm focus:ring-4 focus:ring-theme-focus"
+                      className="px-4 py-2 rounded-lg bg-theme-primary text-theme-primary-text font-bold text-sm focus:ring-4 focus:ring-theme-focus"
                     >
                       Retry
                     </button>
@@ -685,7 +685,7 @@ export const ExamCatalogScreen: React.FC = () => {
                         setSelectedCategory('All');
                         setSearchQuery('');
                       }}
-                      className="px-4 py-2 rounded-lg bg-theme-primary text-white font-bold text-sm focus:ring-4 focus:ring-theme-focus"
+                      className="px-4 py-2 rounded-lg bg-theme-primary text-theme-primary-text font-bold text-sm focus:ring-4 focus:ring-theme-focus"
                     >
                       Reset Filters
                     </button>
@@ -728,10 +728,10 @@ export const ExamCatalogScreen: React.FC = () => {
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`w-6 h-6 rounded-full text-white text-xs font-black flex items-center justify-center font-mono ${
-                              isPractice ? 'bg-emerald-600' : 'bg-theme-primary'
-                            }`}
-                          >
+                            className="w-6 h-6 rounded-full text-theme-primary-text text-xs font-black flex items-center justify-center font-mono bg-theme-primary">
+
+
+
                             {idx + 1}
                           </span>
                           <span className="px-2.5 py-0.5 rounded-md text-xs font-extrabold bg-theme-border/60 text-theme-text tracking-wider uppercase">
@@ -743,15 +743,15 @@ export const ExamCatalogScreen: React.FC = () => {
                           {isPractice && (
                             <span
                               className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 inline-flex items-center gap-1"
-                              title="100% available without active internet connection"
-                            >
+                              title="100% available without active internet connection">
+  
                               <WifiOff className="w-2.5 h-2.5" aria-hidden="true" />
                               Offline Ready
                             </span>
                           )}
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${difficultyBadgeColor}`}
-                          >
+                            className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${difficultyBadgeColor}`}>
+
                             {exam.difficulty}
                           </span>
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-theme-border/40 text-theme-text border border-theme-border">
@@ -827,14 +827,14 @@ export const ExamCatalogScreen: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleStartExam(exam)}
-                        className={`flex-1 min-w-0 py-3 sm:py-2.5 px-3.5 min-h-[44px] rounded-xl text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all focus:outline-none focus:ring-4 focus:ring-theme-focus ${
-                          isPractice ? 'bg-emerald-600' : 'bg-theme-primary'
-                        }`}
+                        className="flex-1 min-w-0 py-3 sm:py-2.5 px-3.5 min-h-[44px] rounded-xl bg-theme-primary text-theme-primary-text font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all focus:outline-none focus:ring-4 focus:ring-theme-focus"
+
+
                         aria-label={`Start ${isPractice ? 'Practice Drill' : 'Examination'}: ${exam.title} (Or press Enter)`}
                       >
                         <span className="shrink-0">{isPractice ? '💡' : '🚀'}</span>
                         <span className="truncate">{isPractice ? 'Start Practice Drill' : 'Start Examination'}</span>
-                        <kbd className="hidden sm:inline-block text-[10px] px-1.5 py-0.5 border border-white/40 rounded bg-white/10 uppercase font-mono shrink-0">
+                        <kbd className="hidden sm:inline-block text-[10px] px-1.5 py-0.5 border border-current/30 rounded bg-black/10 uppercase font-mono shrink-0">
                           Enter
                         </kbd>
                       </button>

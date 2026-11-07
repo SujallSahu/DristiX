@@ -261,7 +261,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
         <button
           type="button"
           onClick={onReturnToCatalog}
-          className="mt-4 px-4 py-2 rounded-xl bg-theme-primary text-white font-bold"
+          className="mt-4 px-4 py-2 rounded-xl bg-theme-primary text-theme-primary-text font-bold"
         >
           Return to Portal
         </button>
@@ -469,7 +469,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                 onClick={() => setTypeFilter('all')}
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
                   typeFilter === 'all'
-                    ? 'bg-theme-primary text-white shadow-xs'
+                    ? 'bg-theme-primary text-theme-primary-text shadow-xs'
                     : 'text-theme-text hover:bg-theme-surface'
                 }`}
               >
@@ -480,7 +480,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                 onClick={() => setTypeFilter('exam')}
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
                   typeFilter === 'exam'
-                    ? 'bg-theme-primary text-white shadow-xs'
+                    ? 'bg-theme-primary text-theme-primary-text shadow-xs'
                     : 'text-theme-text hover:bg-theme-surface'
                 }`}
               >
@@ -491,7 +491,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                 onClick={() => setTypeFilter('practice')}
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
                   typeFilter === 'practice'
-                    ? 'bg-theme-primary text-white shadow-xs'
+                    ? 'bg-theme-primary text-theme-primary-text shadow-xs'
                     : 'text-theme-text hover:bg-theme-surface'
                 }`}
               >
@@ -648,7 +648,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                           <button
                             type="button"
                             onClick={() => handleRetakeTest(sub)}
-                            className="px-3 py-1.5 rounded-lg border border-theme-primary bg-theme-primary text-white text-xs font-bold flex items-center gap-1.5 hover:bg-theme-primary/90 focus:outline-none focus:ring-4 focus:ring-yellow-400 transition shadow-xs"
+                            className="px-3 py-1.5 rounded-lg border border-theme-primary bg-theme-primary text-theme-primary-text text-xs font-bold flex items-center gap-1.5 hover:bg-theme-primary/90 focus:outline-none focus:ring-4 focus:ring-yellow-400 transition shadow-xs"
                             title="Retake this test"
                             aria-label={`Retake test ${sub.examTitle}`}
                           >
@@ -709,7 +709,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                     onClick={() => setCurrentPage(page)}
                     className={`w-8 h-8 rounded-lg font-bold text-xs transition border-2 ${
                       currentPage === page
-                        ? 'bg-theme-primary text-white border-theme-primary shadow-xs'
+                        ? 'bg-theme-primary text-theme-primary-text border-theme-primary shadow-xs'
                         : 'bg-theme-bg border-theme-border text-theme-text hover:border-theme-primary'
                     }`}
                     aria-label={`Page ${page}`}

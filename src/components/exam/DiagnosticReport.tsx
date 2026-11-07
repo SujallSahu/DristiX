@@ -157,7 +157,7 @@ export const DiagnosticReport: React.FC = () => {
             <button
               type="button"
               onClick={resetExam}
-              className="px-4 py-2 font-bold rounded-lg border-2 border-theme-border bg-theme-primary text-white hover:brightness-110 flex items-center gap-1.5 transition text-sm"
+              className="px-4 py-2 font-bold rounded-lg border-2 border-theme-border bg-theme-primary text-theme-primary-text hover:brightness-110 flex items-center gap-1.5 transition text-sm"
             >
               <RotateCcw className="w-4 h-4" aria-hidden="true" />
               <span>Retake Examination</span>
@@ -267,7 +267,7 @@ export const DiagnosticReport: React.FC = () => {
               <button
                 type="button"
                 onClick={() => openFeedbackModal(true)}
-                className="px-5 py-2.5 rounded-xl bg-theme-primary text-white text-xs sm:text-sm font-bold hover:brightness-110 transition shadow-md flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl bg-theme-primary text-theme-primary-text text-xs sm:text-sm font-bold hover:brightness-110 transition shadow-md flex items-center gap-2"
               >
                 <Star className="w-4 h-4 fill-amber-300 stroke-amber-300" aria-hidden="true" />
                 <span>Rate & Share Feedback</span>

@@ -530,3 +530,35 @@ select:autofill {
 [class*="border-theme-border/"] {
   border-color: var(--border-color) !important;
 }
+
+/* ========================================================
+   WCAG 2.1 AA / AAA GLOBAL CONTRAST SAFEGUARDS
+   Guarantees that elements with bg-theme-primary always receive
+   the correct high-contrast text color across all themes.
+   ======================================================== */
+
+.bg-theme-primary,
+button.bg-theme-primary,
+a.bg-theme-primary {
+  color: var(--primary-text);
+}
+
+[data-theme="dark"] .bg-theme-primary,
+[data-theme="dark"] button.bg-theme-primary,
+[data-theme="dark"] a.bg-theme-primary,
+[data-theme="dark"] .bg-theme-primary .truncate,
+[data-theme="dark"] .bg-theme-primary p,
+[data-theme="dark"] .bg-theme-primary.text-white,
+[data-theme="dark"] .bg-theme-primary .text-white {
+  color: var(--primary-text) !important;
+}
+
+[data-theme="high-contrast"] .bg-theme-primary,
+[data-theme="high-contrast"] button.bg-theme-primary,
+[data-theme="high-contrast"] a.bg-theme-primary,
+[data-theme="high-contrast"] .bg-theme-primary .truncate,
+[data-theme="high-contrast"] .bg-theme-primary p,
+[data-theme="high-contrast"] .bg-theme-primary.text-white,
+[data-theme="high-contrast"] .bg-theme-primary .text-white {
+  color: var(--primary-text) !important;
+}

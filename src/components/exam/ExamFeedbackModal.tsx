@@ -320,7 +320,7 @@ export const ExamFeedbackModal: React.FC = () => {
                   aria-pressed={isSelected}
                   className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 border focus:ring-4 focus:ring-theme-focus ${
                     isSelected
-                      ? 'bg-theme-primary text-white border-theme-primary shadow-sm'
+                      ? 'bg-theme-primary text-theme-primary-text border-theme-primary shadow-sm'
                       : 'bg-theme-bg text-theme-text border-theme-border hover:border-theme-primary'
                   }`}
                 >
@@ -403,8 +403,8 @@ export const ExamFeedbackModal: React.FC = () => {
             onClick={submitExamFeedback}
             className={`px-5 py-2.5 rounded-xl text-sm font-black flex items-center gap-2 transition focus:ring-4 focus:ring-theme-focus ${
               feedback.rating > 0
-                ? 'bg-theme-primary text-white hover:brightness-110 shadow-lg shadow-theme-primary/20'
-                : 'bg-theme-primary/50 text-white/80 cursor-not-allowed'
+                ? 'bg-theme-primary text-theme-primary-text hover:brightness-110 shadow-lg shadow-theme-primary/20'
+                : 'bg-theme-primary/50 text-theme-primary-text/80 cursor-not-allowed'
             }`}
           >
             <Send className="w-4 h-4" aria-hidden="true" />
