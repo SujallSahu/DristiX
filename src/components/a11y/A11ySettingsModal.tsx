@@ -698,7 +698,7 @@ export const A11ySettingsModal: React.FC = () => {
                         className="text-[10px] ml-auto px-1.5 py-0.2 rounded font-mono font-bold"
                         style={{
                           backgroundColor: t.preview.primary,
-                          color: t.id === 'high-contrast' ? '#000000' : '#FFFFFF',
+                          color: t.id === 'high-contrast' || t.id === 'dark' ? '#071511' : '#FFFFFF',
                         }}
                       >
                         {t.preview.badge}
@@ -992,11 +992,11 @@ export const A11ySettingsModal: React.FC = () => {
                     {/* Edge Neural TTS Active Profile Card */}
                     <div className="mt-2.5 p-3 rounded-xl border border-yellow-400/30 bg-yellow-400/5 text-xs text-theme-text space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="font-bold flex items-center gap-1.5 text-yellow-400">
+                        <div className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
                           <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
                           <span>Microsoft Edge Neural TTS Profile (Default Active)</span>
                         </div>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-300 font-semibold uppercase tracking-wider">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 font-semibold uppercase tracking-wider">
                           Active
                         </span>
                       </div>
@@ -1007,7 +1007,7 @@ export const A11ySettingsModal: React.FC = () => {
                         <div className="p-2 rounded-lg bg-theme-surface border border-theme-border flex flex-col justify-between">
                           <div>
                             <div className="text-theme-muted font-sans font-medium text-[10px]">Hindi (Devanagari)</div>
-                            <div className="font-bold text-yellow-400 truncate">{EDGE_TTS_VOICES.HINDI}</div>
+                            <div className="font-bold text-amber-700 dark:text-amber-400 truncate">{EDGE_TTS_VOICES.HINDI}</div>
                           </div>
                           <button
                             type="button"
@@ -1019,7 +1019,7 @@ export const A11ySettingsModal: React.FC = () => {
                               );
                             }}
                             onClick={() => handleTestVoice('hindi')}
-                            className="mt-2 text-[10px] font-sans font-semibold text-yellow-400 hover:underline flex items-center gap-1 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
+                            className="mt-2 text-[10px] font-sans font-semibold text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
                           >
                             <Volume2 className="w-3 h-3 inline" aria-hidden="true" />
                             <span>Test Hindi</span>
@@ -1028,7 +1028,7 @@ export const A11ySettingsModal: React.FC = () => {
                         <div className="p-2 rounded-lg bg-theme-surface border border-theme-border flex flex-col justify-between">
                           <div>
                             <div className="text-theme-muted font-sans font-medium text-[10px]">Hinglish (Roman Hindi)</div>
-                            <div className="font-bold text-yellow-400 truncate">{EDGE_TTS_VOICES.HINGLISH}</div>
+                            <div className="font-bold text-amber-700 dark:text-amber-400 truncate">{EDGE_TTS_VOICES.HINGLISH}</div>
                           </div>
                           <button
                             type="button"
@@ -1040,7 +1040,7 @@ export const A11ySettingsModal: React.FC = () => {
                               );
                             }}
                             onClick={() => handleTestVoice('hinglish')}
-                            className="mt-2 text-[10px] font-sans font-semibold text-yellow-400 hover:underline flex items-center gap-1 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
+                            className="mt-2 text-[10px] font-sans font-semibold text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
                           >
                             <Volume2 className="w-3 h-3 inline" aria-hidden="true" />
                             <span>Test Hinglish</span>
@@ -1049,7 +1049,7 @@ export const A11ySettingsModal: React.FC = () => {
                         <div className="p-2 rounded-lg bg-theme-surface border border-theme-border flex flex-col justify-between">
                           <div>
                             <div className="text-theme-muted font-sans font-medium text-[10px]">English (Default)</div>
-                            <div className="font-bold text-yellow-400 truncate">{EDGE_TTS_VOICES.ENGLISH}</div>
+                            <div className="font-bold text-amber-700 dark:text-amber-400 truncate">{EDGE_TTS_VOICES.ENGLISH}</div>
                           </div>
                           <button
                             type="button"
@@ -1061,7 +1061,7 @@ export const A11ySettingsModal: React.FC = () => {
                               );
                             }}
                             onClick={() => handleTestVoice('english')}
-                            className="mt-2 text-[10px] font-sans font-semibold text-yellow-400 hover:underline flex items-center gap-1 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
+                            className="mt-2 text-[10px] font-sans font-semibold text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1 text-left focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
                           >
                             <Volume2 className="w-3 h-3 inline" aria-hidden="true" />
                             <span>Test English</span>
@@ -1109,7 +1109,7 @@ export const A11ySettingsModal: React.FC = () => {
                 <kbd className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-theme-bg border border-theme-border text-theme-text/70">
                   Alt+4
                 </kbd>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 font-bold">
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 font-bold">
                   Acoustic Engine Active
                 </span>
               </div>
@@ -1248,7 +1248,7 @@ export const A11ySettingsModal: React.FC = () => {
                       <span
                         className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
                           hapticManager.isSupported()
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
                             : 'bg-zinc-500/20 text-zinc-400 border border-zinc-500/30'
                         }`}
                       >
@@ -1330,12 +1330,12 @@ export const A11ySettingsModal: React.FC = () => {
                 </kbd>
                 <div className="flex items-center gap-1.5">
                   {geminiVoiceService.getApiKey() && (
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bold">
                       Gemini 1st
                     </span>
                   )}
                   {geminiVoiceService.getGroqApiKey() && (
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold">
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-teal-700 dark:text-cyan-300 border border-cyan-500/30 font-bold">
                       ⚡ Groq Active Fallback
                     </span>
                   )}
@@ -1402,7 +1402,7 @@ export const A11ySettingsModal: React.FC = () => {
               <div className="space-y-1">
                 <label htmlFor="groq-key-input" className="text-[11px] font-bold text-theme-text/70 flex items-center justify-between">
                   <span>Failover: Groq Cloud API Key (Pre-configured)</span>
-                  <span className="text-[10px] text-cyan-400 font-normal">Lightning-fast 500 T/s</span>
+                  <span className="text-[10px] text-teal-700 dark:text-cyan-300 font-normal">Lightning-fast 500 T/s</span>
                 </label>
                 <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
                   <div className="relative flex-1">

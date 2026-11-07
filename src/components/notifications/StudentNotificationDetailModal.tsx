@@ -107,7 +107,7 @@ export const StudentNotificationDetailModal: React.FC<StudentNotificationDetailM
       <div
         ref={modalRef}
         tabIndex={-1}
-        className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#031d22] border-2 border-theme-border shadow-2xl p-5 sm:p-6 space-y-4 focus:outline-none"
+        className="w-full max-w-lg rounded-2xl bg-theme-surface border-2 border-theme-border shadow-2xl p-5 sm:p-6 space-y-4 focus:outline-none"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3 pb-3 border-b border-theme-border">
@@ -192,7 +192,7 @@ export const StudentNotificationDetailModal: React.FC<StudentNotificationDetailM
             <button
               type="button"
               onClick={handleTakeTest}
-              className="w-full py-2.5 px-4 rounded-xl font-black text-sm bg-teal-600 hover:bg-teal-700 text-white shadow-md transition flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-4 focus:ring-teal-400"
+              className="w-full py-2.5 px-4 rounded-xl font-black text-sm bg-theme-primary text-theme-primary-text shadow-md hover:bg-theme-primary-hover transition flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-4 focus:ring-theme-focus"
             >
               <span>{effectiveDetails.testType === 'practice' ? 'Start Practice Drill' : 'Start Mock Examination'} &rarr;</span>
             </button>

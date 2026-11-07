@@ -70,7 +70,7 @@ export const A11yInspector: React.FC = () => {
             <span
               className={`px-1.5 py-0.2 rounded-full text-[9px] sm:text-[10px] font-black ${
                 auditResults.violations.length === 0
-                  ? 'bg-theme-success text-white'
+                  ? 'bg-emerald-700 text-white shadow-xs'
                   : 'bg-theme-danger text-white'
               }`}
             >
@@ -263,6 +263,7 @@ export const A11yInspector: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
+                aria-label="Close accessibility inspector dialog"
                 className="px-4 py-2 font-bold rounded-lg border border-theme-border bg-theme-surface hover:bg-theme-bg text-xs"
               >
                 Close Inspector

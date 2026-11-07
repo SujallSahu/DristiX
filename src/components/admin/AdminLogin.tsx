@@ -68,7 +68,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onReturnToStudent }) => 
       <div className="w-full bg-theme-surface border-2 border-theme-border rounded-3xl p-6 sm:p-10 shadow-xl">
         {/* Header Branding */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600 text-white font-black text-2xl shadow-md mb-3">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-theme-primary text-theme-primary-text font-black text-2xl shadow-md mb-3">
             <ShieldCheck className="w-8 h-8" aria-hidden="true" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-theme-text tracking-tight">
@@ -152,7 +152,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onReturnToStudent }) => 
           <button
             type="submit"
             disabled={isSubmitting || !username.trim() || !password.trim()}
-            className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-base shadow-md transition focus:ring-4 focus:ring-indigo-500/50 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full py-3.5 px-4 rounded-xl bg-theme-primary text-theme-primary-text hover:bg-theme-primary-hover font-extrabold text-base shadow-md transition focus:ring-4 focus:ring-theme-focus disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Authenticating…' : 'Authenticate & Enter Admin Studio'}
           </button>

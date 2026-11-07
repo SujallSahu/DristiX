@@ -452,7 +452,7 @@ export const ExamScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSubmitModalOpen(true)}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] font-bold rounded-xl border-2 border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm text-xs sm:text-sm"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] font-bold rounded-xl border-2 border-emerald-700 bg-emerald-700 hover:bg-emerald-800 text-white transition shadow-sm text-xs sm:text-sm"
                 aria-label="Finish and submit exam (Shortcut: Alt+S)"
               >
                 <span>Finish &amp; Submit</span>
@@ -522,7 +522,7 @@ export const ExamScreen: React.FC = () => {
               id="btn-submit"
               type="button"
               onClick={() => setSubmitModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 min-h-[44px] font-bold rounded-xl border-2 border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm text-sm"
+              className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 min-h-[44px] font-bold rounded-xl border-2 border-emerald-700 bg-emerald-700 hover:bg-emerald-800 text-white transition shadow-sm text-sm"
               aria-label="Finish and submit exam (Shortcut: Alt+S)"
             >
               <span>Finish &amp; Submit</span>

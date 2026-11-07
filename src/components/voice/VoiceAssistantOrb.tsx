@@ -431,12 +431,12 @@ export const VoiceAssistantOrb: React.FC = () => {
               <div className="min-w-0">
                 <h3 className="font-bold text-xs sm:text-sm text-theme-text flex items-center gap-1.5 leading-tight truncate">
                   <span><span className="hidden xs:inline">DristiX </span>Voice Agent</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono font-bold border border-emerald-500/30">
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-mono font-bold border border-emerald-500/30">
                     Live
                   </span>
                 </h3>
                 <span className="text-[11px] text-theme-text/70 block">
-                  Hindi & English • Shortcut: <kbd className="font-mono font-bold text-yellow-400">V</kbd>
+                  Hindi & English • Shortcut: <kbd className="font-mono font-bold text-amber-700 dark:text-yellow-400">V</kbd>
                 </span>
               </div>
             </div>
@@ -448,7 +448,7 @@ export const VoiceAssistantOrb: React.FC = () => {
                 onClick={() => setShowKeyConfig((prev) => !prev)}
                 title="Configure Gemini API Key for 100% natural language accuracy"
                 className={`px-2 py-1 rounded-lg border text-[11px] font-bold transition flex items-center gap-1 shadow-xs ${geminiVoiceService.hasApiKey()
-                    ? 'border-emerald-500/50 bg-emerald-500/20 text-emerald-400'
+                    ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                     : 'border-theme-border bg-theme-bg/90 hover:bg-theme-bg text-theme-text'
                   }`}
               >
@@ -491,7 +491,7 @@ export const VoiceAssistantOrb: React.FC = () => {
                   href="https://aistudio.google.com/app/apikey"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[11px] text-yellow-400 hover:underline font-bold"
+                  className="text-[11px] text-amber-700 dark:text-yellow-400 hover:underline font-bold"
                   title="Get free API key directly from Google AI Studio"
                 >
                   Get Free Key ↗
@@ -679,7 +679,7 @@ export const VoiceAssistantOrb: React.FC = () => {
                 >
                   <p>{m.text}</p>
                   {m.action && (
-                    <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px]">
+                    <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 font-bold text-[10px]">
                       <span>⚡</span> {m.action}
                     </span>
                   )}
@@ -700,7 +700,7 @@ export const VoiceAssistantOrb: React.FC = () => {
             {interimTranscript && (
               <div className="flex gap-2 justify-end animate-pulse">
                 <div className="max-w-[80%] p-2 rounded-xl bg-theme-primary/40 text-theme-text text-xs italic border border-theme-primary/50">
-                  <span className="text-[10px] text-yellow-300 block font-bold">Listening...</span>
+                  <span className="text-[10px] text-amber-800 dark:text-yellow-300 block font-bold">Listening...</span>
                   "{interimTranscript}"
                 </div>
               </div>
@@ -798,13 +798,13 @@ export const VoiceAssistantOrb: React.FC = () => {
           )}
 
           {/* Microphone Icon */}
-          <div className="text-white relative z-10 flex flex-col items-center justify-center">
+          <div className="text-white relative z-10 flex flex-col items-center justify-center" aria-hidden="true">
             {isAnyListening ? (
               <Mic className="w-7 h-7 text-white drop-shadow-md animate-bounce" aria-hidden="true" />
             ) : (
               <Mic className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-md" aria-hidden="true" />
             )}
-            <span className="text-[10px] font-black uppercase tracking-wider text-yellow-300 mt-0.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-white mt-0.5">
               V
             </span>
           </div>

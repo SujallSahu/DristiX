@@ -280,7 +280,7 @@ export const Header: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => void logoutStudent()}
-                    className="flex items-center gap-1 text-[11px] font-bold text-red-600 dark:text-red-400 hover:text-red-700 underline cursor-pointer ml-0.5 shrink-0"
+                    className="flex items-center gap-1 text-[11px] font-bold text-red-700 dark:text-red-400 hover:text-red-800 underline cursor-pointer ml-0.5 shrink-0"
                     title="Sign out of student account"
                     aria-label={`Sign out candidate ${currentStudent.name}`}
                   >
@@ -533,6 +533,7 @@ export const Header: React.FC = () => {
               type="button"
               onClick={() => setSubmitModalOpen(true)}
               className="hidden md:flex ml-0.5 sm:ml-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-theme-border bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm items-center gap-1 sm:gap-1.5 transition shadow-sm shrink-0"
+              aria-label="Submit examination (Shortcut: Alt+S)"
             >
               <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
               <span>Submit</span>

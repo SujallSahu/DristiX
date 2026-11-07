@@ -434,18 +434,18 @@ export const DiagnosticReport: React.FC = () => {
                         </span>
                       )}
                       {isAnswered && !isCorrect && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded border border-red-600 bg-red-600/20 text-red-500 flex items-center gap-1">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded border border-red-600 bg-red-600/20 text-red-700 dark:text-red-400 flex items-center gap-1">
                           <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
                           <span>Incorrect {penaltyValue ? `(-${penaltyValue})` : '(No penalty)'}</span>
                         </span>
                       )}
                       {!isAnswered && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded border border-slate-500 bg-slate-500/20 text-slate-400">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded border border-slate-500 bg-slate-500/20 text-slate-700 dark:text-slate-300">
                           Unattempted (0)
                         </span>
                       )}
                       {isMarked && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded border border-amber-500 bg-amber-500/20 text-amber-500 flex items-center gap-1">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded border border-amber-500 bg-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center gap-1">
                           <Bookmark className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
                           <span>Was Marked</span>
                         </span>

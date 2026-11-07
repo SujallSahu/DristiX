@@ -726,7 +726,7 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                       type="button"
                       onClick={handleVerifyOtp}
                       disabled={isVerifyingOtp || otpCode.length !== 6}
-                      className="flex-1 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
+                      className="flex-1 py-2 px-3 rounded-lg bg-theme-primary text-theme-primary-text font-extrabold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       {isVerifyingOtp ? (
                         <>
@@ -866,7 +866,7 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
               disabled={isSubmitting}
               aria-busy={isSubmitting}
               onFocus={() => speakInput('Registration complete karne ke liye Enter press karein')}
-              className="w-full py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm sm:text-base shadow-md transition focus:ring-4 focus:ring-theme-focus disabled:opacity-60 disabled:cursor-not-allowed mt-2 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3 px-5 rounded-xl bg-theme-primary text-theme-primary-text font-extrabold text-sm sm:text-base shadow-md transition focus:ring-4 focus:ring-theme-focus disabled:opacity-60 disabled:cursor-not-allowed mt-2 cursor-pointer flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>

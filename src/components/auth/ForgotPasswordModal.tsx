@@ -357,7 +357,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         {errorMessage && (
           <div
             role="alert"
-            className="mb-4 p-3.5 rounded-xl bg-red-500/10 border-2 border-red-500/80 text-red-500 text-xs sm:text-sm font-bold flex items-start gap-2.5 animate-shake"
+            className="mb-4 p-3.5 rounded-xl bg-red-500/10 border-2 border-red-500/80 text-red-700 dark:text-red-400 text-xs sm:text-sm font-bold flex items-start gap-2.5 animate-shake"
           >
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
             <span>{errorMessage}</span>
@@ -368,7 +368,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         {statusMessage && (
           <div
             role="status"
-            className="mb-4 p-3.5 rounded-xl bg-green-500/10 border-2 border-green-500/80 text-green-600 dark:text-green-400 text-xs sm:text-sm font-bold flex items-start gap-2.5"
+            className="mb-4 p-3.5 rounded-xl bg-emerald-500/10 border-2 border-emerald-500/80 text-emerald-700 dark:text-emerald-400 text-xs sm:text-sm font-bold flex items-start gap-2.5"
           >
             <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
             <span>{statusMessage}</span>
@@ -600,11 +600,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
             {/* Checklist */}
             <div className="text-xs space-y-1.5 text-theme-text/75 p-3 rounded-xl bg-theme-bg/50 border border-theme-border/60">
-              <div className={`flex items-center gap-2 ${newPassword.length >= 8 ? 'text-green-600 dark:text-green-400 font-bold' : ''}`}>
+              <div className={`flex items-center gap-2 ${newPassword.length >= 8 ? 'text-emerald-700 dark:text-emerald-400 font-bold' : ''}`}>
                 <div className={`w-1.5 h-1.5 rounded-full ${newPassword.length >= 8 ? 'bg-green-500' : 'bg-theme-text/40'}`} />
                 <span>At least 8 characters long</span>
               </div>
-              <div className={`flex items-center gap-2 ${newPassword && confirmPassword && newPassword === confirmPassword ? 'text-green-600 dark:text-green-400 font-bold' : ''}`}>
+              <div className={`flex items-center gap-2 ${newPassword && confirmPassword && newPassword === confirmPassword ? 'text-emerald-700 dark:text-emerald-400 font-bold' : ''}`}>
                 <div className={`w-1.5 h-1.5 rounded-full ${newPassword && confirmPassword && newPassword === confirmPassword ? 'bg-green-500' : 'bg-theme-text/40'}`} />
                 <span>Passwords match</span>
               </div>
@@ -633,7 +633,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         {/* ================= STEP 4: SUCCESS CONFIRMATION ================= */}
         {step === 'SUCCESS' && (
           <div className="text-center py-4 space-y-4">
-            <div className="w-16 h-16 rounded-full bg-green-500/15 border-2 border-green-500 text-green-600 dark:text-green-400 flex items-center justify-center mx-auto shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/15 border-2 border-emerald-500 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-sm">
               <CheckCircle2 className="w-9 h-9" aria-hidden="true" />
             </div>
 

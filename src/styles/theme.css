@@ -562,3 +562,28 @@ a.bg-theme-primary {
 [data-theme="high-contrast"] .bg-theme-primary .text-white {
   color: var(--primary-text) !important;
 }
+
+/* Safeguards for emerald and success buttons in Dark & High-Contrast */
+[data-theme="dark"] .bg-emerald-600.text-white,
+[data-theme="dark"] .bg-emerald-500.text-white,
+[data-theme="dark"] .bg-emerald-600 .text-white,
+[data-theme="dark"] .bg-emerald-500 .text-white,
+[data-theme="dark"] .bg-theme-success.text-white,
+[data-theme="dark"] .bg-theme-success .text-white {
+  color: var(--primary-text) !important;
+}
+
+[data-theme="high-contrast"] .bg-emerald-600.text-white,
+[data-theme="high-contrast"] .bg-emerald-500.text-white,
+[data-theme="high-contrast"] .bg-emerald-600 .text-white,
+[data-theme="high-contrast"] .bg-emerald-500 .text-white,
+[data-theme="high-contrast"] .bg-theme-success.text-white,
+[data-theme="high-contrast"] .bg-theme-success .text-white {
+  color: #000000 !important;
+}
+
+/* Light Mode Safeguards against low-contrast yellow text */
+:root:not([data-theme="dark"]):not([data-theme="high-contrast"]) .text-yellow-400:not([aria-hidden="true"]),
+:root:not([data-theme="dark"]):not([data-theme="high-contrast"]) .text-yellow-300:not([aria-hidden="true"]) {
+  color: #92400e !important;
+}
