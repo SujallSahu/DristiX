@@ -308,14 +308,6 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
           </div>
         </div>
       </div>
-
-      {/* Scroll indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-80" aria-hidden="true">
-        <span className="text-[10px] font-bold text-theme-text-secondary uppercase tracking-[0.15em]">scroll</span>
-        <span className="w-5 h-8 rounded-full border-2 border-theme-border flex items-start justify-center pt-1.5">
-          <span className="w-1 h-2 rounded-full bg-theme-primary animate-bounce" />
-        </span>
-      </div>
     </section>
   );
 };
