@@ -56,14 +56,14 @@ export const ExamFeedbackModal: React.FC = () => {
     if (!feedback.isOpen && speechRecognitionRef.current) {
       try {
         speechRecognitionRef.current.stop();
-      } catch (_) {}
+      } catch (_) { }
       setIsDictating(false);
     }
     return () => {
       if (speechRecognitionRef.current) {
         try {
           speechRecognitionRef.current.stop();
-        } catch (_) {}
+        } catch (_) { }
       }
     };
   }, [feedback.isOpen]);
@@ -271,11 +271,10 @@ export const ExamFeedbackModal: React.FC = () => {
                   role="radio"
                   aria-checked={isExact}
                   onClick={() => setFeedbackRating(starNum, 'keyboard')}
-                  className={`p-2.5 sm:p-3 rounded-xl transition transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-theme-focus flex flex-col items-center gap-1 ${
-                    isSelected
+                  className={`p-2.5 sm:p-3 rounded-xl transition transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-theme-focus flex flex-col items-center gap-1 ${isSelected
                       ? 'text-amber-400 bg-amber-400/10 border-2 border-amber-400/30'
                       : 'text-theme-text-secondary hover:text-amber-400/80 bg-theme-surface border border-theme-border'
-                  }`}
+                    }`}
                   aria-label={
                     isHindi
                       ? `${starNum} स्टार रेटिंग ${isSelected ? '(चुना हुआ)' : ''}`
@@ -283,9 +282,8 @@ export const ExamFeedbackModal: React.FC = () => {
                   }
                 >
                   <Star
-                    className={`w-7 h-7 sm:w-8 sm:h-8 transition ${
-                      isSelected ? 'fill-amber-400 stroke-amber-400' : 'stroke-current'
-                    }`}
+                    className={`w-7 h-7 sm:w-8 sm:h-8 transition ${isSelected ? 'fill-amber-400 stroke-amber-400' : 'stroke-current'
+                      }`}
                   />
                   <span className="text-xs font-bold">{starNum}</span>
                 </button>
@@ -298,8 +296,8 @@ export const ExamFeedbackModal: React.FC = () => {
                 ? `चुनी गई रेटिंग: ${feedback.rating} स्टार`
                 : `Selected Rating: ${feedback.rating} out of 5 stars`
               : isHindi
-              ? 'कीबोर्ड से 1-5 दबाएं या स्टार पर क्लिक करें।'
-              : 'Press 1-5 on keyboard or click a star.'}
+                ? 'कीबोर्ड से 1-5 दबाएं या स्टार पर क्लिक करें।'
+                : 'Press 1-5 on keyboard or click a star.'}
           </div>
         </div>
 
@@ -318,10 +316,9 @@ export const ExamFeedbackModal: React.FC = () => {
                   type="button"
                   onClick={() => toggleFeedbackTag(tag.id, 'keyboard')}
                   aria-pressed={isSelected}
-                  className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 border focus:ring-4 focus:ring-theme-focus ${
-                    isSelected
-                      ? 'bg-theme-primary text-theme-primary-text border-theme-primary shadow-sm'
-                      : 'bg-theme-bg text-theme-text border-theme-border hover:border-theme-primary'
+                  className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 border focus:ring-4 focus:ring-theme-focus ${isSelected
+                        ? 'bg-theme-primary text-theme-primary-text border-theme-primary shadow-sm'
+                        : 'bg-theme-bg text-theme-text border-theme-border hover:border-theme-primary'
                   }`}
                 >
                   {isSelected && <Check className="w-3.5 h-3.5" aria-hidden="true" />}
@@ -342,11 +339,10 @@ export const ExamFeedbackModal: React.FC = () => {
             <button
               type="button"
               onClick={startVoiceDictation}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition border ${
-                isDictating
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition border ${isDictating
                   ? 'bg-red-500 text-white border-red-600 animate-pulse ring-4 ring-red-400/40'
                   : 'bg-theme-bg text-theme-text border-theme-border hover:border-theme-primary'
-              }`}
+                }`}
               aria-label={
                 isDictating
                   ? isHindi ? 'बोलना बंद करें' : 'Stop voice dictation'
@@ -401,11 +397,10 @@ export const ExamFeedbackModal: React.FC = () => {
             type="button"
             disabled={feedback.isSubmitting}
             onClick={submitExamFeedback}
-            className={`px-5 py-2.5 rounded-xl text-sm font-black flex items-center gap-2 transition focus:ring-4 focus:ring-theme-focus ${
-              feedback.rating > 0
-                ? 'bg-theme-primary text-theme-primary-text hover:brightness-110 shadow-lg shadow-theme-primary/20'
-                : 'bg-theme-primary/50 text-theme-primary-text/80 cursor-not-allowed'
-            }`}
+            className={`px-5 py-2.5 rounded-xl text-sm font-black flex items-center gap-2 transition focus:ring-4 focus:ring-theme-focus ${feedback.rating > 0
+                  ? 'bg-theme-primary text-theme-primary-text hover:brightness-110 shadow-lg shadow-theme-primary/20'
+                  : 'bg-theme-primary/50 text-theme-primary-text/80 cursor-not-allowed'
+              }`}
           >
             <Send className="w-4 h-4" aria-hidden="true" />
             <span>
