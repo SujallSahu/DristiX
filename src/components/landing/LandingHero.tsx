@@ -88,12 +88,12 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
       <div className="dx-orb dx-orb-3" aria-hidden="true" />
 
       <div className="dx-hero-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-12 xl:gap-20 items-center py-20 lg:py-28">
+        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 xl:gap-20 items-center pt-6 sm:pt-14 lg:pt-20 pb-16 sm:pb-24 lg:pb-28">
 
           {/* ══ LEFT: Copy ══ */}
           <div>
             {/* Live badge */}
-            <div className="dx-label-pill mb-7 dx-rise w-fit">
+            <div className="dx-label-pill mb-4 sm:mb-6 dx-rise w-fit">
               <span className="relative flex h-2 w-2 shrink-0">
                 <span className="dx-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
@@ -101,36 +101,36 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
               100% Accessible · WCAG 2.1 AA
             </div>
 
-            {/* Headline — 3 staggered lines */}
-            <h1 className="leading-[1.02] tracking-[-0.045em] dx-rise text-theme-text">
-              <span className="block text-5xl sm:text-6xl xl:text-7xl font-black">Exam Portal</span>
-              <span className="block text-5xl sm:text-6xl xl:text-7xl font-black dx-shimmer-text mt-1">That Speaks</span>
-              <span className="block text-5xl sm:text-6xl xl:text-7xl font-black dx-gradient-text mt-1">Your Language.</span>
+            {/* Headline — 3 staggered lines with mobile-proportional font scaling */}
+            <h1 className="leading-[1.1] sm:leading-[1.02] tracking-[-0.03em] sm:tracking-[-0.045em] dx-rise text-theme-text">
+              <span className="block text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black">Exam Portal</span>
+              <span className="block text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-theme-text sm:dx-shimmer-text mt-1">That Speaks</span>
+              <span className="block text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-emerald-600 dark:text-emerald-400 sm:dx-gradient-text mt-1">Your Language.</span>
             </h1>
 
             {/* Sub */}
-            <p className="mt-7 text-base sm:text-lg leading-relaxed max-w-[54ch] text-theme-text/70 font-medium dx-rise-delay">
+            <p className="mt-4 sm:mt-7 text-sm sm:text-base lg:text-lg leading-relaxed max-w-[54ch] text-theme-text/85 font-medium dx-rise-delay">
               DristiX delivers mock tests and practice drills built for candidates who are
               blind, low-vision or keyboard-only — and for everyone who wants a faster exam
               experience. Every question reads itself. No mouse ever required.
             </p>
 
             {/* CTAs */}
-            <div className="mt-10 flex flex-wrap items-center gap-4 dx-rise-delay-2">
+            <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 dx-rise-delay-2">
               <button
                 type="button"
                 onClick={onSignIn}
-                className="dx-btn-primary h-14 px-9 text-base flex items-center gap-3 group"
+                className="dx-btn-primary h-12 sm:h-14 px-6 sm:px-9 text-sm sm:text-base flex items-center justify-center gap-2.5 sm:gap-3 group shadow-lg"
               >
-                <span className="relative z-10">Start Practicing Free</span>
+                <span className="relative z-10 font-black">Start Practicing Free</span>
                 <ArrowRight
-                  className="relative z-10 w-5 h-5 transition-transform group-hover:translate-x-1"
+                  className="relative z-10 w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1"
                   aria-hidden="true"
                 />
               </button>
               <a
                 href="#why"
-                className="h-14 px-7 rounded-2xl border-2 border-theme-border font-extrabold text-base text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 inline-flex items-center no-underline backdrop-blur-sm"
+                className="h-12 sm:h-14 px-5 sm:px-7 rounded-2xl border-2 border-theme-border font-extrabold text-sm sm:text-base text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 inline-flex items-center justify-center no-underline backdrop-blur-sm text-center"
                 style={{ background: 'color-mix(in srgb, var(--bg-surface) 50%, transparent)' }}
               >
                 See how it works
@@ -138,16 +138,16 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
             </div>
 
             {/* Micro-stats */}
-            <div className="mt-10 pt-8 dx-divider dx-rise-delay-3" />
-            <div className="grid grid-cols-3 gap-6 mt-8 dx-rise-delay-3">
+            <div className="mt-6 sm:mt-10 pt-5 sm:pt-8 dx-divider dx-rise-delay-3" />
+            <div className="grid grid-cols-3 gap-2 sm:gap-6 mt-5 sm:mt-8 dx-rise-delay-3">
               {[
                 { val: '100%', lbl: 'Hands-Free Voice' },
                 { val: '4',    lbl: 'Contrast Themes'  },
                 { val: '0',    lbl: 'Mouse Needed'      },
               ].map(({ val, lbl }, i) => (
-                <div key={lbl} className={i > 0 ? 'border-l border-theme-border/40 pl-6' : ''}>
-                  <div className="text-3xl xl:text-4xl font-black dx-gradient-text">{val}</div>
-                  <div className="mt-1 text-xs font-bold text-theme-text-secondary leading-tight">{lbl}</div>
+                <div key={lbl} className={i > 0 ? 'border-l border-theme-border/40 pl-2.5 sm:pl-6' : ''}>
+                  <div className="text-2xl sm:text-3xl xl:text-4xl font-black dx-gradient-text">{val}</div>
+                  <div className="mt-1 text-[11px] sm:text-xs font-bold text-theme-text-secondary leading-tight">{lbl}</div>
                 </div>
               ))}
             </div>

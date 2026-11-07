@@ -297,31 +297,51 @@
 }
 
 .dx-gradient-text {
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary);
+}
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .dx-gradient-text {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 }
 
-/* Animated shimmer headline */
+/* Animated shimmer headline with solid color fallback */
 @keyframes dx-shimmer {
   0%   { background-position: -300% center; }
   100% { background-position: 300% center; }
 }
 .dx-shimmer-text {
-  background: linear-gradient(
-    100deg,
-    var(--text-primary) 0%,
-    var(--text-primary) 30%,
-    var(--primary) 48%,
-    var(--text-primary) 66%,
-    var(--text-primary) 100%
-  );
-  background-size: 300% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: dx-shimmer 5s linear infinite;
+  color: var(--text-primary);
+}
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .dx-shimmer-text {
+    background: linear-gradient(
+      100deg,
+      var(--text-primary) 0%,
+      var(--text-primary) 30%,
+      var(--primary) 48%,
+      var(--text-primary) 66%,
+      var(--text-primary) 100%
+    );
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: dx-shimmer 5s linear infinite;
+  }
+}
+
+/* High-Contrast and safe accessibility overrides: zero transparent text */
+[data-theme="high-contrast"] .dx-gradient-text,
+[data-theme="high-contrast"] .dx-shimmer-text {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  background-clip: initial !important;
+  color: var(--text-primary) !important;
 }
 
 /* Glow CTA button */

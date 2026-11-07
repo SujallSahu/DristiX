@@ -57,18 +57,18 @@ export const A11yInspector: React.FC = () => {
   return (
     <>
       {/* Floating A11y Badge Trigger (positioned on left to avoid overlapping Voice Assistant Orb on right) */}
-      <div className="fixed bottom-4 left-4 z-40">
+      <div className="fixed bottom-3 left-3 sm:bottom-4 sm:left-4 z-30">
         <button
           type="button"
           onClick={handleOpen}
           aria-label="Open WCAG 2.1 AA Accessibility Inspector (Powered by axe-core)"
-          className="px-3 py-2 rounded-full border-2 border-theme-border bg-theme-surface text-theme-text hover:bg-theme-bg shadow-xl flex items-center gap-1.5 font-bold text-xs transition ring-2 ring-theme-focus-ring/40"
+          className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full border-2 border-theme-border bg-theme-surface/90 backdrop-blur-md text-theme-text hover:bg-theme-bg shadow-xl flex items-center gap-1.5 font-bold text-[11px] sm:text-xs transition ring-2 ring-theme-focus-ring/40"
         >
-          <ShieldCheck className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+          <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0" aria-hidden="true" />
           <span>a11y Audit</span>
           {auditResults && (
             <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+              className={`px-1.5 py-0.2 rounded-full text-[9px] sm:text-[10px] font-black ${
                 auditResults.violations.length === 0
                   ? 'bg-theme-success text-white'
                   : 'bg-theme-danger text-white'

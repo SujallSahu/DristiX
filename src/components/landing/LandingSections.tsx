@@ -59,13 +59,13 @@ const SectionHeader: React.FC<{
   sub?: string;
   center?: boolean;
 }> = ({ pill, heading, sub, center = true }) => (
-  <div className={`${center ? 'text-center mx-auto' : ''} max-w-2xl mb-16`}>
-    <span className="dx-label-pill mb-5 inline-flex">{pill}</span>
-    <h2 className="text-4xl sm:text-5xl font-black tracking-[-0.04em] leading-[1.08] text-theme-text mt-4">
+  <div className={`${center ? 'text-center mx-auto' : ''} max-w-2xl mb-10 sm:mb-16`}>
+    <span className="dx-label-pill mb-3 sm:mb-5 inline-flex">{pill}</span>
+    <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-[-0.03em] sm:tracking-[-0.04em] leading-[1.15] sm:leading-[1.08] text-theme-text mt-2 sm:mt-4">
       {heading}
     </h2>
     {sub && (
-      <p className="mt-4 text-base sm:text-lg text-theme-text-secondary font-medium leading-relaxed max-w-[58ch] mx-auto">
+      <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-theme-text-secondary font-medium leading-relaxed max-w-[58ch] mx-auto">
         {sub}
       </p>
     )}
@@ -582,12 +582,12 @@ export const StatsBand: React.FC = () => (
         sub="Every figure below is verifiable in this codebase — no invented usage statistics."
       />
 
-      <ul className="grid grid-cols-2 xl:grid-cols-4 gap-5 list-none m-0 p-0">
+      <ul className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-5 list-none m-0 p-0">
         {FACTS.map(({ icon: Icon, value, sub, label }) => (
-          <li key={sub} className="dx-stat-card p-8 flex flex-col gap-5 group cursor-default">
+          <li key={sub} className="dx-stat-card p-4 sm:p-8 flex flex-col gap-3 sm:gap-5 group cursor-default">
             <div className="flex items-center gap-3">
               <div
-                className="w-11 h-11 grid place-items-center rounded-2xl text-theme-primary shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:text-theme-primary-text"
+                className="w-9 h-9 sm:w-11 sm:h-11 grid place-items-center rounded-2xl text-theme-primary shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:text-theme-primary-text"
                 style={{
                   background: 'color-mix(in srgb, var(--primary) 12%, var(--bg-surface))',
                   border: '1.5px solid color-mix(in srgb, var(--primary) 28%, transparent)',
@@ -595,16 +595,16 @@ export const StatsBand: React.FC = () => (
                 onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-gradient)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'color-mix(in srgb, var(--primary) 12%, var(--bg-surface))')}
               >
-                <Icon className="w-5 h-5" aria-hidden="true" />
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
               </div>
             </div>
 
             <div>
-              <div className="text-5xl sm:text-6xl font-black leading-none tracking-tight dx-gradient-text">
+              <div className="text-3xl sm:text-5xl lg:text-6xl font-black leading-none tracking-tight dx-gradient-text">
                 {value}
               </div>
-              <div className="mt-1 text-sm font-black text-theme-text tracking-tight">{sub}</div>
-              <p className="mt-3 text-xs sm:text-sm font-semibold text-theme-text-secondary leading-snug max-w-[24ch]">
+              <div className="mt-1 text-xs sm:text-sm font-black text-theme-text tracking-tight">{sub}</div>
+              <p className="mt-2 sm:mt-3 text-xs sm:text-sm font-semibold text-theme-text-secondary leading-snug max-w-[24ch]">
                 {label}
               </p>
             </div>
@@ -759,9 +759,9 @@ export const FaqSection: React.FC = () => {
                 type="button"
                 onClick={() => setOpen(open === idx ? null : idx)}
                 aria-expanded={open === idx}
-                className="w-full text-left px-6 py-5 flex items-center justify-between gap-5 focus:outline-none group"
+                className="w-full text-left px-4 sm:px-6 py-3.5 sm:py-5 flex items-center justify-between gap-3 sm:gap-5 focus:outline-none group"
               >
-                <span className="font-black text-base text-theme-text group-hover:text-theme-primary transition-colors leading-snug">
+                <span className="font-black text-sm sm:text-base text-theme-text group-hover:text-theme-primary transition-colors leading-snug">
                   {faq.q}
                 </span>
                 <span
@@ -783,7 +783,7 @@ export const FaqSection: React.FC = () => {
 
               {open === idx && (
                 <div
-                  className="px-6 pb-6 pt-1 text-sm sm:text-base leading-relaxed text-theme-text-secondary font-medium border-t"
+                  className="px-4 sm:px-6 pb-4 sm:pb-6 pt-1 text-sm sm:text-base leading-relaxed text-theme-text-secondary font-medium border-t"
                   style={{ borderColor: 'color-mix(in srgb, var(--border-color) 35%, transparent)' }}
                 >
                   {faq.a}
@@ -826,28 +826,28 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
         Start Today — Free
       </span>
 
-      <h2 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-[-0.045em] leading-[1.03] text-theme-primary-text text-balance">
+      <h2 className="text-2xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-[-0.03em] sm:tracking-[-0.045em] leading-[1.1] sm:leading-[1.03] text-theme-primary-text text-balance">
         The test starts the moment you're ready.
       </h2>
 
-      <p className="mt-7 text-base sm:text-xl leading-relaxed text-theme-primary-text/80 font-medium max-w-[52ch] mx-auto">
+      <p className="mt-4 sm:mt-7 text-sm sm:text-lg lg:text-xl leading-relaxed text-theme-primary-text/85 font-medium max-w-[52ch] mx-auto">
         Sign in with the roll number and password your institution issued.
         Registration is by institution invitation only.
       </p>
 
-      <div className="mt-14 flex flex-wrap justify-center gap-5">
+      <div className="mt-8 sm:mt-14 flex flex-col sm:flex-row justify-center gap-3 sm:gap-5">
         <button
           type="button"
           onClick={onSignIn}
-          className="h-14 px-12 rounded-2xl font-black text-lg transition-all hover:scale-105 active:scale-97 flex items-center gap-3 group shadow-2xl"
+          className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-12 rounded-2xl font-black text-sm sm:text-lg transition-all hover:scale-105 active:scale-97 flex items-center justify-center gap-2.5 sm:gap-3 group shadow-2xl"
           style={{ background: 'var(--bg-page)', color: 'var(--text-primary)' }}
         >
           <span>Sign in to your account</span>
-          <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+          <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
         </button>
         <a
           href="#exams"
-          className="h-14 px-9 rounded-2xl border-2 font-extrabold text-lg text-theme-primary-text hover:bg-white/10 hover:scale-105 active:scale-97 transition-all inline-flex items-center no-underline"
+          className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-9 rounded-2xl border-2 font-extrabold text-sm sm:text-lg text-theme-primary-text hover:bg-white/10 hover:scale-105 active:scale-97 transition-all inline-flex items-center justify-center no-underline"
           style={{ borderColor: 'rgba(255,255,255,0.32)' }}
         >
           Browse exams first

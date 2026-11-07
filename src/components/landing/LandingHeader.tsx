@@ -135,28 +135,56 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
         boxShadow: scrolled ? '0 4px 32px rgba(0,0,0,0.12)' : 'none',
       }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-6">
+        {/* Top bar on Mobile / Left on Desktop */}
+        <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+          {/* Brand */}
+          <a href="#top" className="flex items-center gap-2 sm:gap-3 rounded-xl no-underline group shrink-0">
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9">
+              <div
+                className="absolute inset-0 rounded-xl transition-transform group-hover:scale-110"
+                style={{ background: 'var(--primary-gradient)', boxShadow: '0 4px 16px var(--primary-glow)' }}
+              />
+              <span className="absolute inset-0 grid place-items-center text-theme-primary-text font-black text-xs sm:text-sm rounded-xl">
+                DX
+              </span>
+            </div>
+            <div>
+              <span className="block font-black text-base sm:text-lg text-theme-text tracking-tight leading-tight group-hover:text-theme-primary transition-colors">
+                DristiX
+              </span>
+              <span className="block text-[9px] sm:text-[10px] font-bold text-theme-text-secondary leading-tight tracking-wide uppercase">
+                Accessible Exam Portal
+              </span>
+            </div>
+          </a>
 
-        {/* Brand */}
-        <a href="#top" className="flex items-center gap-3 rounded-xl no-underline group shrink-0">
-          <div className="relative w-9 h-9">
-            <div
-              className="absolute inset-0 rounded-xl transition-transform group-hover:scale-110"
-              style={{ background: 'var(--primary-gradient)', boxShadow: '0 4px 16px var(--primary-glow)' }}
-            />
-            <span className="absolute inset-0 grid place-items-center text-theme-primary-text font-black text-sm rounded-xl">
-              DX
-            </span>
+          {/* MOBILE-ONLY Top Right: Login & Sign Up buttons directly visible */}
+          <div className="flex sm:hidden items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={onSignIn}
+              className="h-8 px-2.5 rounded-lg border border-theme-border/80 bg-theme-surface/70 font-bold text-xs text-theme-text flex items-center gap-1 shadow-xs active:scale-95"
+              aria-label="Login to candidate portal"
+            >
+              <LogIn className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
+              <span>Login</span>
+            </button>
+            <button
+              type="button"
+              onClick={onRegister}
+              className="h-8 px-3 rounded-lg font-black text-xs text-theme-primary-text flex items-center gap-1 shadow-md active:scale-95"
+              style={{
+                background: 'var(--primary-gradient)',
+                boxShadow: '0 2px 10px var(--primary-glow)',
+              }}
+              aria-label="Register / Sign Up for new account"
+            >
+              <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Sign Up</span>
+            </button>
           </div>
-          <div>
-            <span className="block font-black text-lg text-theme-text tracking-tight leading-tight group-hover:text-theme-primary transition-colors">
-              DristiX
-            </span>
-            <span className="block text-[10px] font-bold text-theme-text-secondary leading-tight tracking-wide uppercase">
-              Accessible Exam Portal
-            </span>
-          </div>
-        </a>
+        </div>
 
         {/* Nav — desktop */}
         <nav aria-label="Primary navigation" className="hidden lg:block">
@@ -174,10 +202,10 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
           </ul>
         </nav>
 
-        {/* Right: controls + auth */}
-        <div className="flex items-center gap-2">
+        {/* Right: Accessibility controls + Desktop Auth buttons */}
+        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto pt-1 sm:pt-0 border-t border-theme-border/30 sm:border-t-0">
           {/* Accessibility controls */}
-          <div className="flex items-center gap-1.5 shrink-0" role="group" aria-label="Accessibility controls">
+          <div className="flex items-center justify-between sm:justify-end gap-1.5 w-full sm:w-auto" role="group" aria-label="Accessibility controls">
             <button
               type="button"
               onClick={toggleTts}
@@ -195,7 +223,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               onClick={cycleTheme}
               title={`Theme: ${THEME_NAMES[theme]} — tap to change`}
               aria-label={`Colour theme: ${THEME_NAMES[theme]}. Tap to change.`}
-              className={`${iconBtn} hidden sm:grid`}
+              className={iconBtn}
               style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
             >
               <Contrast className="w-4 h-4" aria-hidden="true" />
@@ -225,10 +253,13 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               }
               className={`${iconBtn} ${
                 fontSize > 100 ? '!bg-theme-primary !text-theme-primary-text !border-theme-primary' : ''
-              } flex sm:grid`}
-              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
+              } flex items-center justify-center`}
+              style={{ width: 'auto', minWidth: '36px', height: '36px', minHeight: '36px', paddingLeft: '8px', paddingRight: '8px' }}
             >
-              <Type className="w-4 h-4" aria-hidden="true" />
+              <Type className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span className="text-[10px] font-sans font-bold leading-none px-1 py-0.5 rounded border border-theme-border bg-white text-black shadow-xs ml-1">
+                {fontSize}%
+              </span>
             </button>
 
             <button
@@ -243,14 +274,14 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
             </button>
           </div>
 
-          {/* Divider */}
-          <div className="hidden sm:block w-px h-5 self-center bg-theme-border/50 mx-1" aria-hidden="true" />
+          {/* Desktop Divider */}
+          <div className="hidden sm:block w-px h-5 self-center bg-theme-border/50 mx-1 shrink-0" aria-hidden="true" />
 
-          {/* Auth buttons */}
+          {/* Desktop Auth buttons */}
           <button
             type="button"
             onClick={onSignIn}
-            className="h-9 px-4 rounded-xl border border-theme-border/60 bg-theme-surface/40 backdrop-blur-sm font-bold text-sm text-theme-text hover:bg-theme-surface hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-2 shadow-sm"
+            className="h-9 px-4 rounded-xl border border-theme-border/60 bg-theme-surface/40 backdrop-blur-sm font-bold text-sm text-theme-text hover:bg-theme-surface hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-2 shadow-sm shrink-0"
           >
             <LogIn className="w-4 h-4" aria-hidden="true" />
             <span>Login</span>
@@ -259,7 +290,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
           <button
             type="button"
             onClick={onRegister}
-            className="h-9 px-5 rounded-xl font-black text-sm text-theme-primary-text transition-all duration-200 active:scale-95 flex items-center gap-2 shadow-md hover:scale-105"
+            className="h-9 px-5 rounded-xl font-black text-sm text-theme-primary-text transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-2 shadow-md hover:scale-105 shrink-0"
             style={{
               background: 'var(--primary-gradient)',
               boxShadow: '0 4px 16px var(--primary-glow)',
