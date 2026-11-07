@@ -72,7 +72,7 @@ export const ExamSidebar: React.FC = () => {
   return (
     <aside
       aria-label="Exam sidebar: Timer, Question Palette, and Progress"
-      className="sticky top-20 flex flex-col gap-3.5 w-72 xl:w-80 flex-shrink-0 select-none"
+      className="w-full lg:w-72 xl:w-80 flex flex-col gap-3.5 flex-shrink-0 select-none lg:sticky lg:top-20"
     >
       {/* ── 1. Timer Card (Taller & Prominent) ── */}
       <div
@@ -165,7 +165,7 @@ export const ExamSidebar: React.FC = () => {
         <div
           role="grid"
           aria-label="Question grid. Click any number to jump."
-          className="grid grid-cols-5 gap-2 p-1 max-h-48 overflow-y-auto"
+          className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-2 p-1 max-h-48 overflow-y-auto"
           style={{ scrollbarWidth: 'none' }}
         >
           {questions.map((q, idx) => {

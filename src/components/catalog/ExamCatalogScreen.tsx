@@ -295,7 +295,7 @@ export const ExamCatalogScreen: React.FC = () => {
             <div
               role="tablist"
               aria-label="Portal Section Selector. Press T to switch between Mock Exams and Practice Arena."
-              className="flex flex-col gap-2"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2"
             >
               {/* Mock Examinations Tab */}
               <button
@@ -409,7 +409,7 @@ export const ExamCatalogScreen: React.FC = () => {
             <div
               role="radiogroup"
               aria-label="Filter by subject category (Press C to cycle)"
-              className="space-y-0.5"
+              className="flex flex-row overflow-x-auto no-scrollbar gap-1.5 pb-1 lg:flex-col lg:space-y-0.5 lg:overflow-visible"
             >
               {EXAM_CATEGORIES.map((cat) => {
                 const isSelected = selectedCategory === cat;
@@ -425,7 +425,7 @@ export const ExamCatalogScreen: React.FC = () => {
                     role="radio"
                     aria-checked={isSelected}
                     onClick={() => handleCategoryChange(cat)}
-                    className={`w-full px-2.5 py-1.5 rounded-xl text-xs font-bold border flex items-center justify-between transition-all focus:outline-none focus:ring-4 focus:ring-theme-focus ${
+                    className={`w-auto shrink-0 whitespace-nowrap lg:w-full px-2.5 py-1.5 rounded-xl text-xs font-bold border flex items-center justify-between gap-2 transition-all focus:outline-none focus:ring-4 focus:ring-theme-focus ${
                       isSelected
                         ? portalTab === 'practice'
                           ? 'bg-emerald-600/15 border-emerald-600 text-theme-text font-black shadow-xs'
@@ -827,7 +827,7 @@ export const ExamCatalogScreen: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleStartExam(exam)}
-                        className={`flex-1 min-w-0 py-2.5 px-3.5 rounded-xl text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all focus:outline-none focus:ring-4 focus:ring-theme-focus ${
+                        className={`flex-1 min-w-0 py-3 sm:py-2.5 px-3.5 min-h-[44px] rounded-xl text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all focus:outline-none focus:ring-4 focus:ring-theme-focus ${
                           isPractice ? 'bg-emerald-600' : 'bg-theme-primary'
                         }`}
                         aria-label={`Start ${isPractice ? 'Practice Drill' : 'Examination'}: ${exam.title} (Or press Enter)`}
@@ -842,7 +842,7 @@ export const ExamCatalogScreen: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleListenOverview(exam)}
-                        className="shrink-0 py-2.5 px-3.5 rounded-xl bg-theme-surface border-2 border-theme-border hover:border-theme-primary text-theme-text font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors focus:outline-none focus:ring-4 focus:ring-theme-focus"
+                        className="shrink-0 py-3 sm:py-2.5 px-3.5 min-h-[44px] rounded-xl bg-theme-surface border-2 border-theme-border hover:border-theme-primary text-theme-text font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-colors focus:outline-none focus:ring-4 focus:ring-theme-focus"
                         aria-label={`Listen overview for ${exam.title} (Or press O)`}
                       >
                         <span className="shrink-0">🔊</span>

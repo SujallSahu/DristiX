@@ -122,21 +122,21 @@ export const Header: React.FC = () => {
   return (
     <header
       role="banner"
-      className="p-3 sm:p-4 border-b-2 border-theme-border/80 dx-glass transition-colors sticky top-0 z-30 shadow-md backdrop-blur-md overflow-visible"
+      className="p-2 sm:p-4 border-b-2 border-theme-border/80 dx-glass transition-colors sticky top-0 z-30 shadow-md backdrop-blur-md overflow-visible"
     >
-      <div className="max-w-[1700px] w-full mx-auto flex flex-nowrap justify-between items-center gap-2 overflow-visible">
+      <div className="max-w-[1700px] w-full mx-auto flex flex-nowrap justify-between items-center gap-1.5 sm:gap-2 overflow-visible">
         {/* Portal Branding and Exam Switcher */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
             <span
-              className="w-9 h-9 rounded-xl border-2 border-theme-border bg-theme-primary text-theme-primary-text flex items-center justify-center font-black text-sm shrink-0 shadow-sm"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border-2 border-theme-border bg-theme-primary text-theme-primary-text flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-sm"
               aria-hidden="true"
             >
               DX
             </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-black text-theme-text leading-tight tracking-tight">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="text-sm sm:text-lg font-black text-theme-text leading-tight tracking-tight truncate">
                   DristiX
                 </h1>
                 {activeView === 'exam' && (
@@ -193,7 +193,7 @@ export const Header: React.FC = () => {
                   ? 'Submit test before exiting'
                   : `Return to catalog`
               }
-              className="px-3 py-1.5 rounded-xl border-2 border-theme-border bg-theme-bg hover:border-theme-primary text-theme-text text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-xs ml-1"
+              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border-2 border-theme-border bg-theme-bg hover:border-theme-primary text-theme-text text-xs font-extrabold flex items-center gap-1 sm:gap-1.5 transition-all shadow-xs ml-0.5 sm:ml-1 shrink-0"
             >
               <span>{isSubmitted ? '📚' : '📝'}</span>
               <span className="hidden sm:inline">
@@ -248,19 +248,19 @@ export const Header: React.FC = () => {
           <div
             role="region"
             aria-label="Exam Timer. Press T to announce time"
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 sm:gap-2 shrink-0"
           >
             <button
               type="button"
               onClick={handleAnnounceTime}
               title="Click or press T to speak remaining time"
               aria-label={`Time Remaining: ${formattedTime}. Click or press T to read aloud.`}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 font-mono font-bold text-base transition ${isTimeCritical
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 font-mono font-bold text-xs sm:text-base transition ${isTimeCritical
                 ? 'border-red-600 bg-red-950/20 text-red-500 animate-pulse'
                 : 'border-theme-border bg-theme-bg text-theme-text hover:border-theme-focus-ring'
                 }`}
             >
-              <Clock className="w-4 h-4 text-theme-focus-ring" aria-hidden="true" />
+              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-theme-focus-ring shrink-0" aria-hidden="true" />
               <span>
                 <span className="sr-only">Time Remaining: </span>
                 <span id="timer-display">{formattedTime}</span>
@@ -347,15 +347,15 @@ export const Header: React.FC = () => {
                 : 'Activate AI Voice Assistant. Speak or control test via voice. Press V'
             }
             aria-pressed={voiceState === 'listening'}
-            className={`p-2 rounded-lg border-2 transition flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 ${voiceState === 'listening'
+            className={`p-1.5 sm:p-2 rounded-lg border-2 transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 shrink-0 ${voiceState === 'listening'
               ? 'bg-rose-600 border-rose-400 text-white shadow-lg animate-pulse'
               : 'border-theme-border bg-theme-bg text-theme-text hover:border-teal-400 hover:text-teal-400'
               }`}
           >
             {voiceState === 'listening' ? (
-              <Mic className="w-5 h-5 text-white" aria-hidden="true" />
+              <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-white" aria-hidden="true" />
             ) : (
-              <Mic className="w-5 h-5 text-teal-400" aria-hidden="true" />
+              <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-teal-400" aria-hidden="true" />
             )}
             <span className="hidden xl:inline text-xs font-bold">
               {voiceState === 'listening' ? 'Listening...' : 'Voice AI'}
@@ -385,13 +385,13 @@ export const Header: React.FC = () => {
             title={ttsEnabled ? 'Disable TTS Speech Output' : 'Enable TTS Speech Output'}
             aria-label={ttsEnabled ? 'Built-in Speech is ON. Click to disable.' : 'Built-in Speech is OFF. Click to enable.'}
             aria-pressed={ttsEnabled}
-            className={`p-2 rounded-lg border-2 border-theme-border transition ${ttsEnabled ? 'bg-theme-primary text-theme-primary-text' : 'bg-theme-bg text-theme-text'
+            className={`p-1.5 sm:p-2 rounded-lg border-2 border-theme-border transition shrink-0 ${ttsEnabled ? 'bg-theme-primary text-theme-primary-text' : 'bg-theme-bg text-theme-text'
               }`}
           >
             {ttsEnabled ? (
-              <Volume2 className="w-5 h-5" aria-hidden="true" />
+              <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
             ) : (
-              <VolumeX className="w-5 h-5" aria-hidden="true" />
+              <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
             )}
           </button>
 
@@ -403,9 +403,9 @@ export const Header: React.FC = () => {
               title="Open Question Palette (Shortcut: Q)"
               aria-label="Open Question Palette (Shortcut: Q)"
               aria-expanded={isPaletteOpen}
-              className="p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 font-semibold text-sm"
+              className="p-1.5 sm:p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 font-semibold text-xs sm:text-sm shrink-0"
             >
-              <LayoutGrid className="w-5 h-5 text-theme-focus-ring" aria-hidden="true" />
+              <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5 text-theme-focus-ring" aria-hidden="true" />
               <span className="hidden lg:inline">Questions</span>
               <kbd className="hidden lg:inline text-[10px] px-1 border border-theme-border rounded">
                 Q
@@ -436,12 +436,12 @@ export const Header: React.FC = () => {
                 ? `Text size ${fontSize}% increased. Tab once to increase, tab twice to reset to normal.`
                 : 'Text size 100% normal. Tab once to increase, tab twice to reset.'
             }
-            className={`p-2 rounded-lg border-2 border-theme-border transition flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 ${fontSize > 100
+            className={`p-1.5 sm:p-2 rounded-lg border-2 border-theme-border transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 shrink-0 ${fontSize > 100
                 ? 'bg-theme-primary text-theme-primary-text border-theme-primary'
                 : 'bg-theme-bg text-theme-text hover:bg-theme-surface'
               }`}
           >
-            <Type className="w-5 h-5" aria-hidden="true" />
+            <Type className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
               <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-white text-black leading-tight shadow-xs">
                 {fontSize}%
               </kbd>
@@ -454,9 +454,9 @@ export const Header: React.FC = () => {
             onClick={() => setSettingsOpen(true)}
             title="Accessibility Preferences (Shortcut: A)"
             aria-label="Accessibility Preferences (Shortcut: A)"
-            className="p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400"
+            className="p-1.5 sm:p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 shrink-0"
           >
-            <Settings className="w-5 h-5 text-yellow-400" aria-hidden="true" />
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" aria-hidden="true" />
             <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-theme-surface">
               A
             </kbd>
@@ -468,9 +468,9 @@ export const Header: React.FC = () => {
             onClick={() => setShortcutsOpen(true)}
             title="Keyboard Shortcuts Reference (Shortcut: H or ?)"
             aria-label="Keyboard Shortcuts Reference (Shortcut: H or ?)"
-            className="p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400"
+            className="p-1.5 sm:p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 shrink-0"
           >
-            <HelpCircle className="w-5 h-5 text-yellow-400" aria-hidden="true" />
+            <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" aria-hidden="true" />
             <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-theme-surface">
               H
             </kbd>
@@ -481,9 +481,9 @@ export const Header: React.FC = () => {
             <button
               type="button"
               onClick={() => setSubmitModalOpen(true)}
-              className="ml-1 sm:ml-2 px-3 py-1.5 rounded-lg border-2 border-theme-border bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm flex items-center gap-1.5 transition shadow-sm"
+              className="ml-0.5 sm:ml-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-theme-border bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center gap-1 sm:gap-1.5 transition shadow-sm shrink-0"
             >
-              <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
               <span>Submit</span>
               <kbd className="hidden xl:inline text-[10px] px-1 border border-white/40 rounded bg-white/10">
                 Alt+S

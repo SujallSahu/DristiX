@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { voiceRecognition } from '../../utils/voiceRecognition';
 import type { VoiceLangMode } from '../../utils/voiceRecognition';
 
@@ -413,24 +413,24 @@ export const VoiceAssistantOrb: React.FC = () => {
   return (
     <aside
       aria-label="AI Conversational Voice Assistant (Shortcut: V)"
-      className="fixed bottom-4 right-4 z-40 flex flex-col items-end select-none font-sans"
+      className="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 flex flex-col items-end select-none font-sans"
     >
       {/* Expanded Conversation Drawer */}
       {isExpanded && (
         <div
           role="region"
           aria-label="AI Conversation Window"
-          className="w-[92vw] sm:w-96 max-h-[75vh] mb-3 bg-theme-surface border-2 border-theme-border rounded-2xl shadow-2xl flex flex-col overflow-hidden text-theme-text transition-all animate-in fade-in slide-in-from-bottom-4 duration-200"
+          className="w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm max-h-[75vh] mb-3 bg-theme-surface border-2 border-theme-border rounded-2xl shadow-2xl flex flex-col overflow-hidden text-theme-text transition-all animate-in fade-in slide-in-from-bottom-4 duration-200"
         >
           {/* Header */}
-          <div className="p-3.5 bg-gradient-to-r from-teal-900/50 via-emerald-900/40 to-teal-800/50 border-b-2 border-theme-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center text-white shadow-sm">
-                <Sparkles className="w-4 h-4" aria-hidden="true" />
+          <div className="p-2.5 sm:p-3.5 bg-gradient-to-r from-teal-900/50 via-emerald-900/40 to-teal-800/50 border-b-2 border-theme-border flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center text-white shadow-sm shrink-0">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
               </span>
-              <div>
-                <h3 className="font-bold text-sm text-theme-text flex items-center gap-1.5 leading-tight">
-                  <span>DristiX AI Voice Agent</span>
+              <div className="min-w-0">
+                <h3 className="font-bold text-xs sm:text-sm text-theme-text flex items-center gap-1.5 leading-tight truncate">
+                  <span><span className="hidden xs:inline">DristiX </span>Voice Agent</span>
                   <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono font-bold border border-emerald-500/30">
                     Live
                   </span>

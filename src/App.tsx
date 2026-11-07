@@ -540,26 +540,26 @@ export const App: React.FC = () => {
                   DX
                 </span>
                 <div>
-                  <h1 className="text-base sm:text-lg font-bold text-theme-text leading-tight">DristiX</h1>
-                  <p className="text-xs text-theme-text-secondary">Accessible Online Examination Platform</p>
+                  <h1 className="text-base sm:text-lg font-bold text-theme-text leading-tight truncate">DristiX</h1>
+                  <p className="text-xs text-theme-text-secondary hidden sm:block truncate">Accessible Online Examination Platform</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => navigateTo('/admin')}
-                  className="h-10 px-3.5 rounded-xl border-2 border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition focus:ring-4 focus:ring-indigo-500/50"
+                  className="h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-xl border-2 border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition focus:ring-4 focus:ring-indigo-500/50 shrink-0"
                   aria-label="Navigate to Examiner or Admin Studio"
                 >
                   <ShieldCheck className="w-4 h-4" aria-hidden="true" />
-                  <span>Admin Studio</span>
+                  <span className="hidden xs:inline sm:inline">Admin Studio</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => navigateTo('/')}
-                  className="h-10 px-4 rounded-xl border-2 border-theme-border bg-theme-bg font-bold text-sm text-theme-text hover:bg-theme-surface-elevated transition"
+                  className="h-9 sm:h-10 px-2.5 sm:px-4 rounded-xl border-2 border-theme-border bg-theme-bg font-bold text-xs sm:text-sm text-theme-text hover:bg-theme-surface-elevated transition shrink-0"
                 >
-                  ← Back to home
+                  ← Back <span className="hidden sm:inline">to home</span>
                 </button>
               </div>
             </div>
@@ -607,7 +607,7 @@ export const App: React.FC = () => {
       <Header />
 
       {/* Primary Content Container: Catalog Dashboard vs Active Exam vs Diagnostic Report vs Analytics */}
-      <div id="main-content" className={`flex-1 ${activeView === 'exam' && !isSubmitted ? 'pb-2' : 'pb-16'}`}>
+      <div id="main-content" className={`flex-1 ${activeView === 'exam' && !isSubmitted ? 'pb-24 lg:pb-4' : 'pb-20 lg:pb-16'}`}>
         {activeView === 'analytics' ? (
           <StudentAnalyticsView onReturnToCatalog={returnToCatalog} />
         ) : activeView === 'catalog' ? (
@@ -616,9 +616,9 @@ export const App: React.FC = () => {
           <DiagnosticReport />
         ) : (
           /* Active exam: two-column layout */
-          <div className="flex gap-4 items-start px-3 sm:px-5 lg:px-6 py-2 max-w-[1700px] mx-auto">
+          <div className="flex flex-col lg:flex-row gap-4 items-start px-2 sm:px-4 lg:px-6 py-2 max-w-[1700px] mx-auto w-full">
             {/* Left: Question content */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 w-full">
               <ExamScreen />
             </div>
             {/* Right: Sidebar — Timer, Palette, Status, Progress */}

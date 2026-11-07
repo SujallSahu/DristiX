@@ -371,7 +371,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
       </div>
 
       {/* 4 Interactive KPI Cards */}
-      <section aria-labelledby="kpi-heading" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section aria-labelledby="kpi-heading" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <h3 id="kpi-heading" className="sr-only">Key Performance Metrics</h3>
 
         {/* Card 1: Total Tests Taken */}

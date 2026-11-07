@@ -175,7 +175,7 @@ export const ExamScreen: React.FC = () => {
       >
 
         {/* Card Top Bar: Section + Status + Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 border-b border-theme-border bg-theme-bg/60">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-6 py-2.5 sm:py-3 border-b border-theme-border bg-theme-bg/60">
 
           {/* Left: Section pill + status badges */}
           <div className="flex flex-wrap items-center gap-2 min-w-0">
@@ -232,7 +232,7 @@ export const ExamScreen: React.FC = () => {
         </div>
 
         {/* ── Question Body ── */}
-        <div className="px-4 sm:px-6 pt-5 pb-2">
+        <div className="px-3.5 sm:px-6 pt-4 sm:pt-5 pb-2">
 
           {/* Q-number + Question Text */}
           <h2
@@ -276,7 +276,7 @@ export const ExamScreen: React.FC = () => {
         </div>
 
         {/* ── Answer Options ── */}
-        <fieldset id="answer-options-group" className="px-4 sm:px-6 pb-4 pt-3">
+        <fieldset id="answer-options-group" className="px-3.5 sm:px-6 pb-4 pt-3">
           <legend className="sr-only">
             Answer Options for Question {currentQ.questionNumber}. Use keyboard keys 1, 2, 3, 4 to select options directly.
           </legend>
@@ -430,37 +430,64 @@ export const ExamScreen: React.FC = () => {
       <nav
         id="question-navigation-controls"
         aria-label="Question Navigation Controls"
-        className="mt-4 flex flex-wrap items-center justify-between gap-3"
+        className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3"
       >
-        {/* LEFT: Previous */}
-        <button
-          id="btn-prev"
-          type="button"
-          onClick={() => previousQuestion()}
-          disabled={currentIndex === 0}
-          className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 font-bold rounded-xl border border-theme-border bg-theme-surface text-theme-text hover:bg-theme-bg disabled:opacity-35 disabled:cursor-not-allowed transition text-sm"
-          aria-label={`Go to previous question (Shortcut: Left Arrow or P). ${currentIndex === 0 ? 'Disabled — this is the first question.' : ''}`}
-        >
-          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-          <span>Previous <kbd className="font-mono opacity-60 text-xs">(←)</kbd></span>
-        </button>
+        {/* LEFT ON DESKTOP / ROW 2 ON MOBILE: Previous & Mobile Next */}
+        <div className="flex items-center justify-between sm:justify-start gap-2.5 order-2 sm:order-1">
+          <button
+            id="btn-prev"
+            type="button"
+            onClick={() => previousQuestion()}
+            disabled={currentIndex === 0}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 sm:py-2.5 min-h-[44px] font-bold rounded-xl border border-theme-border bg-theme-surface text-theme-text hover:bg-theme-bg disabled:opacity-35 disabled:cursor-not-allowed transition text-xs sm:text-sm"
+            aria-label={`Go to previous question (Shortcut: Left Arrow or P). ${currentIndex === 0 ? 'Disabled — this is the first question.' : ''}`}
+          >
+            <ChevronLeft className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>Previous <kbd className="font-mono opacity-60 text-xs hidden sm:inline">(←)</kbd></span>
+          </button>
 
-        {/* CENTER: Mark + Clear + Speak */}
-        <div className="flex flex-wrap items-center gap-2">
+          {/* Mobile-only Next / Submit in Row 2 */}
+          <div className="flex-1 sm:hidden">
+            {isLastQuestion ? (
+              <button
+                type="button"
+                onClick={() => setSubmitModalOpen(true)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] font-bold rounded-xl border-2 border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm text-xs sm:text-sm"
+                aria-label="Finish and submit exam (Shortcut: Alt+S)"
+              >
+                <span>Finish &amp; Submit</span>
+                <CheckCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => nextQuestion()}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] font-bold rounded-xl bg-theme-primary hover:brightness-110 text-theme-primary-text transition shadow-sm text-xs sm:text-sm"
+                aria-label={`Go to next question (Shortcut: Right Arrow or N)`}
+              >
+                <span>Next</span>
+                <ChevronRight className="w-4 h-4 shrink-0" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* CENTER ON DESKTOP / ROW 1 ON MOBILE: Mark + Clear + Speak */}
+        <div className="flex items-center justify-center sm:justify-start gap-2 order-1 sm:order-2">
           <button
             id="btn-mark"
             type="button"
             onClick={toggleMarkForReview}
             aria-pressed={isMarked}
-            className={`inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 font-bold rounded-xl border-2 transition text-sm ${
+            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2.5 min-h-[44px] font-bold rounded-xl border-2 transition text-xs sm:text-sm ${
               isMarked
                 ? 'border-amber-500 bg-amber-500 text-black'
                 : 'border-theme-border bg-theme-surface text-theme-text hover:border-amber-500/50 hover:bg-amber-500/10'
             }`}
             aria-label={`${isMarked ? 'Unmark' : 'Mark'} question for review (Shortcut: M)`}
           >
-            <Bookmark className={`w-4 h-4 ${isMarked ? 'fill-current' : ''}`} aria-hidden="true" />
-            <span>{isMarked ? 'Marked' : 'Mark'} <kbd className={`font-mono text-xs opacity-60 ${isMarked ? 'text-black' : ''}`}>(M)</kbd></span>
+            <Bookmark className={`w-4 h-4 shrink-0 ${isMarked ? 'fill-current' : ''}`} aria-hidden="true" />
+            <span>{isMarked ? 'Marked' : 'Mark'} <kbd className={`font-mono text-xs opacity-60 hidden sm:inline ${isMarked ? 'text-black' : ''}`}>(M)</kbd></span>
           </button>
 
           {selectedOptNum && (
@@ -468,11 +495,11 @@ export const ExamScreen: React.FC = () => {
               id="btn-clear"
               type="button"
               onClick={() => clearOption()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 font-bold rounded-xl border border-theme-border bg-theme-surface text-theme-text hover:bg-theme-bg hover:border-red-400/50 transition text-sm"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] font-bold rounded-xl border border-theme-border bg-theme-surface text-theme-text hover:bg-theme-bg hover:border-red-400/50 transition text-xs sm:text-sm"
               aria-label="Clear selected answer (Shortcut: C)"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-theme-text-secondary" aria-hidden="true" />
-              <span>Clear <kbd className="font-mono text-xs opacity-60">(C)</kbd></span>
+              <RotateCcw className="w-3.5 h-3.5 text-theme-text-secondary shrink-0" aria-hidden="true" />
+              <span>Clear <kbd className="font-mono text-xs opacity-60 hidden sm:inline">(C)</kbd></span>
             </button>
           )}
 
@@ -482,36 +509,38 @@ export const ExamScreen: React.FC = () => {
             onClick={() => announceCurrentQuestion(true)}
             title="Read Question & Options Aloud (R)"
             aria-label="Read Question & Options Aloud (Shortcut: R)"
-            className="p-2.5 rounded-xl border border-theme-border bg-theme-surface text-theme-text hover:bg-theme-bg transition"
+            className="p-2.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl border border-theme-border bg-theme-surface text-theme-text hover:bg-theme-bg transition shrink-0"
           >
-            <Volume2 className="w-4 h-4 text-theme-primary" aria-hidden="true" />
+            <Volume2 className="w-4 h-4 text-theme-primary shrink-0" aria-hidden="true" />
           </button>
         </div>
 
-        {/* RIGHT: Next or Submit */}
-        {isLastQuestion ? (
-          <button
-            id="btn-submit"
-            type="button"
-            onClick={() => setSubmitModalOpen(true)}
-            className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 font-bold rounded-xl border-2 border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm text-sm"
-            aria-label="Finish and submit exam (Shortcut: Alt+S)"
-          >
-            <span>Finish &amp; Submit</span>
-            <CheckCircle className="w-4 h-4" aria-hidden="true" />
-          </button>
-        ) : (
-          <button
-            id="btn-next"
-            type="button"
-            onClick={() => nextQuestion()}
-            className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 font-bold rounded-xl bg-theme-primary hover:brightness-110 text-theme-primary-text transition shadow-sm text-sm"
-            aria-label={`Go to next question (Shortcut: Right Arrow or N)`}
-          >
-            <span>Next <kbd className="font-mono text-xs opacity-70">(→)</kbd></span>
-            <ChevronRight className="w-4 h-4" aria-hidden="true" />
-          </button>
-        )}
+        {/* RIGHT: Next or Submit (Desktop & Tablet) */}
+        <div className="hidden sm:block order-3">
+          {isLastQuestion ? (
+            <button
+              id="btn-submit"
+              type="button"
+              onClick={() => setSubmitModalOpen(true)}
+              className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 min-h-[44px] font-bold rounded-xl border-2 border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm text-sm"
+              aria-label="Finish and submit exam (Shortcut: Alt+S)"
+            >
+              <span>Finish &amp; Submit</span>
+              <CheckCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+            </button>
+          ) : (
+            <button
+              id="btn-next"
+              type="button"
+              onClick={() => nextQuestion()}
+              className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 min-h-[44px] font-bold rounded-xl bg-theme-primary hover:brightness-110 text-theme-primary-text transition shadow-sm text-sm"
+              aria-label={`Go to next question (Shortcut: Right Arrow or N)`}
+            >
+              <span>Next <kbd className="font-mono text-xs opacity-70">(→)</kbd></span>
+              <ChevronRight className="w-4 h-4 shrink-0" aria-hidden="true" />
+            </button>
+          )}
+        </div>
       </nav>
 
       {/* ── Keyboard quick-reference strip ── */}

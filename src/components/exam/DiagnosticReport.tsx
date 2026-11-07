@@ -92,10 +92,10 @@ export const DiagnosticReport: React.FC = () => {
       role="main"
       tabIndex={-1}
       aria-label="Examination Diagnostic and Performance Report"
-      className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 outline-none text-theme-text"
+      className="max-w-5xl mx-auto p-3 sm:p-6 lg:p-8 outline-none text-theme-text"
     >
       {/* Header Banner */}
-      <section aria-labelledby="report-main-title" className="bg-theme-surface border-2 border-theme-border rounded-xl p-6 sm:p-8 mb-6 shadow-sm">
+      <section aria-labelledby="report-main-title" className="bg-theme-surface border-2 border-theme-border rounded-xl p-4 sm:p-8 mb-6 shadow-sm">
         <div className="flex flex-wrap justify-between items-start gap-4">
           <div>
             <div className="flex items-center gap-2">

@@ -108,7 +108,7 @@ export const SubmitConfirmModal: React.FC = () => {
       aria-labelledby="submit-dialog-title"
       aria-describedby="submit-dialog-desc"
       onKeyDown={handleModalKeyDown}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs"
     >
       <div
         ref={modalContainerRef}
@@ -161,7 +161,7 @@ export const SubmitConfirmModal: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 border-t-2 border-theme-border bg-theme-bg flex flex-wrap justify-end gap-3">
+        <div className="p-3 sm:p-4 border-t-2 border-theme-border bg-theme-bg flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
           <button
             type="button"
             disabled={isSubmitting}
@@ -178,7 +178,7 @@ export const SubmitConfirmModal: React.FC = () => {
                 );
             }}
             aria-label="Continue to Exam and close modal (Shortcut: Escape, or say Continue to Exam)"
-            className="px-5 py-2.5 font-bold rounded-lg border-2 border-theme-border bg-theme-surface hover:bg-theme-bg text-theme-text transition text-sm sm:text-base flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto justify-center px-4 sm:px-5 py-2.5 min-h-[44px] font-bold rounded-lg border-2 border-theme-border bg-theme-surface hover:bg-theme-bg text-theme-text transition text-xs sm:text-base flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>Continue to Exam</span>
             <kbd className="text-xs font-mono opacity-70 border border-theme-border rounded px-1.5 py-0.5 ml-1 bg-theme-bg">
@@ -196,7 +196,7 @@ export const SubmitConfirmModal: React.FC = () => {
               void submitExam();
             }}
             aria-label="Yes, Final Submit exam (Shortcut: Enter, or say Yes, Final Submit)"
-            className="px-6 py-2.5 font-bold rounded-lg border-2 border-emerald-600 bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1.5 transition text-sm sm:text-base shadow-sm cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto justify-center px-5 sm:px-6 py-2.5 min-h-[44px] font-bold rounded-lg border-2 border-emerald-600 bg-emerald-700 hover:bg-emerald-800 text-white flex items-center gap-1.5 transition text-xs sm:text-base shadow-sm cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>

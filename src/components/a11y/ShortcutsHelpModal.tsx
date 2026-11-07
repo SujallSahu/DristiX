@@ -115,7 +115,7 @@ export const ShortcutsHelpModal: React.FC = () => {
       aria-modal="true"
       aria-labelledby="shortcuts-title"
       onKeyDown={handleModalKeyDown}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs"
     >
       <div
         ref={modalContainerRef}
@@ -142,12 +142,12 @@ export const ShortcutsHelpModal: React.FC = () => {
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+        <div className="p-3 sm:p-6 overflow-y-auto flex-1">
           <p className="text-sm text-theme-text/80 mb-4">
             DristiX offers 100% keyboard operational independence. All shortcuts are active globally and automatically disabled while typing in text fields.
           </p>
 
-          <table className="w-full text-left border-collapse text-sm sm:text-base">
+          <table className="w-full text-left border-collapse text-xs sm:text-base">
             <caption className="sr-only">Available keyboard shortcuts and their actions</caption>
             <thead>
               <tr className="border-b-2 border-theme-border text-theme-text">

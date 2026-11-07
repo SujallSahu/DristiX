@@ -351,7 +351,7 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
       aria-label="Student Portal Authentication"
       className="min-h-[82vh] flex flex-col justify-center items-center px-4 py-6 max-w-4xl mx-auto"
     >
-      <div className="w-full max-w-xl dx-glass border-2 border-theme-border/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md">
+      <div className="w-full max-w-xl dx-glass border-2 border-theme-border/80 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-2xl backdrop-blur-md">
         {/* Header Branding */}
         <div className="text-center mb-5">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-theme-primary text-theme-primary-text font-black text-xl shadow-lg mb-2 hover:scale-105 transition-transform">
@@ -385,7 +385,7 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
               setAuthMode('login');
               soundEffects.playSelect();
             }}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all focus:ring-4 focus:ring-theme-focus cursor-pointer ${
+            className={`flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 sm:gap-2 transition-all focus:ring-4 focus:ring-theme-focus cursor-pointer ${
               authMode === 'login'
                 ? 'bg-theme-primary text-theme-primary-text shadow-md'
                 : 'text-theme-text hover:bg-theme-surface/70'
@@ -409,14 +409,14 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
               setAuthMode('register');
               soundEffects.playSelect();
             }}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 transition-all focus:ring-4 focus:ring-theme-focus cursor-pointer ${
+            className={`flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 sm:gap-2 transition-all focus:ring-4 focus:ring-theme-focus cursor-pointer ${
               authMode === 'register'
                 ? 'bg-theme-primary text-theme-primary-text shadow-md'
                 : 'text-theme-text hover:bg-theme-surface/70'
             }`}
           >
             <UserPlus className="w-4.5 h-4.5" aria-hidden="true" />
-            <span>Register New Student</span>
+            <span>Register <span className="hidden xs:inline">New Student</span></span>
           </button>
         </div>
 
