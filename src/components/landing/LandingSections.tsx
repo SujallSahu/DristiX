@@ -8,6 +8,8 @@ import {
   UserCheck, PlayCircle, CheckCircle2, Settings2,
   TrendingUp, Shield, Check,
 } from 'lucide-react';
+import { speechEngine } from '../../utils/speechEngine';
+import { soundEffects } from '../../utils/soundEffects';
 
 interface SectionProps {
   onSignIn: () => void;
@@ -25,7 +27,7 @@ const Section: React.FC<{
 }> = ({ id, alt, accent = 'none', children, className = '' }) => (
   <section
     id={id}
-    className={`relative overflow-hidden py-24 sm:py-32 ${className}`}
+    className={`relative overflow-hidden py-12 sm:py-20 lg:py-28 ${className}`}
     style={{
       background: alt
         ? 'color-mix(in srgb, var(--primary) 3.5%, var(--bg-surface))'
@@ -59,13 +61,13 @@ const SectionHeader: React.FC<{
   sub?: string;
   center?: boolean;
 }> = ({ pill, heading, sub, center = true }) => (
-  <div className={`${center ? 'text-center mx-auto' : ''} max-w-2xl mb-10 sm:mb-16`}>
-    <span className="dx-label-pill mb-3 sm:mb-5 inline-flex">{pill}</span>
-    <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-[-0.03em] sm:tracking-[-0.04em] leading-[1.15] sm:leading-[1.08] text-theme-text mt-2 sm:mt-4">
+  <div className={`${center ? 'text-center mx-auto' : ''} max-w-2xl mb-6 sm:mb-12 lg:mb-16`}>
+    <span className="dx-label-pill mb-2.5 sm:mb-4 inline-flex">{pill}</span>
+    <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-[-0.03em] sm:tracking-[-0.04em] leading-[1.15] sm:leading-[1.08] text-theme-text mt-1.5 sm:mt-4">
       {heading}
     </h2>
     {sub && (
-      <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-theme-text-secondary font-medium leading-relaxed max-w-[58ch] mx-auto">
+      <p className="mt-2.5 sm:mt-4 text-xs sm:text-base lg:text-lg text-theme-text-secondary font-medium leading-relaxed max-w-[58ch] mx-auto">
         {sub}
       </p>
     )}
@@ -111,7 +113,7 @@ export const FeatureStrip: React.FC = () => {
               style={{ borderColor: 'color-mix(in srgb, var(--border-color) 28%, transparent)' }}
             >
               <Icon className="w-3.5 h-3.5 text-theme-primary shrink-0" aria-hidden="true" />
-              <span className="text-[13px] font-semibold text-theme-text/70 whitespace-nowrap tracking-tight">
+              <span className="text-[13px] font-semibold text-theme-text-secondary whitespace-nowrap tracking-tight">
                 {label}
               </span>
             </li>
@@ -400,32 +402,58 @@ const VOICE_DEMOS = [
 export const VoiceShowcase: React.FC = () => {
   const [active, setActive] = useState(1);
 
+  const handleSelectDemo = (idx: number) => {
+    setActive(idx);
+    try {
+      soundEffects.playSelect();
+    } catch {}
+    try {
+      speechEngine.speak(VOICE_DEMOS[idx].output, true);
+    } catch {}
+  };
+
+  const handleSpeakAgain = () => {
+    try {
+      soundEffects.playSelect();
+      speechEngine.speak(VOICE_DEMOS[active].output, true);
+    } catch {}
+  };
+
   return (
     <Section accent="left">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10">
         <SectionHeader
           pill={<><Mic className="w-3 h-3" aria-hidden="true" />Interactive Demo</>}
-          heading={<>Speak Your Answer.{' '}<span className="dx-gradient-text">No Mouse Needed.</span></>}
+          heading={
+            <>
+              Speak Your Answer.{' '}
+              <span className="block sm:inline sm:ml-1 dx-gradient-text">
+                No Mouse Needed.
+              </span>
+            </>
+          }
           sub="Tap any command to preview how DristiX listens, confirms and navigates in real time."
         />
 
-        <div className="grid lg:grid-cols-5 gap-6 items-stretch">
-          {/* Commands — 2 cols on lg */}
-          <div className="lg:col-span-2 flex flex-col gap-3">
+        <div className="grid lg:grid-cols-5 gap-3 sm:gap-6 items-stretch">
+          {/* Commands: 2x2 grid on mobile (< lg), vertical stack on desktop (lg:) */}
+          <div className="lg:col-span-2 grid grid-cols-2 lg:flex lg:flex-col gap-2 sm:gap-3" role="tablist" aria-label="Sample voice commands">
             {VOICE_DEMOS.map((demo, idx) => (
               <button
                 key={demo.cmd}
                 type="button"
-                onClick={() => setActive(idx)}
-                className={`w-full text-left p-4 rounded-2xl border transition-all duration-250 flex items-center gap-4 group ${
-                  active === idx ? 'shadow-xl' : 'hover:border-theme-primary/50'
+                role="tab"
+                aria-selected={active === idx}
+                onClick={() => handleSelectDemo(idx)}
+                className={`text-left p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 group cursor-pointer ${
+                  active === idx ? 'shadow-lg ring-2 ring-theme-primary/30' : 'hover:border-theme-primary/50'
                 }`}
                 style={
                   active === idx
                     ? {
-                        background: 'color-mix(in srgb, var(--primary) 9%, var(--bg-surface))',
+                        background: 'color-mix(in srgb, var(--primary) 10%, var(--bg-surface))',
                         borderColor: 'var(--primary)',
-                        boxShadow: '0 8px 32px var(--primary-glow)',
+                        boxShadow: '0 4px 20px var(--primary-glow)',
                       }
                     : {
                         background: 'color-mix(in srgb, var(--bg-surface) 60%, transparent)',
@@ -433,79 +461,108 @@ export const VoiceShowcase: React.FC = () => {
                       }
                 }
               >
-                <span
-                  className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 transition-all ${
-                    active === idx ? 'scale-110' : 'group-hover:scale-105'
-                  }`}
-                  style={
-                    active === idx
-                      ? { background: 'var(--primary-gradient)', boxShadow: '0 4px 12px var(--primary-glow)' }
-                      : { background: 'color-mix(in srgb, var(--border-color) 40%, transparent)' }
-                  }
-                >
-                  <Mic
-                    className={`w-4 h-4 ${active === idx ? 'text-theme-primary-text' : 'text-theme-text-secondary'}`}
-                    aria-hidden="true"
-                  />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-black font-mono text-theme-text">"{demo.cmd}"</div>
-                  <div className="text-xs text-theme-text-secondary mt-0.5 truncate font-medium">{demo.desc}</div>
+                <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+                  <span
+                    className={`w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl grid place-items-center shrink-0 transition-all ${
+                      active === idx ? 'scale-105' : 'group-hover:scale-105'
+                    }`}
+                    style={
+                      active === idx
+                        ? { background: 'var(--primary-gradient)', boxShadow: '0 2px 10px var(--primary-glow)' }
+                        : { background: 'color-mix(in srgb, var(--border-color) 40%, transparent)' }
+                    }
+                  >
+                    <Mic
+                      className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${active === idx ? 'text-theme-primary-text' : 'text-theme-text-secondary'}`}
+                      aria-hidden="true"
+                    />
+                  </span>
+                  {active === idx && (
+                    <span className="sm:hidden flex items-center gap-1 text-[10px] font-black uppercase text-theme-primary tracking-wider">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Active
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 w-full">
+                  <div className="text-xs sm:text-sm font-black font-mono text-theme-text truncate sm:whitespace-normal">
+                    "{demo.cmd}"
+                  </div>
+                  <div className="text-[11px] sm:text-xs text-theme-text-secondary mt-0.5 hidden sm:block font-medium leading-snug">
+                    {demo.desc}
+                  </div>
                 </div>
                 {active === idx && (
-                  <Sparkles className="w-4 h-4 text-theme-primary shrink-0 animate-pulse" aria-hidden="true" />
+                  <Sparkles className="hidden sm:block w-4 h-4 text-theme-primary shrink-0 animate-pulse" aria-hidden="true" />
                 )}
               </button>
             ))}
           </div>
 
-          {/* Output — 3 cols on lg */}
-          <div className="lg:col-span-3 dx-feature-card p-7 sm:p-8 flex flex-col gap-6">
+          {/* Live Output Card — always immediately visible right below the 2x2 grid on mobile */}
+          <div className="lg:col-span-3 dx-feature-card p-3.5 sm:p-7 flex flex-col gap-3 sm:gap-6 mt-1 sm:mt-0">
             {/* Header bar */}
             <div
-              className="flex items-center justify-between border-b pb-5"
+              className="flex items-center justify-between border-b pb-2.5 sm:pb-4"
               style={{ borderColor: 'color-mix(in srgb, var(--border-color) 40%, transparent)' }}
             >
-              <div className="flex items-center gap-2.5">
-                <span className="relative flex h-3 w-3">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
                   <span className="dx-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
+                  <span className="relative inline-flex h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-emerald-500" />
                 </span>
-                <span className="text-xs font-black uppercase tracking-widest text-theme-text-secondary">
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-theme-text-secondary">
                   Voice Assistant · Live
                 </span>
               </div>
-              <span
-                className="px-3 py-1 rounded-lg text-xs font-black"
-                style={{
-                  background: 'color-mix(in srgb, var(--primary) 12%, transparent)',
-                  color: 'var(--primary)',
-                  border: '1px solid color-mix(in srgb, var(--primary) 28%, transparent)',
-                }}
-              >
-                Command Registered
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSpeakAgain()}
+                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  style={{
+                    background: 'color-mix(in srgb, var(--primary) 14%, var(--bg-surface))',
+                    color: 'var(--primary)',
+                    border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)',
+                  }}
+                  title="Click to replay spoken response"
+                  aria-label="Replay spoken audio"
+                >
+                  <Volume2 className="w-3.5 h-3.5 animate-pulse text-theme-primary" aria-hidden="true" />
+                  <span>Replay Audio</span>
+                </button>
+                <span
+                  className="hidden sm:inline-block px-2.5 py-1 rounded-lg text-xs font-black"
+                  style={{
+                    background: 'color-mix(in srgb, var(--primary) 12%, transparent)',
+                    color: 'var(--primary)',
+                    border: '1px solid color-mix(in srgb, var(--primary) 28%, transparent)',
+                  }}
+                >
+                  Command Registered
+                </span>
+              </div>
             </div>
 
-            {/* Candidate input */}
+            {/* Candidate Spoke */}
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-theme-text-secondary mb-3">
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] text-theme-text-secondary mb-1.5 sm:mb-2.5">
                 Candidate Spoke
               </p>
               <div
-                className="flex items-center gap-3 p-4 rounded-xl border"
+                className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl border"
                 style={{
-                  background: 'color-mix(in srgb, var(--primary) 5%, var(--bg-page))',
+                  background: 'color-mix(in srgb, var(--primary) 6%, var(--bg-page))',
                   borderColor: 'color-mix(in srgb, var(--border-color) 45%, transparent)',
                 }}
               >
                 <div
-                  className="w-8 h-8 grid place-items-center rounded-lg text-theme-primary-text shrink-0"
+                  className="w-7 h-7 sm:w-8 sm:h-8 grid place-items-center rounded-lg text-theme-primary-text shrink-0"
                   style={{ background: 'var(--primary-gradient)' }}
                 >
-                  <Mic className="w-4 h-4" aria-hidden="true" />
+                  <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
                 </div>
-                <span className="font-black font-mono text-sm text-theme-primary">
+                <span className="font-black font-mono text-xs sm:text-sm text-theme-text">
                   "{VOICE_DEMOS[active].cmd}"
                 </span>
               </div>
@@ -513,26 +570,31 @@ export const VoiceShowcase: React.FC = () => {
 
             {/* System response */}
             <div className="flex-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-theme-text-secondary mb-3">
+              <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] text-theme-text-secondary mb-1.5 sm:mb-2.5">
                 DristiX Spoken Response
               </p>
               <div
-                className="flex items-start gap-4 p-5 rounded-xl border-2 h-full min-h-[100px]"
+                className="flex items-start gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-xl border-2 h-full min-h-[85px] sm:min-h-[100px]"
                 style={{
-                  background: 'color-mix(in srgb, var(--bg-surface) 55%, transparent)',
+                  background: 'color-mix(in srgb, var(--bg-surface) 65%, transparent)',
                   borderColor: 'color-mix(in srgb, var(--primary) 38%, transparent)',
-                  boxShadow: '0 0 24px color-mix(in srgb, var(--primary) 8%, transparent)',
+                  boxShadow: '0 0 20px color-mix(in srgb, var(--primary) 8%, transparent)',
                 }}
               >
                 <div
-                  className="w-9 h-9 grid place-items-center rounded-xl text-theme-primary-text shrink-0 shadow-lg"
-                  style={{ background: 'var(--primary-gradient)', boxShadow: '0 4px 16px var(--primary-glow)' }}
+                  className="w-7 h-7 sm:w-9 sm:h-9 grid place-items-center rounded-xl text-theme-primary-text shrink-0 shadow-md"
+                  style={{ background: 'var(--primary-gradient)', boxShadow: '0 3px 12px var(--primary-glow)' }}
                 >
-                  <Volume2 className="w-4 h-4" aria-hidden="true" />
+                  <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
                 </div>
-                <p className="text-sm sm:text-base font-semibold text-theme-text leading-relaxed">
-                  {VOICE_DEMOS[active].output}
-                </p>
+                <div className="flex-1">
+                  <p className="text-xs sm:text-base font-semibold text-theme-text leading-snug sm:leading-relaxed">
+                    {VOICE_DEMOS[active].output}
+                  </p>
+                  <p className="text-[11px] text-theme-text-secondary mt-1 font-medium sm:hidden">
+                    🔊 Spoken aloud automatically. Tap Replay to hear again.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -830,7 +892,7 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
         The test starts the moment you're ready.
       </h2>
 
-      <p className="mt-4 sm:mt-7 text-sm sm:text-lg lg:text-xl leading-relaxed text-theme-primary-text/85 font-medium max-w-[52ch] mx-auto">
+      <p className="mt-4 sm:mt-7 text-sm sm:text-lg lg:text-xl leading-relaxed text-theme-primary-text opacity-90 font-medium max-w-[52ch] mx-auto">
         Sign in with the roll number and password your institution issued.
         Registration is by institution invitation only.
       </p>
@@ -857,7 +919,7 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
       {/* Trust badges */}
       <div className="mt-14 flex flex-wrap justify-center items-center gap-x-8 gap-y-3">
         {['WCAG 2.1 AA', 'Screen Reader First', 'Keyboard Complete', 'Server Timers'].map((t) => (
-          <span key={t} className="flex items-center gap-2 text-xs font-bold text-theme-primary-text/70">
+          <span key={t} className="flex items-center gap-2 text-xs font-bold text-theme-primary-text opacity-85">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" aria-hidden="true" />
             {t}
           </span>

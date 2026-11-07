@@ -503,3 +503,30 @@ select:autofill {
 .accent-theme {
   accent-color: var(--primary);
 }
+
+/* ========================================================
+   UNIVERSAL CSS VARIABLE OPACITY SAFEGUARDS
+   Ensures text, borders, and surfaces with slash opacity never fail
+   ======================================================== */
+
+[class*="text-theme-text/"],
+.text-theme-text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-theme-text {
+  color: var(--text-primary) !important;
+}
+
+[class*="text-theme-primary-text/"] {
+  color: var(--primary-text) !important;
+  opacity: 0.9;
+}
+
+[class*="bg-theme-surface/"] {
+  background-color: var(--bg-surface) !important;
+}
+
+[class*="border-theme-border/"] {
+  border-color: var(--border-color) !important;
+}

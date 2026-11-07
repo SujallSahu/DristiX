@@ -117,7 +117,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
   };
 
   const iconBtn =
-    'h-9 w-9 shrink-0 grid place-items-center rounded-xl border border-theme-border/60 bg-theme-surface/40 text-theme-text backdrop-blur-sm transition-all duration-200 hover:bg-theme-surface hover:border-theme-primary hover:text-theme-primary active:scale-95 shadow-sm';
+    'h-9 w-9 shrink-0 grid place-items-center rounded-xl border border-theme-border bg-theme-surface text-theme-text transition-all duration-200 hover:border-theme-primary hover:text-theme-primary active:scale-95 shadow-xs';
 
   return (
     <header
@@ -164,7 +164,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
             <button
               type="button"
               onClick={onSignIn}
-              className="h-8 px-2.5 rounded-lg border border-theme-border/80 bg-theme-surface/70 font-bold text-xs text-theme-text flex items-center gap-1 shadow-xs active:scale-95"
+              className="h-8 px-2.5 rounded-lg border border-theme-border bg-theme-surface font-bold text-xs text-theme-text flex items-center gap-1 shadow-xs active:scale-95"
               aria-label="Login to candidate portal"
             >
               <LogIn className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
@@ -193,7 +193,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               <li key={item.href}>
                 <a
                   href={item.href}
-                  className="px-4 py-2 rounded-xl text-sm font-bold text-theme-text/80 no-underline hover:bg-theme-surface/60 hover:text-theme-primary transition-all duration-150 block"
+                  className="px-4 py-2 rounded-xl text-sm font-bold text-theme-text-secondary no-underline hover:bg-theme-surface hover:text-theme-primary transition-all duration-150 block"
                 >
                   {item.label}
                 </a>
@@ -203,7 +203,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
         </nav>
 
         {/* Right: Accessibility controls + Desktop Auth buttons */}
-        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto pt-1 sm:pt-0 border-t border-theme-border/30 sm:border-t-0">
+        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto pt-1 sm:pt-0 border-t border-theme-border sm:border-t-0" style={{ borderColor: 'color-mix(in srgb, var(--border-color) 40%, transparent)' }}>
           {/* Accessibility controls */}
           <div className="flex items-center justify-between sm:justify-end gap-1.5 w-full sm:w-auto" role="group" aria-label="Accessibility controls">
             <button
@@ -275,13 +275,13 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
           </div>
 
           {/* Desktop Divider */}
-          <div className="hidden sm:block w-px h-5 self-center bg-theme-border/50 mx-1 shrink-0" aria-hidden="true" />
+          <div className="hidden sm:block w-px h-5 self-center bg-theme-border mx-1 shrink-0" aria-hidden="true" />
 
           {/* Desktop Auth buttons */}
           <button
             type="button"
             onClick={onSignIn}
-            className="h-9 px-4 rounded-xl border border-theme-border/60 bg-theme-surface/40 backdrop-blur-sm font-bold text-sm text-theme-text hover:bg-theme-surface hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-2 shadow-sm shrink-0"
+            className="h-9 px-4 rounded-xl border border-theme-border bg-theme-surface font-bold text-sm text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-2 shadow-sm shrink-0"
           >
             <LogIn className="w-4 h-4" aria-hidden="true" />
             <span>Login</span>

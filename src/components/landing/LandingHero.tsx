@@ -109,7 +109,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
             </h1>
 
             {/* Sub */}
-            <p className="mt-4 sm:mt-7 text-sm sm:text-base lg:text-lg leading-relaxed max-w-[54ch] text-theme-text/85 font-medium dx-rise-delay">
+            <p className="mt-4 sm:mt-7 text-sm sm:text-base lg:text-lg leading-relaxed max-w-[54ch] text-theme-text opacity-90 font-medium dx-rise-delay">
               DristiX delivers mock tests and practice drills built for candidates who are
               blind, low-vision or keyboard-only — and for everyone who wants a faster exam
               experience. Every question reads itself. No mouse ever required.
@@ -145,7 +145,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
                 { val: '4',    lbl: 'Contrast Themes'  },
                 { val: '0',    lbl: 'Mouse Needed'      },
               ].map(({ val, lbl }, i) => (
-                <div key={lbl} className={i > 0 ? 'border-l border-theme-border/40 pl-2.5 sm:pl-6' : ''}>
+                <div key={lbl} className={i > 0 ? 'border-l border-theme-border pl-2.5 sm:pl-6' : ''} style={{ borderColor: 'color-mix(in srgb, var(--border-color) 40%, transparent)' }}>
                   <div className="text-2xl sm:text-3xl xl:text-4xl font-black dx-gradient-text">{val}</div>
                   <div className="mt-1 text-[11px] sm:text-xs font-bold text-theme-text-secondary leading-tight">{lbl}</div>
                 </div>
@@ -198,7 +198,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
                     <span className="dx-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
                   </span>
-                  <span className="text-xs font-black uppercase tracking-widest text-theme-text/75">SSC-CGL · Mock 01</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-theme-text-secondary">SSC-CGL · Mock 01</span>
                 </div>
                 <span className="px-3 py-1 rounded-xl text-xs font-black tabular-nums"
                   style={{
@@ -312,7 +312,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
       {/* Scroll indicator */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-80" aria-hidden="true">
         <span className="text-[10px] font-bold text-theme-text-secondary uppercase tracking-[0.15em]">scroll</span>
-        <span className="w-5 h-8 rounded-full border-2 border-theme-border/70 flex items-start justify-center pt-1.5">
+        <span className="w-5 h-8 rounded-full border-2 border-theme-border flex items-start justify-center pt-1.5">
           <span className="w-1 h-2 rounded-full bg-theme-primary animate-bounce" />
         </span>
       </div>
