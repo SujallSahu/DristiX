@@ -10,6 +10,11 @@ html {
   font-size: calc(16px * var(--font-scale, 1));
   scroll-behavior: smooth;
   text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  touch-action: manipulation;
   background-color: var(--bg-page);
   color: var(--text-primary);
 }
@@ -29,11 +34,23 @@ html {
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  max-width: 100vw;
   overflow-x: hidden;
+  touch-action: manipulation;
   min-height: 100vh;
   background-color: var(--bg-page);
   color: var(--text-primary);
   transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+#root {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Accessible custom scrollbars */
@@ -62,6 +79,11 @@ body {
   color: inherit !important;
 }
 
-.katex .mord, .katex .mbin, .katex .mrel, .katex .mopen, .katex .mclose, .katex .mpunct {
+.katex .mord,
+.katex .mbin,
+.katex .mrel,
+.katex .mopen,
+.katex .mclose,
+.katex .mpunct {
   color: inherit !important;
 }

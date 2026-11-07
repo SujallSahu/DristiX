@@ -13,6 +13,7 @@ import {
   BookOpen,
   Award,
   User,
+  LogOut,
   TrendingUp,
   ArrowLeft,
   Mic,
@@ -122,11 +123,11 @@ export const Header: React.FC = () => {
   return (
     <header
       role="banner"
-      className="p-2 sm:p-4 border-b-2 border-theme-border/80 dx-glass transition-colors sticky top-0 z-30 shadow-md backdrop-blur-md overflow-visible"
+      className="p-2 sm:p-3 md:p-4 border-b-2 border-theme-border/80 dx-glass transition-colors sticky top-0 z-30 shadow-md backdrop-blur-md overflow-visible"
     >
-      <div className="max-w-[1700px] w-full mx-auto flex flex-nowrap justify-between items-center gap-1.5 sm:gap-2 overflow-visible">
-        {/* Portal Branding and Exam Switcher */}
-        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+      <div className="max-w-[1700px] w-full mx-auto flex flex-col md:flex-row md:items-center justify-between gap-1.5 md:gap-2 overflow-visible">
+        {/* Top Row on Mobile: Branding on Left, Candidate Profile + Sign Out or Exam Timer+Submit on Right */}
+        <div className="flex items-center justify-between w-full md:w-auto min-w-0 gap-1.5 sm:gap-3">
           <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
             <span
               className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border-2 border-theme-border bg-theme-primary text-theme-primary-text flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-sm"
@@ -241,14 +242,63 @@ export const Header: React.FC = () => {
               </button>
             </div>
           )}
+
+          {/* MOBILE-ONLY TOP-RIGHT: Candidate Profile with Sign Out (or Exam Timer + Submit) */}
+          <div className="flex md:hidden items-center gap-1.5 shrink-0">
+            {activeView === 'exam' && !isSubmitted ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleAnnounceTime}
+                  title="Click or press T to speak remaining time"
+                  aria-label={`Time Remaining: ${formattedTime}. Click to hear.`}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-lg border-2 font-mono font-bold text-xs transition ${isTimeCritical
+                    ? 'border-red-600 bg-red-950/20 text-red-500 animate-pulse'
+                    : 'border-theme-border bg-theme-bg text-theme-text'
+                    }`}
+                >
+                  <Clock className="w-3.5 h-3.5 text-theme-focus-ring shrink-0" aria-hidden="true" />
+                  <span>{formattedTime}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSubmitModalOpen(true)}
+                  className="px-2.5 py-1 rounded-lg border-2 border-theme-border bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1 transition shadow-sm shrink-0"
+                  aria-label="Submit exam"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>Submit</span>
+                </button>
+              </>
+            ) : (
+              currentStudent && (
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border-2 border-theme-border bg-theme-bg text-xs shrink-0 max-w-[190px]">
+                  <User className="w-3.5 h-3.5 text-theme-primary shrink-0" aria-hidden="true" />
+                  <span className="font-bold text-theme-text truncate text-xs">
+                    {currentStudent.name.split(' ')[0]}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void logoutStudent()}
+                    className="flex items-center gap-1 text-[11px] font-bold text-red-600 dark:text-red-400 hover:text-red-700 underline cursor-pointer ml-0.5 shrink-0"
+                    title="Sign out of student account"
+                    aria-label={`Sign out candidate ${currentStudent.name}`}
+                  >
+                    <LogOut className="w-3 h-3" aria-hidden="true" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )
+            )}
+          </div>
         </div>
 
-        {/* Center: Exam Timer (only during active exam) */}
+        {/* Center: Exam Timer (Desktop only — mobile renders in top right) */}
         {activeView === 'exam' && !isSubmitted && (
           <div
             role="region"
             aria-label="Exam Timer. Press T to announce time"
-            className="flex items-center gap-1 sm:gap-2 shrink-0"
+            className="hidden md:flex items-center gap-1 sm:gap-2 shrink-0"
           >
             <button
               type="button"
@@ -272,11 +322,11 @@ export const Header: React.FC = () => {
           </div>
         )}
 
-        {/* Right: Quick Action Controls */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Current Student Profile Chip */}
+        {/* Right / Toolbar: Quick Action Controls (Unified on mobile row 2, and right side on desktop) */}
+        <div className="flex items-center justify-between md:justify-end gap-1 sm:gap-1.5 w-full md:w-auto overflow-x-auto no-scrollbar pt-1 md:pt-0 border-t border-theme-border/40 md:border-t-0">
+          {/* Current Student Profile Chip (Desktop) */}
           {currentStudent && activeView !== 'exam' && (
-            <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 border-theme-border bg-theme-bg text-xs">
+            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 border-theme-border bg-theme-bg text-xs shrink-0">
               <span className="font-bold text-theme-text flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
                 <span>{currentStudent.name}</span>
@@ -285,11 +335,12 @@ export const Header: React.FC = () => {
               <button
                 type="button"
                 onClick={() => void logoutStudent()}
-                className="ml-1 text-xs font-bold text-red-700 dark:text-red-400 hover:text-red-800 underline cursor-pointer"
+                className="flex items-center gap-1 ml-1 text-xs font-bold text-red-700 dark:text-red-400 hover:text-red-800 underline cursor-pointer"
                 title="Sign out of student account"
                 aria-label={`Sign out candidate ${currentStudent.name}`}
               >
-                Sign Out
+                <LogOut className="w-3 h-3" />
+                <span>Sign Out</span>
               </button>
             </div>
           )}
@@ -442,7 +493,7 @@ export const Header: React.FC = () => {
               }`}
           >
             <Type className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
-              <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-white text-black leading-tight shadow-xs">
+              <kbd className="inline-block text-[10px] sm:text-[11px] font-sans font-bold px-1 sm:px-1.5 py-0.5 rounded border border-theme-border bg-white text-black leading-tight shadow-xs">
                 {fontSize}%
               </kbd>
           </button>
@@ -476,12 +527,12 @@ export const Header: React.FC = () => {
             </kbd>
           </button>
 
-          {/* Submit Exam Button */}
+          {/* Submit Exam Button (Desktop) */}
           {activeView === 'exam' && !isSubmitted && (
             <button
               type="button"
               onClick={() => setSubmitModalOpen(true)}
-              className="ml-0.5 sm:ml-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-theme-border bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center gap-1 sm:gap-1.5 transition shadow-sm shrink-0"
+              className="hidden md:flex ml-0.5 sm:ml-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-theme-border bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm items-center gap-1 sm:gap-1.5 transition shadow-sm shrink-0"
             >
               <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
               <span>Submit</span>
