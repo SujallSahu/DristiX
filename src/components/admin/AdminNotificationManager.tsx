@@ -105,7 +105,7 @@ export const AdminNotificationManager: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-[#008f7a]/15 via-[#005f73]/10 to-transparent border border-teal-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-[#006d5c]/15 via-[#005f73]/10 to-transparent border border-teal-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400">
@@ -138,7 +138,7 @@ export const AdminNotificationManager: React.FC = () => {
           <div className="p-5 sm:p-6 rounded-2xl bg-theme-surface border border-theme-border shadow-sm space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-theme-border">
               <div className="flex items-center gap-2">
-                <Send className="w-4 h-4 text-[#008f7a]" aria-hidden="true" />
+                <Send className="w-4 h-4 text-[#006d5c] dark:text-teal-400" aria-hidden="true" />
                 <h3 className="text-base font-extrabold text-theme-text">Compose Notification</h3>
               </div>
               <span className="text-[11px] font-bold text-teal-600 dark:text-teal-400">
@@ -283,7 +283,7 @@ export const AdminNotificationManager: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSending}
-                className="w-full py-3 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#008f7a] to-[#007a68] hover:opacity-95 text-white shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full py-3 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#006d5c] to-[#005a4c] hover:opacity-95 text-white shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isSending ? (
                   <>
@@ -306,7 +306,7 @@ export const AdminNotificationManager: React.FC = () => {
           <div className="p-5 sm:p-6 rounded-2xl bg-theme-surface border border-theme-border shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-theme-border">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#008f7a]" aria-hidden="true" />
+                <Clock className="w-4 h-4 text-[#006d5c] dark:text-teal-400" aria-hidden="true" />
                 <h3 className="text-base font-extrabold text-theme-text">Previously Sent Notifications</h3>
               </div>
               <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-theme-bg border border-theme-border">

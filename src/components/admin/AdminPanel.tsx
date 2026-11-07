@@ -1241,7 +1241,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
             <Menu className="w-5 h-5" aria-hidden="true" />
           </button>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#008f7a] text-white flex items-center justify-center font-black text-xs shadow-md">
+            <div className="w-8 h-8 rounded-xl bg-[#006d5c] text-white flex items-center justify-center font-black text-xs shadow-md">
               DX
             </div>
             <div>
@@ -1265,7 +1265,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
           <button
             type="button"
             onClick={onReturnToStudent}
-            className="px-3 py-1.5 rounded-xl bg-[#008f7a] text-white font-bold text-xs flex items-center gap-1.5 shadow"
+            className="px-3 py-1.5 rounded-xl bg-[#006d5c] text-white font-bold text-xs flex items-center gap-1.5 shadow"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Portal</span>
@@ -1296,7 +1296,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
           {/* Top Brand Logo & Portal Header */}
           <div className="flex items-center justify-between pb-4 border-b border-[#0d3b45]">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#008f7a] text-white flex items-center justify-center font-black text-sm shadow-md">
+              <div className="w-9 h-9 rounded-xl bg-[#006d5c] text-white flex items-center justify-center font-black text-sm shadow-md">
                 DX
               </div>
               <div>
@@ -1329,7 +1329,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               }}
               className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
                 activeAdminTab === 'dashboard'
-                  ? 'bg-gradient-to-r from-[#008f7a] to-[#007a68] text-white shadow-md font-extrabold'
+                  ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
               }`}
             >
@@ -1357,7 +1357,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               }}
               className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
                 activeAdminTab === 'manage'
-                  ? 'bg-gradient-to-r from-[#008f7a] to-[#007a68] text-white shadow-md font-extrabold'
+                  ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
               }`}
             >
@@ -1390,7 +1390,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               }}
               className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
                 activeAdminTab === 'create'
-                  ? 'bg-gradient-to-r from-[#008f7a] to-[#007a68] text-white shadow-md font-extrabold'
+                  ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
               }`}
             >
@@ -1423,7 +1423,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               }}
               className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
                 activeAdminTab === 'students'
-                  ? 'bg-gradient-to-r from-[#008f7a] to-[#007a68] text-white shadow-md font-extrabold'
+                  ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
               }`}
             >
@@ -1456,7 +1456,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               }}
               className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
                 activeAdminTab === 'submissions'
-                  ? 'bg-gradient-to-r from-[#008f7a] to-[#007a68] text-white shadow-md font-extrabold'
+                  ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
               }`}
             >
@@ -1489,7 +1489,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               }}
               className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
                 activeAdminTab === 'notifications'
-                  ? 'bg-gradient-to-r from-[#008f7a] to-[#007a68] text-white shadow-md font-extrabold'
+                  ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
               }`}
             >
@@ -1530,8 +1530,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
         {/* Bottom Section: Decorative Card & Actions */}
         <div className="space-y-3 pt-4">
           {/* Aesthetic Decorative Card (Matching Design) */}
-          <div className="relative p-4 rounded-2xl bg-gradient-to-br from-[#063b44] via-[#02242b] to-[#011417] border border-[#008f7a]/30 overflow-hidden shadow-lg">
-            <div className="absolute right-0 bottom-0 w-24 h-24 bg-[#008f7a]/10 rounded-full blur-xl pointer-events-none" />
+          <div className="relative p-4 rounded-2xl bg-gradient-to-br from-[#063b44] via-[#02242b] to-[#011417] border border-[#006d5c]/30 overflow-hidden shadow-lg">
+            <div className="absolute right-0 bottom-0 w-24 h-24 bg-[#006d5c]/10 rounded-full blur-xl pointer-events-none" />
             <div className="relative z-10 space-y-1">
               <div className="text-xs font-black tracking-wide text-teal-300">DrishtiX</div>
               <p className="text-[11px] font-bold text-teal-100/90 leading-snug">
@@ -1545,7 +1545,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
             <button
               type="button"
               onClick={onReturnToStudent}
-              className="w-full px-3 py-2 rounded-xl bg-[#06333c] hover:bg-[#008f7a] text-teal-100 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition"
+              className="w-full px-3 py-2 rounded-xl bg-[#06333c] hover:bg-[#006d5c] text-teal-100 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition"
             >
               <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Student Portal</span>
@@ -1576,7 +1576,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               value={globalSearch}
               onChange={(e) => setGlobalSearch(e.target.value)}
               placeholder="Search or jump anywhere in portal... (Press /)"
-              className="w-full pl-10 pr-20 py-2 rounded-xl bg-theme-bg border border-theme-border text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition font-medium"
+              className="w-full pl-10 pr-20 py-2 rounded-xl bg-theme-bg border border-theme-border text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition font-medium"
             />
             <button
               type="button"
@@ -1584,7 +1584,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 setIsCommandPaletteOpen(true);
                 soundEffects.playSelect();
               }}
-              className="absolute right-2 top-1.5 px-2 py-1 rounded-lg bg-theme-surface border border-theme-border text-[11px] font-mono font-bold text-theme-text/70 hover:text-[#008f7a] hover:border-[#008f7a] transition flex items-center gap-1 shadow-2xs"
+              className="absolute right-2 top-1.5 px-2 py-1 rounded-lg bg-theme-surface border border-theme-border text-[11px] font-mono font-bold text-theme-text/70 hover:text-[#005a4c] dark:hover:text-teal-300 hover:border-[#006d5c] transition flex items-center gap-1 shadow-2xs"
               title="Open Command Palette (Ctrl+K)"
             >
               <Command className="w-3 h-3" />
@@ -1601,7 +1601,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 soundEffects.playSuccess();
                 announce('Voice AI Assistant activated for DrishtiX Administration.');
               }}
-              className="px-3.5 py-1.5 rounded-full bg-[#008f7a] hover:bg-[#007a68] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
+              className="px-3.5 py-1.5 rounded-full bg-[#006d5c] hover:bg-[#005a4c] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
               title="Voice AI Assistant"
             >
               <Mic className="w-3.5 h-3.5" aria-hidden="true" />
@@ -1668,7 +1668,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
             {/* Admin Profile Chip */}
             <div className="flex items-center gap-2.5 pl-2.5 border-l border-theme-border">
               <div className="relative">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#008f7a] to-teal-400 text-white flex items-center justify-center font-black text-sm shadow-xs">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#006d5c] to-teal-400 text-white flex items-center justify-center font-black text-sm shadow-xs">
                   SK
                 </div>
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#051c22]" />
@@ -1704,7 +1704,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
                     <div className="relative z-10 space-y-2 max-w-2xl">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#008f7a]/15 text-[#008f7a] dark:text-teal-300">
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300">
                           Enterprise Command Center
                         </span>
                         <span className="text-xs text-theme-text/60 font-medium">Atlas Live Synchronized</span>
@@ -1734,11 +1734,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     </div>
 
                     {/* Right Quote Badge */}
-                    <div className="relative z-10 px-5 py-3.5 rounded-2xl bg-white/85 dark:bg-[#031d22]/90 backdrop-blur-md border border-[#008f7a]/30 shadow-sm text-right shrink-0">
-                      <span className="block text-sm sm:text-base font-black text-[#008f7a] dark:text-teal-300">
+                    <div className="relative z-10 px-5 py-3.5 rounded-2xl bg-white/85 dark:bg-[#031d22]/90 backdrop-blur-md border border-[#006d5c]/30 shadow-sm text-right shrink-0">
+                      <span className="block text-sm sm:text-base font-black text-[#005a4c] dark:text-teal-300">
                         “Accessible Education
                       </span>
-                      <span className="block text-sm sm:text-base font-black text-[#008f7a] dark:text-teal-300">
+                      <span className="block text-sm sm:text-base font-black text-[#005a4c] dark:text-teal-300">
                         Stronger Futures”
                       </span>
                       <span className="block text-[10px] text-theme-text/60 font-semibold mt-1">
@@ -1903,7 +1903,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <h3 className="text-base sm:text-lg font-extrabold text-theme-text">Submission Overview</h3>
                       <div className="flex items-center gap-3 text-xs text-theme-text/70 mt-1">
                         <span className="flex items-center gap-1.5 font-medium">
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#008f7a]" /> Submissions
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#006d5c]" /> Submissions
                         </span>
                         <span className="flex items-center gap-1.5 font-medium">
                           <span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Unique Students
@@ -1920,8 +1920,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     <svg viewBox="0 0 450 135" className="w-full h-36 sm:h-44">
                       <defs>
                         <linearGradient id="areaTeal" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#008f7a" stopOpacity="0.4" />
-                          <stop offset="100%" stopColor="#008f7a" stopOpacity="0.0" />
+                          <stop offset="0%" stopColor="#006d5c" stopOpacity="0.4" />
+                          <stop offset="100%" stopColor="#006d5c" stopOpacity="0.0" />
                         </linearGradient>
                         <linearGradient id="areaAmber" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
@@ -1940,7 +1940,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <path
                         d="M 20 100 C 60 90, 90 75, 140 85 C 190 95, 230 55, 280 45 C 330 35, 380 25, 430 12"
                         fill="none"
-                        stroke="#008f7a"
+                        stroke="#006d5c"
                         strokeWidth="3"
                       />
 
@@ -1955,8 +1955,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         strokeWidth="2.5"
                       />
 
-                      <circle cx="280" cy="45" r="4" fill="#008f7a" />
-                      <circle cx="430" cy="12" r="4.5" fill="#008f7a" />
+                      <circle cx="280" cy="45" r="4" fill="#006d5c" />
+                      <circle cx="430" cy="12" r="4.5" fill="#006d5c" />
                       <circle cx="430" cy="50" r="4" fill="#f59e0b" />
                     </svg>
 
@@ -1988,7 +1988,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           cy="50"
                           r="36"
                           fill="none"
-                          stroke="#008f7a"
+                          stroke="#006d5c"
                           strokeWidth="11"
                           strokeDasharray="100 226"
                           strokeDashoffset="0"
@@ -2027,7 +2027,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   <div className="space-y-1.5 text-xs sm:text-sm pt-3 border-t border-theme-border/40">
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-theme-text/80 font-medium">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#008f7a]" /> Correct
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#006d5c]" /> Correct
                       </span>
                       <span className="font-extrabold text-theme-text">
                         {Math.round(totalSubmissions ? avgScore : 0)}%
@@ -2138,7 +2138,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       className="col-span-2 p-3 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/25 text-left transition flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-[#008f7a] text-white flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition">
+                        <div className="w-9 h-9 rounded-xl bg-[#006d5c] text-white flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition">
                           <Megaphone className="w-5 h-5" />
                         </div>
                         <div>
@@ -2174,7 +2174,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <button
                         type="button"
                         onClick={() => setActiveAdminTab('submissions')}
-                      className="text-xs sm:text-sm font-bold text-[#008f7a] hover:underline flex items-center gap-1"
+                      className="text-xs sm:text-sm font-bold text-[#005a4c] dark:text-teal-300 hover:underline flex items-center gap-1"
                     >
                       <span>View All</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -2203,7 +2203,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           submissions.slice(0, 4).map((sub) => (
                             <tr key={sub.id} className="hover:bg-theme-bg/50 transition">
                               <td className="py-2.5 px-2 font-bold text-theme-text flex items-center gap-2">
-                                <span className="w-6 h-6 rounded-full bg-[#008f7a]/20 text-[#008f7a] font-black text-xs flex items-center justify-center shrink-0">
+                                <span className="w-6 h-6 rounded-full bg-[#006d5c]/20 text-[#005a4c] dark:text-teal-300 font-black text-xs flex items-center justify-center shrink-0">
                                   {(sub.studentName || 'C').charAt(0).toUpperCase()}
                                 </span>
                                 <span className="truncate max-w-[130px] font-semibold">{sub.studentName}</span>
@@ -2232,7 +2232,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     <button
                       type="button"
                       onClick={() => setActiveAdminTab('students')}
-                      className="text-xs sm:text-sm font-bold text-[#008f7a] hover:underline flex items-center gap-1"
+                      className="text-xs sm:text-sm font-bold text-[#005a4c] dark:text-teal-300 hover:underline flex items-center gap-1"
                     >
                       <span>View All</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -2253,7 +2253,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           </div>
                           <span className="font-bold text-theme-text truncate flex-1">{st.name}</span>
                           <div className="w-20 sm:w-24 bg-theme-bg rounded-full h-2 overflow-hidden border border-theme-border">
-                            <div className="bg-[#008f7a] h-full rounded-full" style={{ width: `${st.accuracy}%` }} />
+                            <div className="bg-[#006d5c] h-full rounded-full" style={{ width: `${st.accuracy}%` }} />
                           </div>
                           <span className="font-mono font-bold text-theme-text text-xs sm:text-sm w-9 text-right">
                             {st.accuracy}%
@@ -2284,7 +2284,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     ].map((svc) => (
                       <div key={svc.name} className="flex items-center justify-between py-1">
                         <div className="flex items-center gap-2 text-theme-text/80 truncate">
-                          <svc.icon className="w-4 h-4 text-[#008f7a] shrink-0" />
+                          <svc.icon className="w-4 h-4 text-[#005a4c] dark:text-teal-300 shrink-0" />
                           <span className="truncate font-medium">{svc.name}</span>
                         </div>
                         <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -2297,27 +2297,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               {/* 5. Keyboard Shortcuts Bar */}
               <div className="py-2.5 px-4 sm:px-5 rounded-2xl bg-white dark:bg-[#031d22] border border-theme-border flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-theme-text/80 shadow-xs">
                 <div className="flex items-center gap-2 font-bold text-theme-text">
-                  <Command className="w-4 h-4 text-[#008f7a]" />
+                  <Command className="w-4 h-4 text-[#005a4c] dark:text-teal-300" />
                   <span>Keyboard Shortcuts:</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
                   <span className="px-2 py-1 rounded-lg bg-theme-bg border border-theme-border">
-                    <kbd className="font-bold text-[#008f7a]">C</kbd> Create Test
+                    <kbd className="font-bold text-[#005a4c] dark:text-teal-300">C</kbd> Create Test
                   </span>
                   <span className="px-2 py-1 rounded-lg bg-theme-bg border border-theme-border">
-                    <kbd className="font-bold text-[#008f7a]">Q</kbd> Manage Questions
+                    <kbd className="font-bold text-[#005a4c] dark:text-teal-300">Q</kbd> Manage Questions
                   </span>
                   <span className="px-2 py-1 rounded-lg bg-theme-bg border border-theme-border">
-                    <kbd className="font-bold text-[#008f7a]">S</kbd> Student Management
+                    <kbd className="font-bold text-[#005a4c] dark:text-teal-300">S</kbd> Student Management
                   </span>
                   <span className="px-2 py-1 rounded-lg bg-theme-bg border border-theme-border">
-                    <kbd className="font-bold text-[#008f7a]">R</kbd> View Reports
+                    <kbd className="font-bold text-[#005a4c] dark:text-teal-300">R</kbd> View Reports
                   </span>
                   <span className="px-2 py-1 rounded-lg bg-theme-bg border border-theme-border">
-                    <kbd className="font-bold text-[#008f7a]">/</kbd> Search
+                    <kbd className="font-bold text-[#005a4c] dark:text-teal-300">/</kbd> Search
                   </span>
                   <span className="px-2 py-1 rounded-lg bg-theme-bg border border-theme-border">
-                    <kbd className="font-bold text-[#008f7a]">Esc</kbd> Close / Back
+                    <kbd className="font-bold text-[#005a4c] dark:text-teal-300">Esc</kbd> Close / Back
                   </span>
                 </div>
               </div>
@@ -2331,14 +2331,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-theme-border/60">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#008f7a]/15 text-[#008f7a] dark:text-teal-300 uppercase tracking-wider">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 uppercase tracking-wider">
                       Audit Terminal
                     </span>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-xs text-theme-text/60 font-medium">Real-Time Evaluation Records</span>
                   </div>
                   <h2 id="submissions-heading" className="text-xl sm:text-2xl font-black text-theme-text tracking-tight mt-1 flex items-center gap-2">
-                    <Award className="w-6 h-6 text-[#008f7a]" aria-hidden="true" />
+                    <Award className="w-6 h-6 text-[#005a4c] dark:text-teal-300" aria-hidden="true" />
                     <span>Candidate Submissions & Grading Ledger</span>
                   </h2>
                 </div>
@@ -2349,7 +2349,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       type="button"
                       onClick={handleClearAllSubmissions}
                       disabled={isClearingSubmissions}
-                      className="px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-2xs transition disabled:opacity-50 focus:outline-none focus:ring-4 focus:ring-red-400"
+                      className="px-4 py-2 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-700 dark:text-red-400 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-2xs transition disabled:opacity-50 focus:outline-none focus:ring-4 focus:ring-red-400"
                       title="Clear all test submission records from database"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -2362,7 +2362,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     className="px-4 py-2 rounded-xl bg-theme-surface hover:bg-theme-border/40 border border-theme-border text-theme-text font-bold text-xs sm:text-sm flex items-center gap-2 shadow-2xs transition"
                     title="Export submissions to CSV spreadsheet"
                   >
-                    <Download className="w-4 h-4 text-[#008f7a]" />
+                    <Download className="w-4 h-4 text-[#005a4c] dark:text-teal-300" />
                     <span>Export Ledger CSV</span>
                   </button>
                 </div>
@@ -2388,7 +2388,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   <div className="h-4 w-px bg-theme-border hidden sm:block" />
                   <div className="flex items-center gap-2">
                     <span className="text-theme-text/60">Top Candidate:</span>
-                    <span className="font-black text-sm text-[#008f7a] dark:text-teal-300">{students[0]?.name || 'N/A'}</span>
+                    <span className="font-black text-sm text-[#005a4c] dark:text-teal-300">{students[0]?.name || 'N/A'}</span>
                   </div>
                 </div>
 
@@ -2407,9 +2407,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 const pieCount = sonifiedQs.filter((q) => q.graph?.type === 'pie').length;
 
                 return (
-                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-teal-500/5 via-emerald-500/5 to-transparent border border-[#008f7a]/30 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-teal-500/5 via-emerald-500/5 to-transparent border border-[#006d5c]/30 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#008f7a] to-teal-700 text-white flex items-center justify-center text-xl shadow-xs shrink-0">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#006d5c] to-teal-700 text-white flex items-center justify-center text-xl shadow-xs shrink-0">
                         🎧
                       </div>
                       <div>
@@ -2429,7 +2429,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
                       <span className="px-3 py-1.5 rounded-xl bg-theme-surface border border-theme-border text-xs font-bold text-theme-text flex items-center gap-1.5">
-                        <Volume2 className="w-3.5 h-3.5 text-[#008f7a]" />
+                        <Volume2 className="w-3.5 h-3.5 text-[#005a4c] dark:text-teal-300" />
                         <span>{sonifiedQs.length} Sonified Items</span>
                       </span>
                       <span className="px-2.5 py-1 rounded-lg bg-theme-bg border border-theme-border text-xs font-bold text-theme-text/80">
@@ -2457,7 +2457,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       value={submissionSearch}
                       onChange={(e) => setSubmissionSearch(e.target.value)}
                       placeholder="Search candidate name, roll number, or examination..."
-                      className="w-full pl-10 pr-4 py-2 rounded-xl bg-theme-bg border border-theme-border text-xs sm:text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#008f7a] font-medium"
+                      className="w-full pl-10 pr-4 py-2 rounded-xl bg-theme-bg border border-theme-border text-xs sm:text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#006d5c] font-medium"
                     />
                   </div>
 
@@ -2466,7 +2466,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     <select
                       value={selectedExamFilter}
                       onChange={(e) => setSelectedExamFilter(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-theme-bg border border-theme-border text-xs sm:text-sm font-semibold text-theme-text focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
+                      className="w-full p-2.5 rounded-xl bg-theme-bg border border-theme-border text-xs sm:text-sm font-semibold text-theme-text focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
                       aria-label="Filter submissions by examination paper"
                     >
                       <option value="All">All Tests & Drills</option>
@@ -2501,7 +2501,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       }}
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition shrink-0 border ${
                         submissionAccuracyFilter === filterKey
-                          ? 'bg-[#008f7a]/15 text-[#008f7a] dark:text-teal-300 border-[#008f7a]'
+                          ? 'bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 border-[#006d5c]'
                           : 'bg-theme-bg border-theme-border text-theme-text/70 hover:text-theme-text'
                       }`}
                     >
@@ -2514,7 +2514,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       type="button"
                       onClick={handleClearAllSubmissions}
                       disabled={isClearingSubmissions}
-                      className="ml-auto px-3.5 py-1.5 rounded-lg text-xs font-bold transition shrink-0 border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center gap-1.5 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-400"
+                      className="ml-auto px-3.5 py-1.5 rounded-lg text-xs font-bold transition shrink-0 border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-700 dark:text-red-400 flex items-center gap-1.5 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-400"
                       title="Clear all test submission records from Admin Portal"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -2567,7 +2567,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                   <button
                                     type="button"
                                     onClick={() => handleCopyRoll(sub.studentRoll)}
-                                    className="text-[11px] font-mono text-theme-text/60 hover:text-[#008f7a] flex items-center gap-1 mt-0.5 transition"
+                                    className="text-[11px] font-mono text-theme-text/60 hover:text-[#005a4c] dark:hover:text-teal-300 flex items-center gap-1 mt-0.5 transition"
                                     title="Click to copy roll number"
                                   >
                                     <span>{sub.studentRoll}</span>
@@ -2628,10 +2628,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                   <span
                                     className={`px-2 py-0.2 rounded-full text-[10px] font-black uppercase tracking-wider ${
                                       sub.percentage >= 80
-                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                                        ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30'
                                         : sub.percentage >= 50
-                                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30'
-                                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                                        ? 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30'
+                                        : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30'
                                     }`}
                                   >
                                     {sub.percentage >= 80 ? 'Distinction' : sub.percentage >= 50 ? 'Passed' : 'Review'}
@@ -2641,7 +2641,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                 <div className="w-full bg-theme-bg h-1.5 rounded-full overflow-hidden border border-theme-border/60">
                                   <div
                                     className={`h-full rounded-full transition-all duration-500 ${
-                                      sub.percentage >= 80 ? 'bg-[#008f7a]' : sub.percentage >= 50 ? 'bg-amber-500' : 'bg-rose-500'
+                                      sub.percentage >= 80 ? 'bg-[#006d5c]' : sub.percentage >= 50 ? 'bg-amber-500' : 'bg-rose-500'
                                     }`}
                                     style={{ width: `${Math.min(100, Math.max(5, sub.percentage))}%` }}
                                   />
@@ -2657,7 +2657,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                   onClick={() => handleSpeakResult(sub)}
                                   title="Listen to student performance summary via speech"
                                   aria-label={`Read result for ${sub.studentName}`}
-                                  className="p-2 rounded-xl border border-theme-border bg-theme-bg hover:border-[#008f7a] text-theme-text hover:text-[#008f7a] transition"
+                                  className="p-2 rounded-xl border border-theme-border bg-theme-bg hover:border-[#006d5c] text-theme-text hover:text-[#005a4c] dark:hover:text-teal-300 transition"
                                 >
                                   <Volume2 className="w-3.5 h-3.5" aria-hidden="true" />
                                 </button>
@@ -2697,7 +2697,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         type="button"
                         disabled={submissionPage === 1}
                         onClick={() => setSubmissionPage((p) => Math.max(1, p - 1))}
-                        className="px-3 py-1.5 rounded-xl border border-theme-border bg-theme-surface text-theme-text font-bold text-xs hover:border-[#008f7a] hover:text-[#008f7a] disabled:opacity-40 disabled:hover:border-theme-border disabled:hover:text-theme-text transition flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-xl border border-theme-border bg-theme-surface text-theme-text font-bold text-xs hover:border-[#006d5c] hover:text-[#005a4c] dark:hover:text-teal-300 disabled:opacity-40 disabled:hover:border-theme-border disabled:hover:text-theme-text transition flex items-center gap-1"
                       >
                         <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
                         <span>Previous</span>
@@ -2711,8 +2711,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             onClick={() => setSubmissionPage(page)}
                             className={`w-7 h-7 rounded-lg font-bold text-xs transition border ${
                               submissionPage === page
-                                ? 'bg-[#008f7a] text-white border-[#008f7a] shadow-xs'
-                                : 'bg-theme-surface border-theme-border text-theme-text hover:border-[#008f7a]'
+                                ? 'bg-[#006d5c] text-white border-[#006d5c] shadow-xs'
+                                : 'bg-theme-surface border-theme-border text-theme-text hover:border-[#006d5c]'
                             }`}
                           >
                             {page}
@@ -2724,7 +2724,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         type="button"
                         disabled={submissionPage === totalSubmissionPages}
                         onClick={() => setSubmissionPage((p) => Math.min(totalSubmissionPages, p + 1))}
-                        className="px-3 py-1.5 rounded-xl border border-theme-border bg-theme-surface text-theme-text font-bold text-xs hover:border-[#008f7a] hover:text-[#008f7a] disabled:opacity-40 disabled:hover:border-theme-border disabled:hover:text-theme-text transition flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-xl border border-theme-border bg-theme-surface text-theme-text font-bold text-xs hover:border-[#006d5c] hover:text-[#005a4c] dark:hover:text-teal-300 disabled:opacity-40 disabled:hover:border-theme-border disabled:hover:text-theme-text transition flex items-center gap-1"
                       >
                         <span>Next</span>
                         <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -2743,13 +2743,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-theme-border/60">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#008f7a]/15 text-[#008f7a] dark:text-teal-300 uppercase tracking-wider">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 uppercase tracking-wider">
                       Learner Directory
                     </span>
                     <span className="text-xs text-theme-text/60 font-medium">Atlas Synchronized</span>
                   </div>
                   <h2 id="students-roster-heading" className="text-xl sm:text-2xl font-black text-theme-text tracking-tight mt-1 flex items-center gap-2">
-                    <Users className="w-6 h-6 text-[#008f7a]" aria-hidden="true" />
+                    <Users className="w-6 h-6 text-[#005a4c] dark:text-teal-300" aria-hidden="true" />
                     <span>Candidate Roster & Accessibility Accommodations</span>
                   </h2>
                 </div>
@@ -2761,7 +2761,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     className="px-4 py-2 rounded-xl bg-theme-surface hover:bg-theme-border/40 border border-theme-border text-theme-text font-bold text-xs sm:text-sm flex items-center gap-2 shadow-2xs transition"
                     title="Export Student Directory as CSV"
                   >
-                    <Download className="w-4 h-4 text-[#008f7a]" />
+                    <Download className="w-4 h-4 text-[#005a4c] dark:text-teal-300" />
                     <span>Export Roster CSV</span>
                   </button>
 
@@ -2769,7 +2769,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     type="button"
                     onClick={handleManualSync}
                     disabled={isSyncing}
-                    className="px-4 py-2 rounded-xl bg-[#008f7a] hover:bg-[#007a68] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xs transition disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl bg-[#006d5c] hover:bg-[#005a4c] text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xs transition disabled:opacity-50"
                     title="Sync records from MongoDB Atlas"
                   >
                     <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -2819,7 +2819,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       placeholder="Search candidate name, roll number, or email..."
                       value={studentSearch}
                       onChange={(e) => setStudentSearch(e.target.value)}
-                      className="w-full h-10 pl-10 pr-9 rounded-xl border border-theme-border bg-theme-bg text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition font-medium"
+                      className="w-full h-10 pl-10 pr-9 rounded-xl border border-theme-border bg-theme-bg text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition font-medium"
                     />
                     {studentSearch && (
                       <button
@@ -2840,7 +2840,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     <select
                       value={studentSortBy}
                       onChange={(e) => setStudentSortBy(e.target.value as any)}
-                      className="h-10 px-3 rounded-xl border border-theme-border bg-theme-bg text-xs sm:text-sm font-semibold text-theme-text focus:outline-none focus:ring-2 focus:ring-[#008f7a] cursor-pointer"
+                      className="h-10 px-3 rounded-xl border border-theme-border bg-theme-bg text-xs sm:text-sm font-semibold text-theme-text focus:outline-none focus:ring-2 focus:ring-[#006d5c] cursor-pointer"
                     >
                       <option value="recent">Recently Registered</option>
                       <option value="name">Candidate Name (A-Z)</option>
@@ -2868,7 +2868,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         soundEffects.playSelect();
                       }}
                       className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${studentFilterPref === chip.id
-                        ? 'bg-[#008f7a] text-white shadow-xs'
+                        ? 'bg-[#006d5c] text-white shadow-xs'
                         : 'bg-theme-bg border border-theme-border text-theme-text/70 hover:text-theme-text hover:bg-theme-border/30'
                       }`}
                     >
@@ -2892,7 +2892,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               {/* 4. Candidate Directory Table / Grid */}
               {filteredStudents.length === 0 ? (
                 <div className="p-12 text-center rounded-2xl bg-theme-surface border border-theme-border shadow-sm space-y-3">
-                  <div className="w-14 h-14 mx-auto rounded-2xl bg-[#008f7a]/10 text-[#008f7a] flex items-center justify-center">
+                  <div className="w-14 h-14 mx-auto rounded-2xl bg-[#006d5c]/10 text-[#005a4c] dark:text-teal-300 flex items-center justify-center">
                     <Users className="w-7 h-7" />
                   </div>
                   <h3 className="text-base sm:text-lg font-bold text-theme-text">No registered candidates match your filters</h3>
@@ -2906,7 +2906,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       setStudentFilterPref('all');
                       soundEffects.playSelect();
                     }}
-                    className="px-4 py-2 rounded-xl bg-[#008f7a] text-white font-bold text-xs sm:text-sm hover:bg-[#007a68] transition"
+                    className="px-4 py-2 rounded-xl bg-[#006d5c] text-white font-bold text-xs sm:text-sm hover:bg-[#005a4c] transition"
                   >
                     Reset Filters
                   </button>
@@ -2951,7 +2951,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                     )}
                                   </div>
                                   <div className="min-w-0">
-                                    <div className="font-extrabold text-theme-text text-sm sm:text-base group-hover:text-[#008f7a] transition truncate">
+                                    <div className="font-extrabold text-theme-text text-sm sm:text-base group-hover:text-[#005a4c] dark:hover:text-teal-300 transition truncate">
                                       {std.name}
                                     </div>
                                     <div className="text-xs text-theme-text/60 flex items-center gap-1.5 mt-0.5">
@@ -2964,13 +2964,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
                               {/* Roll Number with One-Click Copy */}
                               <td className="py-4 px-4">
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-theme-bg border border-theme-border font-mono text-xs font-bold text-[#008f7a] dark:text-teal-300">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-theme-bg border border-theme-border font-mono text-xs font-bold text-[#005a4c] dark:text-teal-300">
                                   <span>{std.rollNumber}</span>
                                   <button
                                     type="button"
                                     onClick={() => handleCopyRoll(std.rollNumber)}
                                     title="Copy Roll Number"
-                                    className="p-0.5 hover:text-white hover:bg-[#008f7a] rounded transition"
+                                    className="p-0.5 hover:text-white hover:bg-[#006d5c] rounded transition"
                                   >
                                     {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3 h-3 text-theme-text/40 hover:text-inherit" />}
                                   </button>
@@ -3027,7 +3027,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                       setSelectedStudent(std);
                                       soundEffects.playSelect();
                                     }}
-                                    className="px-3 py-1.5 rounded-xl border border-[#008f7a]/40 bg-[#008f7a]/10 hover:bg-[#008f7a] text-[#008f7a] hover:text-white font-bold text-xs flex items-center gap-1.5 transition shadow-2xs"
+                                    className="px-3 py-1.5 rounded-xl border border-[#006d5c]/40 bg-[#006d5c]/10 hover:bg-[#006d5c] text-[#005a4c] dark:text-teal-300 hover:text-white font-bold text-xs flex items-center gap-1.5 transition shadow-2xs"
                                     title={`View ${std.name}'s Profile & Test History`}
                                   >
                                     <Eye className="w-3.5 h-3.5" />
@@ -3095,7 +3095,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           </h3>
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-theme-text/70 mt-1">
-                          <span className="font-mono font-bold text-[#008f7a] dark:text-teal-300 bg-theme-bg px-2 py-0.5 rounded border border-theme-border">
+                          <span className="font-mono font-bold text-[#005a4c] dark:text-teal-300 bg-theme-bg px-2 py-0.5 rounded border border-theme-border">
                             {selectedStudent.rollNumber}
                           </span>
                           <span>{selectedStudent.email}</span>
@@ -3123,7 +3123,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             </div>
                             <div className="p-3.5 rounded-2xl bg-theme-bg border border-theme-border">
                               <span className="text-[10px] uppercase font-bold text-theme-text/60 block">Best Score</span>
-                              <div className="text-xl font-black text-[#008f7a] dark:text-teal-300 mt-0.5">{best}%</div>
+                              <div className="text-xl font-black text-[#005a4c] dark:text-teal-300 mt-0.5">{best}%</div>
                             </div>
                             <div className="p-3.5 rounded-2xl bg-theme-bg border border-theme-border">
                               <span className="text-[10px] uppercase font-bold text-theme-text/60 block">Profile Mode</span>
@@ -3137,7 +3137,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           <div className="space-y-3">
                             <div className="flex items-center justify-between flex-wrap gap-2">
                               <h4 className="text-sm font-extrabold text-theme-text flex items-center gap-2">
-                                <Award className="w-4 h-4 text-[#008f7a]" />
+                                <Award className="w-4 h-4 text-[#005a4c] dark:text-teal-300" />
                                 Examination & Drill Attempts ({studentSubs.length})
                               </h4>
                               {studentSubs.length > 0 && (
@@ -3223,7 +3223,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <button
                         type="button"
                         onClick={() => setSelectedStudent(null)}
-                        className="px-5 py-2 rounded-xl bg-[#008f7a] hover:bg-[#007a68] text-white font-bold text-xs sm:text-sm transition"
+                        className="px-5 py-2 rounded-xl bg-[#006d5c] hover:bg-[#005a4c] text-white font-bold text-xs sm:text-sm transition"
                       >
                         Close Profile
                       </button>
@@ -3241,13 +3241,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-theme-border/60">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#008f7a]/15 text-[#008f7a] dark:text-teal-300 uppercase tracking-wider">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 uppercase tracking-wider">
                       Paper Repository
                     </span>
                     <span className="text-xs text-theme-text/60 font-medium">Curriculum Management</span>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-black text-theme-text tracking-tight mt-1 flex items-center gap-2">
-                    <BookOpen className="w-6 h-6 text-[#008f7a]" aria-hidden="true" />
+                    <BookOpen className="w-6 h-6 text-[#005a4c] dark:text-teal-300" aria-hidden="true" />
                     <span>Examination Papers & Practice Drills</span>
                   </h2>
                 </div>
@@ -3261,7 +3261,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       setActiveAdminTab('create');
                       soundEffects.playSelect();
                     }}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#008f7a] to-teal-700 hover:brightness-110 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-md transition"
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#006d5c] to-teal-700 hover:brightness-110 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-md transition"
                   >
                     <PlusCircle className="w-4 h-4" aria-hidden="true" />
                     <span>{manageSubTab === 'exams' ? 'Create Mock Test' : 'Create Practice Drill'}</span>
@@ -3317,7 +3317,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       value={manageSearchQuery}
                       onChange={(e) => setManageSearchQuery(e.target.value)}
                       placeholder="Search test paper by title, exam code, or syllabus..."
-                      className="w-full pl-10 pr-4 py-2 rounded-xl bg-theme-bg border border-theme-border text-xs sm:text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#008f7a] font-medium"
+                      className="w-full pl-10 pr-4 py-2 rounded-xl bg-theme-bg border border-theme-border text-xs sm:text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#006d5c] font-medium"
                     />
                   </div>
 
@@ -3333,7 +3333,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       }}
                       className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition ${
                         manageSubTab === 'exams'
-                          ? 'bg-[#008f7a] text-white shadow-xs'
+                          ? 'bg-[#006d5c] text-white shadow-xs'
                           : 'text-theme-text/70 hover:text-theme-text'
                       }`}
                     >
@@ -3355,7 +3355,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       }}
                       className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition ${
                         manageSubTab === 'practice'
-                          ? 'bg-[#008f7a] text-white shadow-xs'
+                          ? 'bg-[#006d5c] text-white shadow-xs'
                           : 'text-theme-text/70 hover:text-theme-text'
                       }`}
                     >
@@ -3394,7 +3394,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       }}
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition shrink-0 border ${
                         manageCategoryFilter === cat
-                          ? 'bg-[#008f7a]/15 text-[#008f7a] dark:text-teal-300 border-[#008f7a]'
+                          ? 'bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 border-[#006d5c]'
                           : 'bg-theme-bg border-theme-border text-theme-text/70 hover:text-theme-text'
                       }`}
                     >
@@ -3426,7 +3426,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           setActiveAdminTab('create');
                           soundEffects.playSelect();
                         }}
-                        className="px-4 py-2 rounded-xl bg-[#008f7a] text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-xs transition hover:brightness-110"
+                        className="px-4 py-2 rounded-xl bg-[#006d5c] text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-xs transition hover:brightness-110"
                       >
                         <PlusCircle className="w-4 h-4" />
                         <span>Create First Mock Test</span>
@@ -3437,11 +3437,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       {filteredManageExams.map((exam) => (
                         <div
                           key={exam.id}
-                          className="p-5 sm:p-6 rounded-2xl bg-theme-surface border border-theme-border shadow-xs hover:border-[#008f7a]/50 transition flex flex-col justify-between space-y-4 group"
+                          className="p-5 sm:p-6 rounded-2xl bg-theme-surface border border-theme-border shadow-xs hover:border-[#006d5c]/50 transition flex flex-col justify-between space-y-4 group"
                         >
                           <div className="space-y-3">
                             <div className="flex items-center justify-between gap-2 flex-wrap">
-                              <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-black bg-[#008f7a]/15 text-[#008f7a] dark:text-teal-300 border border-[#008f7a]/30">
+                              <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-black bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 border border-[#006d5c]/30">
                                 {exam.code}
                               </span>
                               <div className="flex items-center gap-1.5">
@@ -3455,7 +3455,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             </div>
 
                             <div>
-                              <h3 className="text-base sm:text-lg font-black text-theme-text group-hover:text-[#008f7a] transition-colors leading-snug">
+                              <h3 className="text-base sm:text-lg font-black text-theme-text group-hover:text-[#005a4c] dark:hover:text-teal-300 transition-colors leading-snug">
                                 {exam.title}
                               </h3>
                               <p className="text-xs text-theme-text/70 mt-1 line-clamp-2 leading-relaxed">
@@ -3498,7 +3498,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               <button
                                 type="button"
                                 onClick={() => handleTestAsStudent(exam, 'exam')}
-                                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#008f7a] to-teal-700 text-white text-xs font-bold flex items-center gap-1.5 hover:brightness-110 shadow-xs transition"
+                                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#006d5c] to-teal-700 text-white text-xs font-bold flex items-center gap-1.5 hover:brightness-110 shadow-xs transition"
                               >
                                 <Play className="w-3.5 h-3.5" aria-hidden="true" />
                                 <span>Test as Student</span>
@@ -3508,9 +3508,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                 type="button"
                                 disabled={isLoadingExamForEdit}
                                 onClick={() => void handleStartEditExam(exam.id)}
-                                className="px-3 py-1.5 rounded-xl border border-theme-border bg-theme-bg hover:border-[#008f7a] text-theme-text text-xs font-bold flex items-center gap-1.5 transition disabled:opacity-50"
+                                className="px-3 py-1.5 rounded-xl border border-theme-border bg-theme-bg hover:border-[#006d5c] text-theme-text text-xs font-bold flex items-center gap-1.5 transition disabled:opacity-50"
                               >
-                                <Edit3 className="w-3.5 h-3.5 text-[#008f7a]" aria-hidden="true" />
+                                <Edit3 className="w-3.5 h-3.5 text-[#005a4c] dark:text-teal-300" aria-hidden="true" />
                                 <span>{isLoadingExamForEdit ? 'Loading...' : 'Edit in Studio'}</span>
                               </button>
                             </div>
@@ -3677,13 +3677,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-theme-border/60">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#008f7a]/15 text-[#008f7a] dark:text-teal-300 uppercase tracking-wider">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 uppercase tracking-wider">
                       Authoring Studio
                     </span>
                     <span className="text-xs text-theme-text/60 font-medium">LaTeX Math · Multimodal Vision · Audio Sonification</span>
                   </div>
                   <h2 id="create-heading" className="text-xl sm:text-2xl font-black text-theme-text tracking-tight mt-1 flex items-center gap-2">
-                    <HelpCircle className="w-6 h-6 text-[#008f7a]" aria-hidden="true" />
+                    <HelpCircle className="w-6 h-6 text-[#005a4c] dark:text-teal-300" aria-hidden="true" />
                     <span>{editingExamId ? `Editing Paper: ${code || 'Draft'}` : 'Question Bank & Authoring Studio'}</span>
                   </h2>
                 </div>
@@ -3723,7 +3723,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   <button
                     type="button"
                     onClick={handleAddQuestion}
-                    className="px-3.5 py-2 rounded-xl bg-[#008f7a] hover:bg-[#007a68] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
+                    className="px-3.5 py-2 rounded-xl bg-[#006d5c] hover:bg-[#005a4c] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
                   >
                     <PlusCircle className="w-4 h-4" aria-hidden="true" />
                     <span>+ Add Question</span>
@@ -3798,7 +3798,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 <div className="p-5 sm:p-7 rounded-2xl bg-theme-surface border border-theme-border shadow-sm space-y-5">
                   <div className="flex items-center justify-between border-b border-theme-border/60 pb-3">
                     <h3 className="text-base sm:text-lg font-black text-theme-text flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-[#008f7a]" />
+                      <BookOpen className="w-5 h-5 text-[#005a4c] dark:text-teal-300" />
                       <span>1. Examination Blueprint & Metadata</span>
                     </h3>
                     <span className="text-xs font-semibold text-theme-text/60">Configure timing, syllabus & marking</span>
@@ -3813,7 +3813,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <select
                         value={examType}
                         onChange={(e) => setExamType(e.target.value as 'exam' | 'practice')}
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition"
                       >
                         <option value="exam">🏆 Mock Examination (Timed with Penalty)</option>
                         <option value="practice">💡 Practice Drill (Untimed with Hints)</option>
@@ -3827,7 +3827,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value as ExamCategory)}
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition"
                       >
                         <option value="Staff Selection">Staff Selection Commission (SSC)</option>
                         <option value="Banking & Insurance">Banking & Insurance (IBPS/SBI)</option>
@@ -3843,7 +3843,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <select
                         value={difficulty}
                         onChange={(e) => setDifficulty(e.target.value as any)}
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition"
                       >
                         <option value="Easy">Easy (Foundation / Starter)</option>
                         <option value="Moderate">Moderate (Standard Examination)</option>
@@ -3864,7 +3864,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="e.g. IBPS Clerk 2026 Quantitative Speed & Accuracy Drill"
                         required
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition"
                       />
                     </div>
 
@@ -3878,7 +3878,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         onChange={(e) => setCode(e.target.value.toUpperCase())}
                         placeholder="e.g. IBPS-CLK-05"
                         required
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition uppercase"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition uppercase"
                       />
                     </div>
                   </div>
@@ -3894,7 +3894,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       rows={2}
                       placeholder="Brief summary of syllabus, topics covered, target examination, and learning objectives..."
                       required
-                      className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-[#008f7a] transition font-medium"
+                      className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition font-medium"
                     />
                   </div>
 
@@ -3910,7 +3910,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         max={180}
                         value={durationMinutes}
                         onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
                       />
                     </div>
 
@@ -3924,7 +3924,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         max={300}
                         value={totalMarks}
                         onChange={(e) => setTotalMarks(Number(e.target.value))}
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
                       />
                     </div>
 
@@ -3938,7 +3938,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         onChange={(e) => setNegativeMarking(e.target.value)}
                         placeholder="-0.25 marks"
                         disabled={examType === 'practice'}
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-semibold disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-semibold disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
                       />
                     </div>
                   </div>
@@ -3949,7 +3949,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-theme-border/60 pb-4">
                     <div>
                       <h3 className="text-base sm:text-lg font-black text-theme-text flex items-center gap-2">
-                        <FileSpreadsheet className="w-5 h-5 text-[#008f7a]" />
+                        <FileSpreadsheet className="w-5 h-5 text-[#005a4c] dark:text-teal-300" />
                         <span>2. Questions Workbench ({questions.length} Items)</span>
                       </h3>
                       <p className="text-xs text-theme-text/60 mt-0.5">
@@ -3961,7 +3961,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <button
                         type="button"
                         onClick={handleAddQuestion}
-                        className="px-4 py-2 rounded-xl bg-[#008f7a] hover:bg-[#007a68] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
+                        className="px-4 py-2 rounded-xl bg-[#006d5c] hover:bg-[#005a4c] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition"
                       >
                         <PlusCircle className="w-4 h-4" aria-hidden="true" />
                         <span>Add Question</span>
@@ -3990,7 +3990,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             }}
                             className={`px-2.5 py-1 rounded-lg text-xs font-black font-mono transition shrink-0 flex items-center gap-1 border ${
                               hasContent
-                                ? 'bg-theme-surface border-theme-border text-theme-text hover:border-[#008f7a]'
+                                ? 'bg-theme-surface border-theme-border text-theme-text hover:border-[#006d5c]'
                                 : 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
                             }`}
                             title={`Jump to Question ${idx + 1}`}
@@ -4005,7 +4005,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <button
                         type="button"
                         onClick={handleAddQuestion}
-                        className="px-2.5 py-1 rounded-lg text-xs font-extrabold border border-dashed border-[#008f7a] text-[#008f7a] hover:bg-[#008f7a]/10 transition shrink-0"
+                        className="px-2.5 py-1 rounded-lg text-xs font-extrabold border border-dashed border-[#006d5c] text-[#005a4c] dark:text-teal-300 hover:bg-[#006d5c]/10 transition shrink-0"
                         title="Add New Question"
                       >
                         + Add Q
@@ -4019,12 +4019,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <div
                         key={q.id}
                         id={`question-card-${qIdx}`}
-                        className="p-5 sm:p-6 rounded-2xl bg-theme-bg border border-theme-border shadow-xs space-y-4 hover:border-[#008f7a]/40 transition scroll-mt-24"
+                        className="p-5 sm:p-6 rounded-2xl bg-theme-bg border border-theme-border shadow-xs space-y-4 hover:border-[#006d5c]/40 transition scroll-mt-24"
                       >
                         {/* Question Card Header Bar */}
                         <div className="flex flex-wrap items-center justify-between border-b border-theme-border pb-3 gap-3">
                           <div className="flex items-center gap-2.5">
-                            <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#008f7a] to-teal-700 text-white font-black text-xs flex items-center justify-center font-mono shadow-xs">
+                            <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#006d5c] to-teal-700 text-white font-black text-xs flex items-center justify-center font-mono shadow-xs">
                               Q{q.questionNumber}
                             </span>
                             <span className="text-sm font-extrabold text-theme-text">Question {q.questionNumber}</span>
@@ -4093,11 +4093,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                       });
                                     }
                                   }}
-                                  className="accent-[#008f7a]"
+                                  className="accent-[#006d5c]"
                                 />
                                 <span>Standard Multiple Choice (MCQ)</span>
                               </label>
-                              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-[#008f7a]">
+                              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-[#005a4c] dark:text-teal-300">
                                 <input
                                   type="radio"
                                   name={`q_type_${qIdx}`}
@@ -4132,7 +4132,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                       enabled: true,
                                     });
                                   }}
-                                  className="accent-[#008f7a]"
+                                  className="accent-[#006d5c]"
                                 />
                                 <span>DI / Data Interpretation (Audio Sonification)</span>
                               </label>
@@ -4153,7 +4153,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                     });
                                   }
                                 }}
-                                className="w-4 h-4 accent-[#008f7a]"
+                                className="w-4 h-4 accent-[#006d5c]"
                               />
                               <span className={q.graph?.enabled ? 'text-emerald-500 font-extrabold' : 'text-theme-text/60'}>
                                 {q.graph?.enabled ? 'ENABLED' : 'DISABLED'}
@@ -4179,7 +4179,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               value={q.section}
                               onChange={(e) => handleUpdateQuestion(qIdx, 'section', e.target.value)}
                               placeholder="e.g. Quantitative Aptitude"
-                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text font-semibold focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
+                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text font-semibold focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
                             />
                           </div>
                           <div className="sm:col-span-3">
@@ -4204,14 +4204,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               rows={2}
                               placeholder="Enter the complete question statement..."
                               required
-                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
+                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
                             />
                           </div>
                         </div>
 
                         {/* Math Formula Input + Live Preview */}
-                        <div className="p-4 rounded-xl border border-[#008f7a]/30 bg-[#008f7a]/5 space-y-2">
-                          <label className="block text-xs font-bold text-[#008f7a] dark:text-teal-300">
+                        <div className="p-4 rounded-xl border border-[#006d5c]/30 bg-[#006d5c]/5 space-y-2">
+                          <label className="block text-xs font-bold text-[#005a4c] dark:text-teal-300">
                             Optional Mathematical Equation (LaTeX)
                           </label>
                           <input
@@ -4219,7 +4219,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             value={q.mathLatex || ''}
                             onChange={(e) => handleUpdateQuestion(qIdx, 'mathLatex', e.target.value)}
                             placeholder="e.g. v = 72 \times \frac{5}{18} = 20 \text{ m/s}"
-                            className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border font-mono text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-[#008f7a]"
+                            className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border font-mono text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
                           />
 
                           {q.mathLatex && (
@@ -4421,7 +4421,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                   onChange={(e) => handleUpdateOption(qIdx, opt.number, e.target.value)}
                                   placeholder={`Option ${opt.number} text...`}
                                   required
-                                  className="flex-1 p-1 rounded bg-transparent border-b border-theme-border/60 text-xs sm:text-sm text-theme-text outline-none focus:border-[#008f7a] font-medium"
+                                  className="flex-1 p-1 rounded bg-transparent border-b border-theme-border/60 text-xs sm:text-sm text-theme-text outline-none focus:border-[#006d5c] font-medium"
                                 />
                               </div>
                             ))}
@@ -4464,7 +4464,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 {/* 5. Sticky Bottom Publish Footer Bar */}
                 <div className="sticky bottom-4 z-20 p-4 sm:p-5 rounded-2xl bg-white/95 dark:bg-[#031d22]/95 backdrop-blur-md border border-theme-border shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#008f7a]/15 text-[#008f7a] flex items-center justify-center font-black">
+                    <div className="w-9 h-9 rounded-xl bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 flex items-center justify-center font-black">
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <div>
@@ -4488,7 +4488,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
                     <button
                       type="submit"
-                      className="flex-1 sm:flex-initial px-7 py-3 rounded-xl bg-gradient-to-r from-[#008f7a] via-[#00a890] to-[#007a68] hover:brightness-110 text-white font-extrabold text-sm sm:text-base shadow-md transition flex items-center justify-center gap-2"
+                      className="flex-1 sm:flex-initial px-7 py-3 rounded-xl bg-gradient-to-r from-[#006d5c] via-[#008573] to-[#005a4c] hover:brightness-110 text-white font-extrabold text-sm sm:text-base shadow-md transition flex items-center justify-center gap-2"
                     >
                       <Sparkles className="w-4 h-4 text-teal-100" />
                       <span>{editingExamId ? 'Save & Update Paper' : 'Publish to Student Catalog'}</span>
@@ -4613,7 +4613,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
             >
               {/* Palette Search Header */}
               <div className="flex items-center px-4 py-3.5 border-b border-theme-border gap-3">
-                <Search className="w-5 h-5 text-[#008f7a] shrink-0" />
+                <Search className="w-5 h-5 text-[#005a4c] dark:text-teal-300 shrink-0" />
                 <input
                   type="text"
                   autoFocus
@@ -4665,12 +4665,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           }}
                           className={`w-full px-3 py-2.5 rounded-xl text-left text-xs sm:text-sm font-bold flex items-center justify-between transition ${
                             activeAdminTab === tab.id
-                              ? 'bg-[#008f7a] text-white shadow-xs'
+                              ? 'bg-[#006d5c] text-white shadow-xs'
                               : 'hover:bg-theme-bg text-theme-text'
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <tab.icon className={`w-4 h-4 ${activeAdminTab === tab.id ? 'text-white' : 'text-[#008f7a]'}`} />
+                            <tab.icon className={`w-4 h-4 ${activeAdminTab === tab.id ? 'text-white' : 'text-[#005a4c] dark:text-teal-300'}`} />
                             <span>{tab.label}</span>
                           </div>
                           <kbd className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
@@ -4761,9 +4761,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           key={idx}
                           type="button"
                           onClick={op.action}
-                          className="px-3 py-2.5 rounded-xl border border-theme-border bg-theme-surface hover:border-[#008f7a] text-left text-xs font-bold text-theme-text flex items-center gap-2.5 transition"
+                          className="px-3 py-2.5 rounded-xl border border-theme-border bg-theme-surface hover:border-[#006d5c] text-left text-xs font-bold text-theme-text flex items-center gap-2.5 transition"
                         >
-                          <op.icon className="w-4 h-4 text-[#008f7a] shrink-0" />
+                          <op.icon className="w-4 h-4 text-[#005a4c] dark:text-teal-300 shrink-0" />
                           <span className="truncate">{op.label}</span>
                         </button>
                       ))}
@@ -4802,7 +4802,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                   setIsCommandPaletteOpen(false);
                                   handleTestAsStudent(exam, 'exam');
                                 }}
-                                className="px-2.5 py-1 rounded-lg bg-[#008f7a] text-white font-bold text-xs"
+                                className="px-2.5 py-1 rounded-lg bg-[#006d5c] text-white font-bold text-xs"
                               >
                                 Test
                               </button>
@@ -4846,10 +4846,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               setIsCommandPaletteOpen(false);
                               soundEffects.playSelect();
                             }}
-                            className="p-2.5 rounded-xl bg-theme-bg border border-theme-border hover:border-[#008f7a] cursor-pointer flex items-center justify-between gap-3 text-xs transition"
+                            className="p-2.5 rounded-xl bg-theme-bg border border-theme-border hover:border-[#006d5c] cursor-pointer flex items-center justify-between gap-3 text-xs transition"
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="w-7 h-7 rounded-full bg-[#008f7a]/20 text-[#008f7a] font-black flex items-center justify-center shrink-0">
+                              <div className="w-7 h-7 rounded-full bg-[#006d5c]/20 text-[#005a4c] dark:text-teal-300 font-black flex items-center justify-center shrink-0">
                                 {st.name.charAt(0)}
                               </div>
                               <div className="min-w-0">
@@ -4857,7 +4857,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                 <div className="text-[11px] text-theme-text/60 font-mono">{st.rollNumber}</div>
                               </div>
                             </div>
-                            <span className="text-[10px] font-bold text-[#008f7a]">View Profile →</span>
+                            <span className="text-[10px] font-bold text-[#005a4c] dark:text-teal-300">View Profile →</span>
                           </div>
                         ))}
                     </div>
@@ -4872,7 +4872,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   <span>↑↓ to navigate</span>
                   <span>Esc to dismiss</span>
                 </div>
-                <span className="font-bold text-[#008f7a]">DrishtiX Enterprise Command Suite</span>
+                <span className="font-bold text-[#005a4c] dark:text-teal-300">DrishtiX Enterprise Command Suite</span>
               </div>
             </div>
           </div>

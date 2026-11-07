@@ -518,6 +518,11 @@ select:autofill {
   color: var(--text-primary) !important;
 }
 
+.text-theme-primary-text,
+[class*="text-theme-primary-text"] {
+  color: var(--primary-text) !important;
+}
+
 [class*="text-theme-primary-text/"] {
   color: var(--primary-text) !important;
   opacity: 0.9;
@@ -548,8 +553,17 @@ a.bg-theme-primary {
 [data-theme="dark"] a.bg-theme-primary,
 [data-theme="dark"] .bg-theme-primary .truncate,
 [data-theme="dark"] .bg-theme-primary p,
+[data-theme="dark"] .bg-theme-primary span:not([class*="bg-"]),
 [data-theme="dark"] .bg-theme-primary.text-white,
-[data-theme="dark"] .bg-theme-primary .text-white {
+[data-theme="dark"] .bg-theme-primary .text-white,
+.dark .bg-theme-primary,
+.dark button.bg-theme-primary,
+.dark a.bg-theme-primary,
+.dark .bg-theme-primary .truncate,
+.dark .bg-theme-primary p,
+.dark .bg-theme-primary span:not([class*="bg-"]),
+.dark .bg-theme-primary.text-white,
+.dark .bg-theme-primary .text-white {
   color: var(--primary-text) !important;
 }
 
@@ -558,6 +572,7 @@ a.bg-theme-primary {
 [data-theme="high-contrast"] a.bg-theme-primary,
 [data-theme="high-contrast"] .bg-theme-primary .truncate,
 [data-theme="high-contrast"] .bg-theme-primary p,
+[data-theme="high-contrast"] .bg-theme-primary span:not([class*="bg-"]),
 [data-theme="high-contrast"] .bg-theme-primary.text-white,
 [data-theme="high-contrast"] .bg-theme-primary .text-white {
   color: var(--primary-text) !important;
@@ -569,7 +584,13 @@ a.bg-theme-primary {
 [data-theme="dark"] .bg-emerald-600 .text-white,
 [data-theme="dark"] .bg-emerald-500 .text-white,
 [data-theme="dark"] .bg-theme-success.text-white,
-[data-theme="dark"] .bg-theme-success .text-white {
+[data-theme="dark"] .bg-theme-success .text-white,
+.dark .bg-emerald-600.text-white,
+.dark .bg-emerald-500.text-white,
+.dark .bg-emerald-600 .text-white,
+.dark .bg-emerald-500 .text-white,
+.dark .bg-theme-success.text-white,
+.dark .bg-theme-success .text-white {
   color: var(--primary-text) !important;
 }
 
@@ -586,4 +607,78 @@ a.bg-theme-primary {
 :root:not([data-theme="dark"]):not([data-theme="high-contrast"]) .text-yellow-400:not([aria-hidden="true"]),
 :root:not([data-theme="dark"]):not([data-theme="high-contrast"]) .text-yellow-300:not([aria-hidden="true"]) {
   color: #92400e !important;
+}
+
+/* ========================================================
+   ADMIN PORTAL SPECIFIC WCAG 2.1 AA COLOR CONTRAST RULES
+   Guarantees that admin teal elements, tags, and status badges
+   never fall below the required 4.5:1 contrast threshold.
+   ======================================================== */
+
+.bg-\[\#008f7a\],
+[class*="bg-[#008f7a]"] {
+  background-color: #006d5c !important;
+}
+
+.hover\:bg-\[\#007a68\]:hover {
+  background-color: #005a4c !important;
+}
+
+/* Fix #008f7a text contrast on light/tinted backgrounds */
+[class*="text-[#008f7a]"]:not(.dark\:[class*="text-"]):not([class*="dark:text-"]) {
+  color: #005a4c !important;
+}
+
+[data-theme="dark"] [class*="text-[#008f7a]"],
+.dark [class*="text-[#008f7a]"] {
+  color: #5eead4 !important;
+}
+
+/* Ensure Rose, Red, Amber, and Emerald status badges meet >= 4.5:1 */
+.text-rose-600,
+.text-rose-500 {
+  color: #be123c !important; /* rose-700: 5.3:1 on light rose tint */
+}
+
+.text-red-600,
+.text-red-500 {
+  color: #b91c1c !important; /* red-700: 5.4:1 on light red tint */
+}
+
+.text-amber-600,
+.text-amber-500 {
+  color: #92400e !important; /* amber-800: 6.0:1 on light amber tint */
+}
+
+.text-emerald-600,
+.text-emerald-500 {
+  color: #065f46 !important; /* emerald-800: 5.8:1 on light emerald tint */
+}
+
+.dark .text-rose-600,
+.dark .text-rose-500,
+[data-theme="dark"] .text-rose-600,
+[data-theme="dark"] .text-rose-500 {
+  color: #fda4af !important; /* rose-300: 9.8:1 on dark */
+}
+
+.dark .text-red-600,
+.dark .text-red-500,
+[data-theme="dark"] .text-red-600,
+[data-theme="dark"] .text-red-500 {
+  color: #fca5a5 !important; /* red-300: 9.6:1 on dark */
+}
+
+.dark .text-amber-600,
+.dark .text-amber-500,
+[data-theme="dark"] .text-amber-600,
+[data-theme="dark"] .text-amber-500 {
+  color: #fcd34d !important; /* amber-300: 11.2:1 on dark */
+}
+
+.dark .text-emerald-600,
+.dark .text-emerald-500,
+[data-theme="dark"] .text-emerald-600,
+[data-theme="dark"] .text-emerald-500 {
+  color: #6ee7b7 !important; /* emerald-300: 10.4:1 on dark */
 }
