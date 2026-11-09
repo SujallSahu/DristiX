@@ -643,6 +643,8 @@ export const StatsBand: React.FC = () => (
   <Section alt accent="center" id="stats">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       <SectionHeader
+        className="max-w-4xl"
+        subClassName="max-w-none md:whitespace-nowrap"
         pill={<><Zap className="w-3 h-3" aria-hidden="true" />At a Glance</>}
         heading={<>Numbers That <span className="dx-gradient-text">Matter</span></>}
         sub="Every figure below is verifiable in this codebase — no invented usage statistics."
@@ -653,13 +655,12 @@ export const StatsBand: React.FC = () => (
           <li key={sub} className="dx-stat-card p-4 sm:p-8 flex flex-col gap-3 sm:gap-5 group cursor-default">
             <div className="flex items-center gap-3">
               <div
-                className="w-9 h-9 sm:w-11 sm:h-11 grid place-items-center rounded-2xl text-theme-primary shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:text-theme-primary-text"
+                className="w-9 h-9 sm:w-11 sm:h-11 grid place-items-center rounded-2xl text-theme-primary-text shrink-0 transition-all duration-300 group-hover:scale-110 shadow-md group-hover:shadow-lg"
                 style={{
-                  background: 'color-mix(in srgb, var(--primary) 12%, var(--bg-surface))',
-                  border: '1.5px solid color-mix(in srgb, var(--primary) 28%, transparent)',
+                  background: 'var(--primary-gradient)',
+                  border: '1.5px solid color-mix(in srgb, var(--primary) 40%, transparent)',
+                  boxShadow: '0 4px 16px var(--primary-glow), 0 0 0 4px var(--bg-page)',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-gradient)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'color-mix(in srgb, var(--primary) 12%, var(--bg-surface))')}
               >
                 <Icon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
               </div>
@@ -720,6 +721,8 @@ export const WhyChoose: React.FC = () => (
   <Section id="why" accent="right">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       <SectionHeader
+        className="max-w-5xl"
+        subClassName="max-w-none md:whitespace-nowrap"
         pill={<><BadgeCheck className="w-3 h-3" aria-hidden="true" />Accessibility First</>}
         heading={<>Why Choose <span className="dx-gradient-text">DristiX?</span></>}
         sub="Accessibility is not a bolt-on screen reader mode — it is the interaction model the whole exam is built around."
@@ -732,13 +735,12 @@ export const WhyChoose: React.FC = () => (
             <div className="flex items-center justify-between">
               <span className="dx-label-pill">{tag}</span>
               <div
-                className="w-11 h-11 grid place-items-center rounded-2xl text-theme-primary transition-all duration-300 group-hover:scale-110 group-hover:text-theme-primary-text"
+                className="w-11 h-11 grid place-items-center rounded-2xl text-theme-primary-text transition-all duration-300 group-hover:scale-110 shadow-md group-hover:shadow-lg"
                 style={{
-                  background: 'color-mix(in srgb, var(--primary) 10%, var(--bg-surface))',
-                  border: '1.5px solid color-mix(in srgb, var(--primary) 28%, transparent)',
+                  background: 'var(--primary-gradient)',
+                  border: '1.5px solid color-mix(in srgb, var(--primary) 40%, transparent)',
+                  boxShadow: '0 4px 16px var(--primary-glow)',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-gradient)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'color-mix(in srgb, var(--primary) 10%, var(--bg-surface))')}
                 aria-hidden="true"
               >
                 <Icon className="w-5 h-5" />
