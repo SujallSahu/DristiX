@@ -815,34 +815,50 @@ export const FaqSection: React.FC = () => {
     <Section alt accent="left">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <SectionHeader
-          pill="FAQ"
+          className="max-w-4xl"
+          subClassName="max-w-none md:whitespace-nowrap"
+          pill={<><Lightbulb className="w-3 h-3" aria-hidden="true" />FAQ</>}
           heading={<>Everything You <span className="dx-gradient-text">Need to Know</span></>}
           sub="Can't find your answer? Contact your institution administrator."
         />
 
         <div className="flex flex-col gap-3">
           {FAQS.map((faq, idx) => (
-            <div key={faq.q} className="dx-feature-card overflow-hidden">
+            <div
+              key={faq.q}
+              className={`dx-feature-card overflow-hidden transition-all duration-300 ${
+                open === idx ? 'ring-1 ring-theme-primary/30 shadow-md' : ''
+              }`}
+            >
               <button
                 type="button"
                 onClick={() => setOpen(open === idx ? null : idx)}
                 aria-expanded={open === idx}
-                className="w-full text-left px-4 sm:px-6 py-3.5 sm:py-5 flex items-center justify-between gap-3 sm:gap-5 focus:outline-none group"
+                className="w-full text-left px-4 sm:px-6 py-3.5 sm:py-5 flex items-center justify-between gap-3 sm:gap-5 focus:outline-none group cursor-pointer"
               >
                 <span className="font-black text-sm sm:text-base text-theme-text group-hover:text-theme-primary transition-colors leading-snug">
                   {faq.q}
                 </span>
                 <span
-                  className="w-8 h-8 shrink-0 grid place-items-center rounded-xl transition-all duration-300"
+                  className={`w-8 h-8 shrink-0 grid place-items-center rounded-xl transition-all duration-300 group-hover:scale-110 ${
+                    open === idx ? 'text-theme-primary-text shadow-sm' : 'text-theme-primary'
+                  }`}
                   style={
                     open === idx
-                      ? { background: 'var(--primary-gradient)' }
-                      : { background: 'color-mix(in srgb, var(--border-color) 40%, transparent)' }
+                      ? {
+                          background: 'var(--primary-gradient)',
+                          border: '1.5px solid color-mix(in srgb, var(--primary) 40%, transparent)',
+                          boxShadow: '0 2px 10px var(--primary-glow)',
+                        }
+                      : {
+                          background: 'color-mix(in srgb, var(--primary) 12%, var(--bg-surface))',
+                          border: '1.5px solid color-mix(in srgb, var(--primary) 28%, transparent)',
+                        }
                   }
                 >
                   <ChevronDown
                     className={`w-4 h-4 transition-transform duration-300 ${
-                      open === idx ? 'rotate-180 text-white' : 'text-theme-text-secondary'
+                      open === idx ? 'rotate-180' : ''
                     }`}
                     aria-hidden="true"
                   />
