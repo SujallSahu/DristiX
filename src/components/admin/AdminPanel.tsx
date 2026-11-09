@@ -2182,7 +2182,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto">
+                  <div
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Recent Candidate Submissions Table"
+                    className="overflow-x-auto focus:outline-none focus:ring-2 focus:ring-[#006d5c]/50 rounded-xl"
+                  >
                     <table className="w-full text-left text-xs sm:text-sm border-collapse">
                       <thead>
                         <tr className="border-b border-theme-border text-xs font-bold text-theme-text/60 uppercase tracking-wider">
@@ -2480,7 +2485,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 </div>
 
                 {/* Accuracy Filter Pills */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 scrollbar-thin">
+                <div
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Submission Performance Filters"
+                  className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 scrollbar-thin focus:outline-none focus:ring-2 focus:ring-[#006d5c]/50 rounded-lg"
+                >
                   <span className="text-xs font-bold text-theme-text/60 shrink-0 mr-1 flex items-center gap-1">
                     <SlidersHorizontal className="w-3.5 h-3.5" /> Performance:
                   </span>
@@ -2526,7 +2536,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
               {/* 5. Submissions Data Table */}
               <div className="rounded-2xl bg-theme-surface border border-theme-border shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
+                <div
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Submissions and Reports Data Table"
+                  className="overflow-x-auto focus:outline-none focus:ring-2 focus:ring-[#006d5c]/50"
+                >
                   <table className="w-full text-left text-xs sm:text-sm border-collapse">
                     <thead>
                       <tr className="border-b border-theme-border text-xs uppercase font-extrabold text-theme-text/70 bg-theme-bg/60">
@@ -2913,7 +2928,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 </div>
               ) : (
                 <div className="overflow-hidden rounded-2xl border border-theme-border bg-theme-surface shadow-sm">
-                  <div className="overflow-x-auto">
+                  <div
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Registered Candidate Roster Table"
+                    className="overflow-x-auto focus:outline-none focus:ring-2 focus:ring-[#006d5c]/50 rounded-xl"
+                  >
                     <table className="w-full text-left text-sm border-collapse">
                       <thead>
                         <tr className="border-b border-theme-border bg-theme-bg/60 text-xs font-black uppercase tracking-wider text-theme-text/70">
@@ -3152,7 +3172,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                 This candidate has not submitted any mock tests or practice drills yet.
                               </div>
                             ) : (
-                              <div className="overflow-hidden rounded-2xl border border-theme-border">
+                              <div
+                                tabIndex={0}
+                                role="region"
+                                aria-label="Candidate Test Submissions History"
+                                className="overflow-x-auto rounded-2xl border border-theme-border focus:outline-none focus:ring-2 focus:ring-[#006d5c]/50"
+                              >
                                 <table className="w-full text-left text-xs sm:text-sm">
                                   <thead className="bg-theme-bg border-b border-theme-border text-[11px] font-bold text-theme-text/60 uppercase">
                                     <tr>
@@ -3370,7 +3395,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 </div>
 
                 {/* Category Filter Pills */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 scrollbar-thin">
+                <div
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Curriculum Category Filters"
+                  className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 scrollbar-thin focus:outline-none focus:ring-2 focus:ring-[#006d5c]/50 rounded-lg"
+                >
                   <span className="text-xs font-bold text-theme-text/60 shrink-0 mr-1 flex items-center gap-1">
                     <SlidersHorizontal className="w-3.5 h-3.5" /> Category:
                   </span>
@@ -3970,7 +4000,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   </div>
 
                   {/* Interactive Question Quick-Navigator Ribbon */}
-                  <div className="p-3 rounded-xl bg-theme-bg border border-theme-border/80 flex items-center gap-2 overflow-x-auto scrollbar-thin">
+                  <div
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Question Quick Jump Navigator"
+                    className="p-3 rounded-xl bg-theme-bg border border-theme-border/80 flex items-center gap-2 overflow-x-auto scrollbar-thin focus:outline-none focus:ring-2 focus:ring-[#006d5c]/50"
+                  >
                     <span className="text-xs font-bold text-theme-text/60 shrink-0 flex items-center gap-1">
                       <SlidersHorizontal className="w-3.5 h-3.5" /> Quick Jump:
                     </span>

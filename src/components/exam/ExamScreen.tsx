@@ -257,7 +257,12 @@ export const ExamScreen: React.FC = () => {
 
           {/* Math equation if present */}
           {currentQ.mathLatex && (
-            <div className="mt-4 p-4 rounded-xl bg-theme-bg border border-theme-border inline-block max-w-full overflow-x-auto">
+            <div
+              tabIndex={0}
+              role="region"
+              aria-label="Mathematical formula container"
+              className="mt-4 p-4 rounded-xl bg-theme-bg border border-theme-border inline-block max-w-full overflow-x-auto focus:outline-none focus:ring-2 focus:ring-theme-primary/50"
+            >
               <MathEquation
                 latex={currentQ.mathLatex}
                 displayMode={true}

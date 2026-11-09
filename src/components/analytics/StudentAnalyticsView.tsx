@@ -513,7 +513,12 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
         </div>
 
         {/* Submissions Table with Keyboard Arrow Navigation */}
-        <div className="overflow-x-auto rounded-xl border border-theme-border">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Student Exam Submissions History Table"
+          className="overflow-x-auto rounded-xl border border-theme-border focus:outline-none focus:ring-2 focus:ring-theme-primary/50"
+        >
           <table className="w-full text-left text-sm border-collapse">
             <thead>
               <tr className="bg-theme-bg/80 border-b-2 border-theme-border text-xs uppercase font-bold text-theme-text/70">

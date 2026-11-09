@@ -71,7 +71,12 @@ export class AppErrorBoundary extends React.Component<
             <div className="bg-theme-surface px-4 py-2 font-bold border-b-2 border-theme-border">
               Error message
             </div>
-            <pre className="p-4 text-sm whitespace-pre-wrap break-words bg-theme-surface-elevated overflow-x-auto">
+            <pre
+              tabIndex={0}
+              role="region"
+              aria-label="Error message details"
+              className="p-4 text-sm whitespace-pre-wrap break-words bg-theme-surface-elevated overflow-x-auto focus:outline-none"
+            >
               {error.message || String(error)}
             </pre>
           </div>
@@ -81,7 +86,12 @@ export class AppErrorBoundary extends React.Component<
               <div className="bg-theme-surface px-4 py-2 font-bold border-b-2 border-theme-border">
                 Component stack
               </div>
-              <pre className="p-4 text-xs whitespace-pre-wrap break-words bg-theme-surface-elevated overflow-x-auto max-h-64">
+              <pre
+                tabIndex={0}
+                role="region"
+                aria-label="Component stack trace"
+                className="p-4 text-xs whitespace-pre-wrap break-words bg-theme-surface-elevated overflow-x-auto max-h-64 focus:outline-none"
+              >
                 {info.componentStack}
               </pre>
             </div>

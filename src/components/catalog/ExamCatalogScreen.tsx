@@ -409,7 +409,8 @@ export const ExamCatalogScreen: React.FC = () => {
             <div
               role="radiogroup"
               aria-label="Filter by subject category (Press C to cycle)"
-              className="flex flex-row overflow-x-auto no-scrollbar gap-1.5 pb-1 lg:flex-col lg:space-y-0.5 lg:overflow-visible"
+              tabIndex={0}
+              className="flex flex-row overflow-x-auto no-scrollbar gap-1.5 pb-1 lg:flex-col lg:space-y-0.5 lg:overflow-visible focus:outline-none focus:ring-2 focus:ring-theme-primary/50 rounded-xl"
             >
               {EXAM_CATEGORIES.map((cat) => {
                 const isSelected = selectedCategory === cat;

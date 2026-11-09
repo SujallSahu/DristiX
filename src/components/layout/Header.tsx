@@ -323,7 +323,12 @@ export const Header: React.FC = () => {
         )}
 
         {/* Right / Toolbar: Quick Action Controls (Unified on mobile row 2, and right side on desktop) */}
-        <div className="flex items-center justify-between md:justify-end gap-1 sm:gap-1.5 w-full md:w-auto overflow-x-auto no-scrollbar pt-1 md:pt-0 border-t border-theme-border/40 md:border-t-0">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Accessibility quick controls toolbar"
+          className="flex items-center justify-between md:justify-end gap-1 sm:gap-1.5 w-full md:w-auto overflow-x-auto no-scrollbar pt-1 md:pt-0 border-t border-theme-border/40 md:border-t-0 focus:outline-none"
+        >
           {/* Current Student Profile Chip (Desktop) */}
           {currentStudent && activeView !== 'exam' && (
             <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 border-theme-border bg-theme-bg text-xs shrink-0">

@@ -283,7 +283,12 @@ export const DiagnosticReport: React.FC = () => {
           Section-Wise Performance Breakdown
         </h3>
 
-        <div className="overflow-x-auto">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Section-Wise Performance Breakdown Table"
+          className="overflow-x-auto focus:outline-none focus:ring-2 focus:ring-theme-primary/50 rounded-lg"
+        >
           <table className="w-full text-left border-collapse border-2 border-theme-border text-sm sm:text-base">
             <caption className="sr-only">
               Section-wise breakdown of exam performance showing total questions, attempted questions, correct questions, and percentage accuracy.

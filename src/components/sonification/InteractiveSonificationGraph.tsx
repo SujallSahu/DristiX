@@ -511,7 +511,12 @@ export const InteractiveSonificationGraph: React.FC<InteractiveSonificationGraph
           </div>
         ) : (
           /* BAR AND LINE CHART RENDERER (SVG) */
-          <div className="w-full overflow-x-auto">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label="Interactive chart visual graph container"
+            className="w-full overflow-x-auto focus:outline-none focus:ring-2 focus:ring-theme-primary/50 rounded-xl"
+          >
             <svg
               viewBox={`0 0 ${svgWidth} ${svgHeight}`}
               className="w-full h-56 min-w-[420px]"

@@ -398,7 +398,12 @@ export const AdminGraphBuilder: React.FC<AdminGraphBuilderProps> = ({ graph, onC
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-theme-border bg-theme-surface">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label="Graph data points editor table"
+            className="overflow-x-auto rounded-xl border border-theme-border bg-theme-surface focus:outline-none focus:ring-2 focus:ring-theme-primary/50"
+          >
             <table className="w-full text-xs text-left" role="table" aria-label="Graph data points editor">
               <thead className="bg-theme-bg/80 border-b border-theme-border text-theme-text/70 uppercase">
                 <tr>

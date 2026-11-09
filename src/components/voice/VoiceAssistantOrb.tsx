@@ -710,7 +710,12 @@ export const VoiceAssistantOrb: React.FC = () => {
           </div>
 
           {/* Suggestion Chips */}
-          <div className="px-3 py-2 border-t border-theme-border bg-theme-surface flex items-center gap-1.5 overflow-x-auto text-[11px] no-scrollbar">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label="Voice command suggestion chips"
+            className="px-3 py-2 border-t border-theme-border bg-theme-surface flex items-center gap-1.5 overflow-x-auto text-[11px] no-scrollbar focus:outline-none"
+          >
             <span className="text-theme-text/50 font-bold shrink-0">Try:</span>
             {suggestionChips.map((chip) => (
               <button

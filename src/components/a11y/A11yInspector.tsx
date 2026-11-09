@@ -12,6 +12,26 @@ export const A11yInspector: React.FC = () => {
     setIsScanning(true);
     useAnnouncerStore.getState().announce('Running WCAG 2.1 Level AA accessibility scan with axe-core...', 'polite');
 
+    // Ensure any dynamically rendered scrollable containers have keyboard focusability (WCAG 2.1 AA scrollable-region-focusable)
+    if (typeof document !== 'undefined') {
+      const scrollableElements = document.querySelectorAll<HTMLElement>(
+        '.overflow-x-auto, .overflow-y-auto, [class*="overflow-x-"], [class*="overflow-y-"]'
+      );
+      scrollableElements.forEach((el, index) => {
+        if (!el.hasAttribute('tabindex')) {
+          el.setAttribute('tabindex', '0');
+        }
+        if (!el.getAttribute('role')) {
+          el.setAttribute('role', 'region');
+        }
+        if (!el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby')) {
+          const heading = el.querySelector('h1, h2, h3, h4, h5, h6, caption, th');
+          const labelText = heading?.textContent?.trim() || `Scrollable content region ${index + 1}`;
+          el.setAttribute('aria-label', labelText);
+        }
+      });
+    }
+
     try {
       const results = await axe.run(document.body, {
         runOnly: {
@@ -227,7 +247,12 @@ export const A11yInspector: React.FC = () => {
                                       <summary className="cursor-pointer text-[10px] font-bold text-theme-text-secondary hover:text-theme-text">
                                         View HTML snippet
                                       </summary>
-                                      <pre className="mt-1 p-2 rounded bg-theme-bg border border-theme-border text-[10px] font-mono text-theme-text overflow-x-auto whitespace-pre-wrap break-all">
+                                      <pre
+                                        tabIndex={0}
+                                        role="region"
+                                        aria-label="HTML code snippet"
+                                        className="mt-1 p-2 rounded bg-theme-bg border border-theme-border text-[10px] font-mono text-theme-text overflow-x-auto whitespace-pre-wrap break-all focus:outline-none"
+                                      >
                                         {node.html}
                                       </pre>
                                     </details>
