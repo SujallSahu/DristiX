@@ -961,11 +961,13 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
 export const LandingFooter: React.FC<SectionProps> = ({ onSignIn }) => (
   <footer
     role="contentinfo"
-    style={{ background: 'color-mix(in srgb, var(--bg-surface-elevated) 96%, var(--primary) 4%)' }}
+    style={{
+      background: 'color-mix(in srgb, var(--bg-surface-elevated) 96%, var(--primary) 4%)',
+      borderTop: '1px solid color-mix(in srgb, var(--border-color) 35%, transparent)',
+    }}
   >
     <div
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid gap-12 sm:grid-cols-2 lg:grid-cols-4"
-      style={{ borderBottom: '1px solid color-mix(in srgb, var(--border-color) 35%, transparent)' }}
     >
       {/* Brand */}
       <div>
@@ -978,7 +980,7 @@ export const LandingFooter: React.FC<SectionProps> = ({ onSignIn }) => (
           </span>
           <span className="font-black text-xl tracking-tight text-theme-text">DristiX</span>
         </div>
-        <p className="text-sm leading-relaxed text-theme-text-secondary font-medium max-w-[34ch]">
+        <p className="text-sm leading-relaxed text-theme-text-secondary font-medium max-w-sm">
           An accessible examination and practice portal: screen-reader first, keyboard-complete and spoken from end to end.
         </p>
         <div
@@ -1023,7 +1025,7 @@ export const LandingFooter: React.FC<SectionProps> = ({ onSignIn }) => (
         <button
           type="button"
           onClick={onSignIn}
-          className="w-full h-11 px-4 rounded-xl font-bold text-sm text-theme-primary-text transition-all hover:scale-105 active:scale-95 shadow-md"
+          className="w-full h-11 px-4 rounded-xl font-bold text-sm text-theme-primary-text transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
           style={{ background: 'var(--primary-gradient)', boxShadow: '0 4px 16px var(--primary-glow)' }}
         >
           Sign in
@@ -1032,13 +1034,6 @@ export const LandingFooter: React.FC<SectionProps> = ({ onSignIn }) => (
           Registration is invite-only from your institution.
         </p>
       </div>
-    </div>
-
-    <div
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-wrap items-center justify-between gap-3 text-xs font-semibold text-theme-text-secondary"
-    >
-      <p className="m-0">© 2026 DristiX. Built to WCAG 2.1 level AA.</p>
-      <p className="m-0">Voice, keyboard and screen reader tested throughout.</p>
     </div>
   </footer>
 );
