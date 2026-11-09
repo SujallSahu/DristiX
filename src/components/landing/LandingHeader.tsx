@@ -116,8 +116,12 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
     );
   };
 
-  const iconBtn =
-    'h-9 w-9 shrink-0 grid place-items-center rounded-xl border border-theme-border bg-theme-surface text-theme-text transition-all duration-200 hover:border-theme-primary hover:text-theme-primary active:scale-95 shadow-xs';
+  const getIconBtnClass = (isActive: boolean = false) =>
+    `h-9 shrink-0 grid place-items-center rounded-xl border transition-all duration-200 active:scale-95 shadow-xs ${
+      isActive
+        ? 'border-theme-primary bg-theme-primary text-theme-primary-text shadow-md'
+        : 'border-theme-border bg-theme-surface text-theme-text hover:border-theme-primary hover:text-theme-primary'
+    }`;
 
   return (
     <header
@@ -212,7 +216,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               aria-pressed={ttsEnabled}
               aria-label={ttsEnabled ? 'Spoken output on — tap to disable' : 'Spoken output off — tap to enable'}
               title={ttsEnabled ? 'Disable spoken output' : 'Enable spoken output'}
-              className={`${iconBtn} ${ttsEnabled ? '!bg-theme-primary !text-theme-primary-text !border-theme-primary' : ''}`}
+              className={`${getIconBtnClass(ttsEnabled)} w-9`}
               style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
             >
               {ttsEnabled ? <Volume2 className="w-4 h-4" aria-hidden="true" /> : <VolumeX className="w-4 h-4" aria-hidden="true" />}
@@ -223,7 +227,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               onClick={cycleTheme}
               title={`Theme: ${THEME_NAMES[theme]} — tap to change`}
               aria-label={`Colour theme: ${THEME_NAMES[theme]}. Tap to change.`}
-              className={iconBtn}
+              className={`${getIconBtnClass(false)} w-9`}
               style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
             >
               <Contrast className="w-4 h-4" aria-hidden="true" />
@@ -251,13 +255,15 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
                   ? `Text size ${fontSize}% increased. Tab once to increase, tab twice to reset to normal.`
                   : 'Text size 100% normal. Tab once to increase, tab twice to reset.'
               }
-              className={`${iconBtn} ${
-                fontSize > 100 ? '!bg-theme-primary !text-theme-primary-text !border-theme-primary' : ''
-              } flex items-center justify-center`}
-              style={{ width: 'auto', minWidth: '36px', height: '36px', minHeight: '36px', paddingLeft: '8px', paddingRight: '8px' }}
+              className={`${getIconBtnClass(fontSize > 100)} w-auto flex items-center justify-center px-2`}
+              style={{ minWidth: '36px', height: '36px', minHeight: '36px' }}
             >
               <Type className="w-4 h-4 shrink-0" aria-hidden="true" />
-              <span className="text-[10px] font-sans font-bold leading-none px-1 py-0.5 rounded border border-theme-border bg-white text-black shadow-xs ml-1">
+              <span className={`text-[10px] font-sans font-bold leading-none px-1 py-0.5 rounded border shadow-xs ml-1 ${
+                fontSize > 100
+                  ? 'border-white/40 bg-white text-slate-900 font-extrabold'
+                  : 'border-theme-border bg-theme-bg text-theme-text'
+              }`}>
                 {fontSize}%
               </span>
             </button>
@@ -267,7 +273,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               onClick={() => useExamStore.getState().setSettingsOpen(true)}
               title="Full accessibility settings"
               aria-label="Open full accessibility settings"
-              className={iconBtn}
+              className={`${getIconBtnClass(false)} w-9`}
               style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
             >
               <Settings className="w-4 h-4" aria-hidden="true" />

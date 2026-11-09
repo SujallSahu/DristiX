@@ -123,7 +123,7 @@ body[data-theme="liquid-glass"] {
 }
 
 /* Translucent Frosted Liquid Glass Cards */
-[data-theme="liquid-glass"] .bg-theme-surface,
+[data-theme="liquid-glass"] .bg-theme-surface:not(.bg-theme-primary):not([class*="bg-theme-primary"]),
 [data-theme="liquid-glass"] .dx-glass-card,
 [data-theme="liquid-glass"] .dx-feature-card,
 [data-theme="liquid-glass"] .dx-step-card,
@@ -223,7 +223,8 @@ body[data-theme="liquid-glass"] {
 
 /* Liquid Primary Buttons */
 [data-theme="liquid-glass"] .dx-btn-primary,
-[data-theme="liquid-glass"] button.bg-theme-primary {
+[data-theme="liquid-glass"] button.bg-theme-primary,
+[data-theme="liquid-glass"] button[class*="bg-theme-primary"] {
   background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%) !important;
   color: #FFFFFF !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
@@ -233,12 +234,28 @@ body[data-theme="liquid-glass"] {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+[data-theme="liquid-glass"] button.bg-theme-primary svg,
+[data-theme="liquid-glass"] button[class*="bg-theme-primary"] svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
 [data-theme="liquid-glass"] .dx-btn-primary:hover,
-[data-theme="liquid-glass"] button.bg-theme-primary:hover {
+[data-theme="liquid-glass"] button.bg-theme-primary:hover,
+[data-theme="liquid-glass"] button[class*="bg-theme-primary"]:hover {
   box-shadow:
     0 12px 32px -4px rgba(124, 58, 237, 0.55),
     inset 0 1px 2px 0 rgba(255, 255, 255, 0.6) !important;
   transform: translateY(-2px);
+}
+
+/* Inactive header buttons in Liquid Glass: ensure dark high-contrast icons */
+[data-theme="liquid-glass"] header button:not(.bg-theme-primary):not([class*="bg-theme-primary"]) {
+  color: var(--text-primary) !important;
+}
+[data-theme="liquid-glass"] header button:not(.bg-theme-primary):not([class*="bg-theme-primary"]) svg {
+  color: var(--text-primary) !important;
+  stroke: currentColor !important;
 }
 
 /* --------------------------------------------------------
