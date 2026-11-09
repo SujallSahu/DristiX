@@ -1035,5 +1035,13 @@ export const LandingFooter: React.FC<SectionProps> = ({ onSignIn }) => (
         </p>
       </div>
     </div>
+
+    {/* Copyright bar */}
+    <div
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center border-t text-xs sm:text-sm font-medium text-theme-text-secondary"
+      style={{ borderColor: 'color-mix(in srgb, var(--border-color) 25%, transparent)' }}
+    >
+      <p className="m-0">© 2026 DristiX — All Rights Reserved.</p>
+    </div>
   </footer>
 );
