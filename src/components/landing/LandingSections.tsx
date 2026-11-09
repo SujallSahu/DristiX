@@ -425,12 +425,14 @@ export const VoiceShowcase: React.FC = () => {
     <Section accent="left">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10">
         <SectionHeader
+          className="max-w-4xl"
+          subClassName="max-w-none md:whitespace-nowrap"
           pill={<><Mic className="w-3 h-3" aria-hidden="true" />Interactive Demo</>}
           heading={
             <>
-              Speak Your Answer.{' '}
+              Speak Your Answer{' '}
               <span className="block sm:inline sm:ml-1 dx-gradient-text">
-                No Mouse Needed.
+                No Mouse Needed
               </span>
             </>
           }
