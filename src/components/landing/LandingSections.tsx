@@ -901,20 +901,23 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
     <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] rounded-full bg-white/10 blur-3xl pointer-events-none" aria-hidden="true" />
     <div className="absolute -bottom-32 right-1/4 w-[400px] h-[400px] rounded-full bg-white/10 blur-3xl pointer-events-none" aria-hidden="true" />
 
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
       <span
         className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest border text-theme-primary-text mb-8"
-        style={{ background: 'rgba(255,255,255,0.12)', borderColor: 'rgba(255,255,255,0.22)' }}
+        style={{
+          background: 'color-mix(in srgb, var(--primary-text) 14%, transparent)',
+          borderColor: 'color-mix(in srgb, var(--primary-text) 24%, transparent)',
+        }}
       >
         <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
         Start Today — Free
       </span>
 
-      <h2 className="text-2xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-[-0.03em] sm:tracking-[-0.045em] leading-[1.1] sm:leading-[1.03] text-theme-primary-text text-balance">
+      <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-[-0.03em] sm:tracking-[-0.045em] leading-[1.1] sm:leading-[1.05] text-theme-primary-text text-balance xl:whitespace-nowrap">
         The test starts the moment you're ready.
       </h2>
 
-      <p className="mt-4 sm:mt-7 text-sm sm:text-lg lg:text-xl leading-relaxed text-theme-primary-text opacity-90 font-medium max-w-[52ch] mx-auto">
+      <p className="mt-4 sm:mt-7 text-sm sm:text-lg lg:text-xl leading-relaxed text-theme-primary-text opacity-90 font-medium max-w-none md:whitespace-nowrap mx-auto">
         Sign in with the roll number and password your institution issued.
         Registration is by institution invitation only.
       </p>
@@ -923,7 +926,7 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
         <button
           type="button"
           onClick={onSignIn}
-          className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-12 rounded-2xl font-black text-sm sm:text-lg transition-all hover:scale-105 active:scale-97 flex items-center justify-center gap-2.5 sm:gap-3 group shadow-2xl"
+          className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-12 rounded-2xl font-black text-sm sm:text-lg transition-all hover:scale-105 active:scale-97 flex items-center justify-center gap-2.5 sm:gap-3 group shadow-2xl cursor-pointer"
           style={{ background: 'var(--bg-page)', color: 'var(--text-primary)' }}
         >
           <span>Sign in to your account</span>
@@ -931,8 +934,8 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
         </button>
         <a
           href="#exams"
-          className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-9 rounded-2xl border-2 font-extrabold text-sm sm:text-lg text-theme-primary-text hover:bg-white/10 hover:scale-105 active:scale-97 transition-all inline-flex items-center justify-center no-underline"
-          style={{ borderColor: 'rgba(255,255,255,0.32)' }}
+          className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-9 rounded-2xl border-2 font-extrabold text-sm sm:text-lg text-theme-primary-text hover:bg-white/10 hover:scale-105 active:scale-97 transition-all inline-flex items-center justify-center no-underline cursor-pointer"
+          style={{ borderColor: 'color-mix(in srgb, var(--primary-text) 35%, transparent)' }}
         >
           Browse exams first
         </a>
