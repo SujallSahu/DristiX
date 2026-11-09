@@ -297,14 +297,14 @@
 }
 
 .dx-gradient-text {
-  color: var(--primary);
+  color: var(--primary) !important;
 }
 @supports (-webkit-background-clip: text) or (background-clip: text) {
   .dx-gradient-text {
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: var(--primary-gradient) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
   }
 }
 
