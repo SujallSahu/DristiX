@@ -250,10 +250,10 @@ body[data-theme="liquid-glass"] {
 }
 
 /* Inactive header buttons in Liquid Glass: ensure dark high-contrast icons */
-[data-theme="liquid-glass"] header button:not(.bg-theme-primary):not([class*="bg-theme-primary"]) {
+[data-theme="liquid-glass"] header button:not(.bg-theme-primary):not([class*="bg-theme-primary"]):not(.btn-signout):not([class*="btn-signout"]) {
   color: var(--text-primary) !important;
 }
-[data-theme="liquid-glass"] header button:not(.bg-theme-primary):not([class*="bg-theme-primary"]) svg {
+[data-theme="liquid-glass"] header button:not(.bg-theme-primary):not([class*="bg-theme-primary"]):not(.btn-signout):not([class*="btn-signout"]) svg {
   color: var(--text-primary) !important;
   stroke: currentColor !important;
 }
@@ -698,4 +698,64 @@ a.bg-theme-primary {
 [data-theme="dark"] .text-emerald-600,
 [data-theme="dark"] .text-emerald-500 {
   color: #6ee7b7 !important; /* emerald-300: 10.4:1 on dark */
+}
+
+/* ========================================================
+   STUDENT PORTAL SIGN OUT BUTTON — Red in Every Theme
+   ======================================================== */
+.btn-signout,
+button.btn-signout,
+header .btn-signout,
+header button.btn-signout,
+[data-theme="teal-cream"] .btn-signout,
+[data-theme="liquid-glass"] .btn-signout,
+[data-theme="dark"] .btn-signout,
+.dark .btn-signout,
+[data-theme="high-contrast"] .btn-signout {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid #b91c1c !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25) !important;
+}
+
+.btn-signout:hover,
+button.btn-signout:hover,
+header .btn-signout:hover,
+header button.btn-signout:hover,
+[data-theme="teal-cream"] .btn-signout:hover,
+[data-theme="liquid-glass"] .btn-signout:hover,
+[data-theme="dark"] .btn-signout:hover,
+.dark .btn-signout:hover,
+[data-theme="high-contrast"] .btn-signout:hover {
+  background-color: #b91c1c !important;
+  color: #ffffff !important;
+  border-color: #991b1b !important;
+}
+
+.btn-signout svg,
+button.btn-signout svg,
+header .btn-signout svg,
+header button.btn-signout svg,
+[data-theme="teal-cream"] .btn-signout svg,
+[data-theme="liquid-glass"] .btn-signout svg,
+[data-theme="dark"] .btn-signout svg,
+.dark .btn-signout svg,
+[data-theme="high-contrast"] .btn-signout svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  fill: none !important;
+}
+
+.btn-signout span,
+header .btn-signout span {
+  color: #ffffff !important;
+}
+
+/* High-Contrast WCAG AAA safeguard: Maximum legibility on black */
+[data-theme="high-contrast"] .btn-signout,
+[data-theme="high-contrast"] header .btn-signout {
+  background-color: #e11d48 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  font-weight: 800 !important;
 }

@@ -272,7 +272,7 @@ export const Header: React.FC = () => {
               </>
             ) : (
               currentStudent && (
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border-2 border-theme-border bg-theme-bg text-xs shrink-0 max-w-[190px]">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border-2 border-theme-border bg-theme-bg text-xs shrink-0 max-w-[210px]">
                   <User className="w-3.5 h-3.5 text-theme-primary shrink-0" aria-hidden="true" />
                   <span className="font-bold text-theme-text truncate text-xs">
                     {currentStudent.name.split(' ')[0]}
@@ -280,11 +280,11 @@ export const Header: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => void logoutStudent()}
-                    className="flex items-center gap-1 text-[11px] font-bold text-red-700 dark:text-red-400 hover:text-red-800 underline cursor-pointer ml-0.5 shrink-0"
+                    className="btn-signout flex items-center gap-1 text-[11px] font-bold text-white bg-red-600 hover:bg-red-700 active:scale-95 px-2 py-0.5 rounded-md shadow-xs transition-all cursor-pointer ml-1 shrink-0"
                     title="Sign out of student account"
                     aria-label={`Sign out candidate ${currentStudent.name}`}
                   >
-                    <LogOut className="w-3 h-3" aria-hidden="true" />
+                    <LogOut className="w-3 h-3 text-white" aria-hidden="true" />
                     <span>Sign Out</span>
                   </button>
                 </div>
@@ -331,7 +331,7 @@ export const Header: React.FC = () => {
         >
           {/* Current Student Profile Chip (Desktop) */}
           {currentStudent && activeView !== 'exam' && (
-            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-lg border-2 border-theme-border bg-theme-bg text-xs shrink-0">
+            <div className="hidden md:flex items-center gap-2.5 px-3 py-1 rounded-xl border-2 border-theme-border bg-theme-bg text-xs shrink-0 shadow-xs">
               <span className="font-bold text-theme-text flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
                 <span>{currentStudent.name}</span>
@@ -340,11 +340,11 @@ export const Header: React.FC = () => {
               <button
                 type="button"
                 onClick={() => void logoutStudent()}
-                className="flex items-center gap-1 ml-1 text-xs font-bold text-red-700 dark:text-red-400 hover:text-red-800 underline cursor-pointer"
+                className="btn-signout flex items-center gap-1.5 ml-2 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 active:scale-95 shadow-xs transition-all cursor-pointer shrink-0"
                 title="Sign out of student account"
                 aria-label={`Sign out candidate ${currentStudent.name}`}
               >
-                <LogOut className="w-3 h-3" />
+                <LogOut className="w-3.5 h-3.5 text-white" aria-hidden="true" />
                 <span>Sign Out</span>
               </button>
             </div>
