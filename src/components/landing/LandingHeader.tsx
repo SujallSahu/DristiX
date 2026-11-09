@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Volume2, VolumeX, Contrast, Type, Settings, LogIn, UserPlus } from 'lucide-react';
+import {
+  Volume2, VolumeX, Contrast, Type, Settings, LogIn, UserPlus,
+  Menu, X, Home, Zap, Mic, Star, BarChart3, BadgeCheck, HelpCircle, ChevronRight,
+} from 'lucide-react';
 import {
   usePreferencesStore,
   type ThemeMode,
@@ -18,8 +21,22 @@ interface LandingHeaderProps {
 const NAV_ITEMS = [
   { label: 'Home', href: '#top' },
   { label: 'Features', href: '#features' },
+  { label: 'How It Works', href: '#how-it-works' },
+  { label: 'Demo', href: '#voice-demo' },
   { label: 'Exams', href: '#exams' },
   { label: 'Why DristiX', href: '#why' },
+  { label: 'FAQ', href: '#faq' },
+] as const;
+
+const MOBILE_NAV_ITEMS = [
+  { label: 'Home', href: '#top', icon: Home, desc: 'Top of page' },
+  { label: 'Features', href: '#features', icon: Zap, desc: 'Accessibility highlights' },
+  { label: 'How It Works', href: '#how-it-works', icon: Zap, desc: '4-step exam journey' },
+  { label: 'Voice Assistant Demo', href: '#voice-demo', icon: Mic, desc: 'Interactive voice controls' },
+  { label: 'Exam Catalogue', href: '#exams', icon: Star, desc: 'SSC, Banking, UPSC & more' },
+  { label: 'Numbers That Matter', href: '#stats', icon: BarChart3, desc: 'Audited platform metrics' },
+  { label: 'Why DristiX', href: '#why', icon: BadgeCheck, desc: 'Screen-reader first design' },
+  { label: 'FAQ', href: '#faq', icon: HelpCircle, desc: 'Everything you need to know' },
 ] as const;
 
 const THEME_ORDER: ThemeMode[] = ['teal-cream', 'liquid-glass', 'dark', 'high-contrast'];
@@ -37,12 +54,25 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
   const { theme, setTheme, fontSize, setFontSize, ttsEnabled, setTtsEnabled } =
     usePreferencesStore();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Close mobile menu on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+        say('Navigation menu closed.');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
 
   const cycleTheme = () => {
     const next = THEME_ORDER[(THEME_ORDER.indexOf(theme) + 1) % THEME_ORDER.length];
@@ -163,12 +193,12 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
             </div>
           </a>
 
-          {/* MOBILE-ONLY Top Right: Login & Sign Up buttons directly visible */}
+          {/* MOBILE-ONLY Top Right: Login, Sign Up, & Menu Toggle */}
           <div className="flex sm:hidden items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={onSignIn}
-              className="h-8 px-2.5 rounded-lg border border-theme-border bg-theme-surface font-bold text-xs text-theme-text flex items-center gap-1 shadow-xs active:scale-95"
+              className="h-8 px-2 rounded-lg border border-theme-border bg-theme-surface font-bold text-xs text-theme-text flex items-center gap-1 shadow-xs active:scale-95 cursor-pointer"
               aria-label="Login to candidate portal"
             >
               <LogIn className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
@@ -177,7 +207,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
             <button
               type="button"
               onClick={onRegister}
-              className="h-8 px-3 rounded-lg font-black text-xs text-theme-primary-text flex items-center gap-1 shadow-md active:scale-95"
+              className="h-8 px-2.5 rounded-lg font-black text-xs text-theme-primary-text flex items-center gap-1 shadow-md active:scale-95 cursor-pointer"
               style={{
                 background: 'var(--primary-gradient)',
                 boxShadow: '0 2px 10px var(--primary-glow)',
@@ -186,6 +216,20 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
             >
               <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Sign Up</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !mobileMenuOpen;
+                setMobileMenuOpen(next);
+                say(next ? 'Navigation menu opened.' : 'Navigation menu closed.');
+              }}
+              aria-expanded={mobileMenuOpen}
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-controls="mobile-nav-menu"
+              className="w-8 h-8 grid place-items-center rounded-lg border border-theme-border bg-theme-surface text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all active:scale-95 shadow-xs cursor-pointer"
+            >
+              {mobileMenuOpen ? <X className="w-4 h-4 text-theme-primary" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
         </div>
@@ -307,6 +351,107 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
           </button>
         </div>
       </div>
+
+      {/* Mobile Navigation Dropdown Menu — Full flexibility on mobile view */}
+      {mobileMenuOpen && (
+        <div
+          id="mobile-nav-menu"
+          className="lg:hidden border-t px-3.5 py-4 space-y-3.5 transition-all duration-300 animate-in slide-in-from-top-2 max-h-[82vh] overflow-y-auto"
+          style={{
+            background: 'color-mix(in srgb, var(--bg-surface-elevated) 96%, var(--bg-page))',
+            borderColor: 'color-mix(in srgb, var(--border-color) 45%, transparent)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            boxShadow: '0 16px 36px rgba(0,0,0,0.18)',
+          }}
+        >
+          <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'color-mix(in srgb, var(--border-color) 30%, transparent)' }}>
+            <span className="text-[11px] font-black uppercase tracking-wider text-theme-text-secondary">
+              Jump to Section
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                say('Navigation menu closed.');
+              }}
+              className="text-xs font-bold text-theme-primary hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Close</span>
+            </button>
+          </div>
+
+          <nav aria-label="Mobile navigation">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 list-none m-0 p-0">
+              {MOBILE_NAV_ITEMS.map((item) => {
+                const ItemIcon = item.icon;
+                return (
+                  <li key={item.href}>
+                    <a
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-2.5 rounded-xl border flex items-center justify-between gap-3 no-underline group transition-all duration-150 active:scale-98"
+                      style={{
+                        background: 'color-mix(in srgb, var(--bg-surface) 60%, transparent)',
+                        borderColor: 'color-mix(in srgb, var(--border-color) 30%, transparent)',
+                      }}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className="w-8 h-8 rounded-lg grid place-items-center text-theme-primary shrink-0 transition-transform group-hover:scale-110"
+                          style={{ background: 'color-mix(in srgb, var(--primary) 12%, var(--bg-surface))' }}
+                        >
+                          <ItemIcon className="w-4 h-4" aria-hidden="true" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="block text-xs font-bold text-theme-text group-hover:text-theme-primary transition-colors truncate">
+                            {item.label}
+                          </span>
+                          <span className="block text-[10px] text-theme-text-secondary font-medium truncate">
+                            {item.desc}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-theme-text-secondary group-hover:text-theme-primary transition-colors shrink-0" aria-hidden="true" />
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          {/* Quick Portal Action Buttons */}
+          <div className="pt-2 border-t flex flex-col gap-2" style={{ borderColor: 'color-mix(in srgb, var(--border-color) 30%, transparent)' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onSignIn();
+              }}
+              className="w-full h-10 px-4 rounded-xl border border-theme-border bg-theme-surface font-bold text-xs text-theme-text flex items-center justify-center gap-2 shadow-xs active:scale-98 cursor-pointer"
+            >
+              <LogIn className="w-4 h-4 text-theme-primary" aria-hidden="true" />
+              <span>Login to Candidate Account</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onRegister();
+              }}
+              className="w-full h-10 px-4 rounded-xl font-black text-xs text-theme-primary-text flex items-center justify-center gap-2 shadow-md active:scale-98 cursor-pointer"
+              style={{
+                background: 'var(--primary-gradient)',
+                boxShadow: '0 2px 10px var(--primary-glow)',
+              }}
+            >
+              <UserPlus className="w-4 h-4" aria-hidden="true" />
+              <span>Create Free Account / Register</span>
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

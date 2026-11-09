@@ -158,7 +158,7 @@ const STEPS = [
 ] as const;
 
 export const HowItWorks: React.FC = () => (
-  <Section accent="center">
+  <Section id="how-it-works" accent="center">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       <SectionHeader
         className="max-w-5xl"
@@ -284,7 +284,7 @@ export const ExamCategories: React.FC<SectionProps> = ({ onSignIn }) => (
         <button
           type="button"
           onClick={onSignIn}
-          className="dx-btn-primary h-12 px-8 text-sm flex items-center gap-2.5 group shrink-0 mb-16"
+          className="dx-btn-primary h-12 px-8 text-sm flex items-center justify-center gap-2.5 group shrink-0 mb-6 sm:mb-16 w-full sm:w-auto"
         >
           <span className="relative z-10">Browse All Exams</span>
           <ArrowRight
@@ -422,7 +422,7 @@ export const VoiceShowcase: React.FC = () => {
   };
 
   return (
-    <Section accent="left">
+    <Section id="voice-demo" accent="left">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10">
         <SectionHeader
           className="max-w-4xl"
@@ -489,15 +489,15 @@ export const VoiceShowcase: React.FC = () => {
                   )}
                 </div>
                 <div className="min-w-0 flex-1 w-full">
-                  <div className="text-xs sm:text-sm font-black font-mono text-theme-text truncate sm:whitespace-normal">
+                  <div className="text-xs sm:text-sm font-black font-mono text-theme-text whitespace-normal break-words">
                     "{demo.cmd}"
                   </div>
-                  <div className="text-[11px] sm:text-xs text-theme-text-secondary mt-0.5 hidden sm:block font-medium leading-snug">
+                  <div className="text-[11px] sm:text-xs text-theme-text-secondary mt-0.5 block font-medium leading-snug">
                     {demo.desc}
                   </div>
                 </div>
                 {active === idx && (
-                  <Sparkles className="hidden sm:block w-4 h-4 text-theme-primary shrink-0 animate-pulse" aria-hidden="true" />
+                  <Sparkles className="w-4 h-4 text-theme-primary shrink-0 animate-pulse" aria-hidden="true" />
                 )}
               </button>
             ))}
@@ -536,7 +536,7 @@ export const VoiceShowcase: React.FC = () => {
                   <span>Replay Audio</span>
                 </button>
                 <span
-                  className="hidden sm:inline-block px-2.5 py-1 rounded-lg text-xs font-black"
+                  className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black"
                   style={{
                     background: 'color-mix(in srgb, var(--primary) 12%, transparent)',
                     color: 'var(--primary)',
@@ -812,7 +812,7 @@ export const FaqSection: React.FC = () => {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <Section alt accent="left">
+    <Section id="faq" alt accent="left">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <SectionHeader
           className="max-w-4xl"
