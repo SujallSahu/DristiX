@@ -439,9 +439,9 @@ export const VoiceShowcase: React.FC = () => {
           sub="Tap any command to preview how DristiX listens, confirms and navigates in real time."
         />
 
-        <div className="grid lg:grid-cols-5 gap-3 sm:gap-6 items-stretch">
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 items-stretch">
           {/* Commands: 2x2 grid on mobile (< lg), vertical stack on desktop (lg:) */}
-          <div className="lg:col-span-2 grid grid-cols-2 lg:flex lg:flex-col gap-2 sm:gap-3" role="tablist" aria-label="Sample voice commands">
+          <div className="grid grid-cols-2 lg:flex lg:flex-col gap-2 sm:gap-3.5 h-full" role="tablist" aria-label="Sample voice commands">
             {VOICE_DEMOS.map((demo, idx) => (
               <button
                 key={demo.cmd}
@@ -449,7 +449,7 @@ export const VoiceShowcase: React.FC = () => {
                 role="tab"
                 aria-selected={active === idx}
                 onClick={() => handleSelectDemo(idx)}
-                className={`text-left p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 group cursor-pointer ${
+                className={`text-left p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-200 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 group cursor-pointer lg:flex-1 ${
                   active === idx ? 'shadow-lg ring-2 ring-theme-primary/30' : 'hover:border-theme-primary/50'
                 }`}
                 style={
@@ -504,7 +504,7 @@ export const VoiceShowcase: React.FC = () => {
           </div>
 
           {/* Live Output Card — always immediately visible right below the 2x2 grid on mobile */}
-          <div className="lg:col-span-3 dx-feature-card p-3.5 sm:p-7 flex flex-col gap-3 sm:gap-6 mt-1 sm:mt-0">
+          <div className="dx-feature-card p-3.5 sm:p-7 flex flex-col gap-3 sm:gap-6 mt-1 sm:mt-0 h-full">
             {/* Header bar */}
             <div
               className="flex items-center justify-between border-b pb-2.5 sm:pb-4"
