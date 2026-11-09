@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useAuthStore, type StudentProfile, type ExamSubmission, deduplicateSubmissions, authBroadcastChannel } from '../../store/useAuthStore';
+import { useAuthStore, type StudentProfile, type ExamSubmission, deduplicateSubmissions, authBroadcastChannel, matchesStudent } from '../../store/useAuthStore';
 import { useExamStore } from '../../store/useExamStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import { soundEffects } from '../../utils/soundEffects';
@@ -72,27 +72,6 @@ interface AdminPanelProps {
   onReturnToStudent: () => void;
 }
 
-/**
- * Resilient student matcher that handles ObjectId, roll numbers (case-insensitive),
- * and student names to ensure candidate attempts are accurately correlated with their profile.
- */
-function matchesStudent(
-  s: { studentId?: string; studentRoll?: string; studentName?: string },
-  std: { id?: string; rollNumber?: string; name?: string }
-): boolean {
-  const stdRoll = std.rollNumber ? std.rollNumber.trim().toLowerCase() : '';
-  const stdId = std.id ? String(std.id).trim().toLowerCase() : '';
-  const stdName = std.name ? std.name.trim().toLowerCase() : '';
-
-  const sRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
-  const sId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
-  const sName = s.studentName ? s.studentName.trim().toLowerCase() : '';
-
-  if (stdRoll && (sRoll === stdRoll || sId === stdRoll)) return true;
-  if (stdId && (sId === stdId || sRoll === stdId)) return true;
-  if (stdName && sName && sName === stdName) return true;
-  return false;
-}
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => {
   const {
@@ -201,21 +180,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
     );
   }, [announce]);
 
-  // Refresh the cohort's results & student roster from the server on mount, tab change,
-  // cross-tab submission events, focus events, and gentle background polling
+  // Refresh the cohort's results, student roster, & exam catalog on mount, tab change,
+  // cross-tab submission events, student registration, focus events, and gentle background polling
   useEffect(() => {
     void syncSubmissions();
     void fetchStudents();
+    void useExamStore.getState().loadCatalog();
 
     const handleDataRefresh = () => {
       void syncSubmissions();
       void fetchStudents();
     };
 
+    const handleCatalogRefresh = () => {
+      void useExamStore.getState().loadCatalog();
+    };
+
     window.addEventListener('dristix:submission-updated', handleDataRefresh);
     window.addEventListener('dristix:submission-deleted', handleDataRefresh);
     window.addEventListener('dristix:submission-cleared', handleDataRefresh);
     window.addEventListener('dristix:student-history-cleared', handleDataRefresh);
+    window.addEventListener('dristix:student-registered', handleDataRefresh);
+    window.addEventListener('dristix:catalog-updated', handleCatalogRefresh);
     window.addEventListener('focus', handleDataRefresh);
 
     const interval = setInterval(() => {
@@ -229,6 +215,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
       window.removeEventListener('dristix:submission-deleted', handleDataRefresh);
       window.removeEventListener('dristix:submission-cleared', handleDataRefresh);
       window.removeEventListener('dristix:student-history-cleared', handleDataRefresh);
+      window.removeEventListener('dristix:student-registered', handleDataRefresh);
+      window.removeEventListener('dristix:catalog-updated', handleCatalogRefresh);
       window.removeEventListener('focus', handleDataRefresh);
       clearInterval(interval);
     };

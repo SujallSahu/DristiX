@@ -352,7 +352,17 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
 // Listen for broadcast notifications across browser tabs
 if (typeof window !== 'undefined') {
-  window.addEventListener('dristix:notification-broadcast', () => {
+  window.addEventListener('dristix:notification-broadcast', (event: any) => {
+    const notif = event?.detail;
+    if (notif && typeof notif === 'object' && notif.id) {
+      const cur = useNotificationStore.getState().notifications;
+      if (!cur.some((n) => n.id === notif.id)) {
+        useNotificationStore.setState({
+          notifications: [notif, ...cur],
+          unreadCount: useNotificationStore.getState().unreadCount + 1,
+        });
+      }
+    }
     void useNotificationStore.getState().fetchNotifications();
   });
   window.addEventListener('dristix:catalog-updated', () => {

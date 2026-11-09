@@ -41,6 +41,7 @@ export const AdminNotificationManager: React.FC = () => {
 
   useEffect(() => {
     void fetchAdminSentNotifications();
+    void useExamStore.getState().loadCatalog();
   }, [fetchAdminSentNotifications]);
 
   const handleSubmit = async (e: React.FormEvent) => {

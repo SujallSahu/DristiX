@@ -4,6 +4,7 @@ import { useAnnouncerStore } from './useAnnouncerStore';
 import { useBootstrapStore } from '../stores/useBootstrapStore';
 import { getDataSource } from '../services/dataSource';
 import { onSessionExpired, getStoredSessionUser, clearSessionTokens } from '../services/dataSource/apiToken';
+import { offlinePracticeStorage } from '../services/offlinePracticeStorage';
 import type {
   AccessibilityPreference,
   AttemptSummary,
@@ -22,11 +23,37 @@ if (authBroadcastChannel) {
       void useBootstrapStore.getState().run();
     } else if (data === 'LOGOUT') {
       useAuthStore.getState().setSession(null);
-    } else if (
-      data === 'SUBMISSION' ||
-      data?.type === 'SUBMISSION_UPDATED' ||
-      data?.type === 'SUBMISSION_DELETED'
-    ) {
+    } else if (data?.type === 'SUBMISSION_UPDATED') {
+      if (data.submission) {
+        const currentSubs = useAuthStore.getState().submissions;
+        const updated = deduplicateSubmissions([data.submission, ...currentSubs]);
+        useAuthStore.setState({ submissions: updated });
+        saveStored(SUBMISSIONS_CACHE, updated);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('dristix:submission-updated', { detail: data.submission })
+          );
+        }
+      }
+      void useAuthStore.getState().syncSubmissions();
+      if (useAuthStore.getState().isAdminAuthenticated) {
+        void useAuthStore.getState().fetchStudents();
+      }
+    } else if (data?.type === 'SUBMISSION_DELETED' || data === 'SUBMISSION_DELETED') {
+      const subId = data?.submissionId;
+      if (subId) {
+        const currentSubs = useAuthStore.getState().submissions;
+        const updated = currentSubs.filter((s) => s.id !== subId);
+        useAuthStore.setState({ submissions: updated });
+        saveStored(SUBMISSIONS_CACHE, updated);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('dristix:submission-deleted', { detail: { submissionId: subId } })
+          );
+        }
+      }
+      void useAuthStore.getState().syncSubmissions();
+    } else if (data === 'SUBMISSION') {
       void useAuthStore.getState().syncSubmissions();
       if (useAuthStore.getState().isAdminAuthenticated) {
         void useAuthStore.getState().fetchStudents();
@@ -36,6 +63,13 @@ if (authBroadcastChannel) {
         window.dispatchEvent(new CustomEvent('dristix:catalog-updated', { detail: data }));
       }
     } else if (data?.type === 'STUDENT_DELETED') {
+      const studentId = data.studentId;
+      if (studentId) {
+        const currentStudents = useAuthStore.getState().students;
+        const updatedStudents = currentStudents.filter((s) => s.id !== studentId);
+        useAuthStore.setState({ students: updatedStudents });
+        saveStored(STUDENTS_CACHE, updatedStudents);
+      }
       const currentStudent = useAuthStore.getState().currentStudent;
       if (
         currentStudent &&
@@ -48,26 +82,75 @@ if (authBroadcastChannel) {
       } else {
         void useAuthStore.getState().fetchStudents();
       }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('dristix:student-deleted', { detail: data }));
+      }
     } else if (data === 'STUDENT_REGISTERED' || data?.type === 'STUDENT_REGISTERED') {
+      const newStudent = data?.student;
+      if (newStudent) {
+        const curStudents = useAuthStore.getState().students;
+        if (!curStudents.some((s) => s.id === newStudent.id || s.rollNumber === newStudent.rollNumber)) {
+          const updated = [newStudent, ...curStudents];
+          useAuthStore.setState({ students: updated });
+          saveStored(STUDENTS_CACHE, updated);
+        }
+      }
       if (useAuthStore.getState().isAdminAuthenticated) {
         void useAuthStore.getState().fetchStudents();
       }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('dristix:student-registered', { detail: newStudent }));
+      }
     } else if (data === 'NOTIFICATION_BROADCAST' || data?.type === 'NOTIFICATION_BROADCAST') {
+      const notif = data?.notification;
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
-          new CustomEvent('dristix:notification-broadcast', { detail: data?.notification })
+          new CustomEvent('dristix:notification-broadcast', { detail: notif })
         );
       }
       const currentStudent = useAuthStore.getState().currentStudent;
       if (currentStudent) {
         soundEffects.playSuccess();
-        const title = data?.notification?.title || 'Notice';
+        const title = notif?.title || 'Notice';
         useAnnouncerStore
           .getState()
           .announce(`New notification received from Administrator: ${title}. Press N to open.`, 'assertive', true);
       }
     }
   };
+}
+
+/**
+ * Universal matcher for student records and test submissions.
+ * Normalizes rollNumber, id, email, and names case-insensitively so candidate attempts
+ * always synchronize reliably across admin and student portals.
+ */
+export function matchesStudent(
+  s: { studentId?: string; studentRoll?: string; studentName?: string; email?: string } | null | undefined,
+  std: { id?: string; rollNumber?: string; name?: string; email?: string } | null | undefined
+): boolean {
+  if (!s || !std) return false;
+
+  const stdRoll = std.rollNumber ? std.rollNumber.trim().toLowerCase() : '';
+  const stdId = std.id ? String(std.id).trim().toLowerCase() : '';
+  const stdName = std.name ? std.name.trim().toLowerCase() : '';
+  const stdEmail = std.email ? std.email.trim().toLowerCase() : '';
+
+  const sRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
+  const sId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
+  const sName = s.studentName ? s.studentName.trim().toLowerCase() : '';
+  const sEmail = (s as any).email ? (s as any).email.trim().toLowerCase() : '';
+
+  // 1. Match by roll number (case-insensitive)
+  if (stdRoll && (sRoll === stdRoll || sId === stdRoll)) return true;
+  // 2. Match by student ID
+  if (stdId && (sId === stdId || sRoll === stdId)) return true;
+  // 3. Match by email
+  if (stdEmail && (sEmail === stdEmail || sRoll === stdEmail || sId === stdEmail)) return true;
+  // 4. Fallback match by exact candidate name
+  if (stdName && sName && sName === stdName) return true;
+
+  return false;
 }
 
 /**
@@ -91,13 +174,13 @@ function toSubmission(
     examId: a.examId,
     examTitle: a.examTitle,
     examCode: a.examCode,
-    examType: a.mode,
+    examType: (a.mode && a.mode.toLowerCase() === 'practice') ? 'practice' : 'exam',
     studentId: resolvedId,
     studentName: resolvedName,
     studentRoll: resolvedRoll,
-    score: a.score ?? 0,
-    maxScore: a.maxScore ?? 0,
-    percentage: a.percentage ?? 0,
+    score: typeof a.score === 'number' ? Number(a.score.toFixed(2)) : 0,
+    maxScore: typeof a.maxScore === 'number' ? a.maxScore : 0,
+    percentage: typeof a.percentage === 'number' ? Math.round(a.percentage) : 0,
     correctCount: a.correctCount ?? 0,
     incorrectCount: a.incorrectCount ?? 0,
     unattemptedCount: a.unattemptedCount ?? 0,
@@ -239,12 +322,64 @@ interface AuthState {
 }
 
 /**
- * Submissions are a server-side projection of the Attempt documents, but the
- * admin panel can still delete one locally, so the trimmed list is cached to
- * avoid refetching on every render. It is a cache, never a source of truth.
+ * Submissions and students cache. Trimmed lists are cached to provide instant
+ * rendering on initial mount and prevent blank dashboards/rosters during network latency.
  */
 const SUBMISSIONS_CACHE = 'dristix_submissions_cache';
+const STUDENTS_CACHE = 'dristix_students_cache';
 const ADMIN_DELETED_SUBMISSIONS_KEY = 'dristix_admin_deleted_submissions';
+
+// Cross-tab storage synchronization listener
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === SUBMISSIONS_CACHE && event.newValue) {
+      try {
+        const parsed = JSON.parse(event.newValue);
+        if (Array.isArray(parsed)) {
+          const dedupled = deduplicateSubmissions(parsed);
+          useAuthStore.setState({ submissions: dedupled });
+          window.dispatchEvent(new CustomEvent('dristix:submission-updated'));
+        }
+      } catch {}
+    } else if (event.key === STUDENTS_CACHE && event.newValue) {
+      try {
+        const parsed = JSON.parse(event.newValue);
+        if (Array.isArray(parsed)) {
+          useAuthStore.setState({ students: parsed });
+          window.dispatchEvent(new CustomEvent('dristix:student-registered'));
+        }
+      } catch {}
+    }
+  });
+}
+
+function getInitialSubmissions(): ExamSubmission[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(SUBMISSIONS_CACHE);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return deduplicateSubmissions(parsed);
+      }
+    }
+  } catch {}
+  return [];
+}
+
+function getInitialStudents(): StudentProfile[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STUDENTS_CACHE);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    }
+  } catch {}
+  return [];
+}
 
 // Purge legacy tombstone storage keys that could inadvertently mask valid backend submissions
 if (typeof window !== 'undefined') {
@@ -422,8 +557,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
   return {
     currentStudent: initialStudent,
-    students: [],
-    submissions: [],
+    students: getInitialStudents(),
+    submissions: getInitialSubmissions(),
     isAdminAuthenticated: initialAdminAuth,
 
     /**
@@ -489,10 +624,25 @@ export const useAuthStore = create<AuthState>((set, get) => {
           localStorage.removeItem('dristix_admin_auth');
         }
         authBroadcastChannel?.postMessage('LOGIN');
+        try {
+          authBroadcastChannel?.postMessage({
+            type: 'STUDENT_REGISTERED',
+            student: studentProfile,
+            timestamp: Date.now(),
+          });
+        } catch {}
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('dristix:student-registered', { detail: studentProfile })
+          );
+        }
         // Keep the roster fresh so admin views and the demo list stay accurate.
         void getDataSource().auth
           .listStudents()
-          .then((students) => set({ students }))
+          .then((students) => {
+            set({ students });
+            saveStored(STUDENTS_CACHE, students);
+          })
           .catch(() => undefined);
 
         soundEffects.playSuccess();
@@ -548,6 +698,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
         // Authoritative sync: immediately fetch full cohort submissions and roster for Admin Studio
         void get().syncSubmissions();
         void get().fetchStudents();
+        try {
+          const { useExamStore } = await import('./useExamStore');
+          void useExamStore.getState().loadCatalog();
+        } catch {}
         soundEffects.playSuccess();
         useAnnouncerStore
           .getState()
@@ -579,6 +733,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       try {
         const students = await getDataSource().auth.listStudents();
         set({ students });
+        saveStored(STUDENTS_CACHE, students);
       } catch (err) {
         console.error('[dristix] fetchStudents error', err);
       }
@@ -669,14 +824,44 @@ export const useAuthStore = create<AuthState>((set, get) => {
           ? rows.filter((r) => !adminDeletedIds.has(r.id))
           : rows.filter((r) => r.submittedAt > 0);
 
-        // Preserve any recent local-only / in-progress submissions (id starting with 'sub-')
+        // Load any offline practice drills so practice arena attempts are never lost
+        let offlineDrills: ExamSubmission[] = [];
+        try {
+          const offlineRecords = await offlinePracticeStorage.getOfflineSubmissions();
+          if (offlineRecords && offlineRecords.length > 0) {
+            offlineDrills = offlineRecords.map((o: any) => ({
+              id: String(
+                o.id
+                  ? String(o.id).startsWith('sub-')
+                    ? o.id
+                    : `sub-offline-${o.id}`
+                  : o.attemptId || `sub-offline-${Date.now()}`
+              ),
+              examId: o.examId || '',
+              examTitle: o.examTitle || 'Practice Drill',
+              examCode: o.examCode || 'PRACTICE',
+              examType: 'practice' as const,
+              studentId: o.studentId || (get().currentStudent?.id ?? 'std-guest'),
+              studentName: o.studentName || (get().currentStudent?.name ?? 'Candidate'),
+              studentRoll: o.studentRoll || (get().currentStudent?.rollNumber ?? 'DX-GUEST'),
+              score: typeof o.score === 'number' ? Number(o.score.toFixed(2)) : 0,
+              maxScore: typeof o.maxScore === 'number' ? o.maxScore : 0,
+              percentage: typeof o.percentage === 'number' ? Math.round(o.percentage) : 0,
+              correctCount: o.correctCount ?? 0,
+              incorrectCount: o.incorrectCount ?? 0,
+              unattemptedCount: o.unattemptedCount ?? 0,
+              submittedAt: Number(o.recordedAt || o.submittedAt || Date.now()),
+            }));
+          }
+        } catch {}
+
+        // Preserve any recent local-only / in-progress submissions
         // only if they have not already been persisted to the server.
         const currentSubs = get().submissions;
         const serverIds = new Set(validRows.map((r) => r.id));
         const localOnly = currentSubs.filter((s) => {
-          if (!s.id.startsWith('sub-')) return false;
           if (serverIds.has(s.id)) return false;
-          // Discard provisional sub- if a matching server attempt exists
+          // Discard provisional if a matching server attempt exists
           const matchedOnServer = validRows.some(
             (vr) =>
               (vr.examId === s.examId || (s.examCode && vr.examCode === s.examCode)) &&
@@ -685,7 +870,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
           return !matchedOnServer;
         });
 
-        const mergedRows = deduplicateSubmissions([...validRows, ...localOnly]);
+        const mergedRows = deduplicateSubmissions([...validRows, ...localOnly, ...offlineDrills]);
 
         set({ submissions: mergedRows });
         saveStored(SUBMISSIONS_CACHE, mergedRows);
@@ -702,7 +887,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
         rollNumber: 'DX-GUEST',
       };
 
-      const resolvedId = sub.id || `sub-${Date.now().toString().slice(-6)}`;
+      const resolvedId =
+        sub.id && sub.id !== 'local'
+          ? sub.id
+          : `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       const newSub: ExamSubmission = {
         ...sub,
         id: resolvedId,

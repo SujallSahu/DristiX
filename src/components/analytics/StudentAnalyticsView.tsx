@@ -4,6 +4,7 @@ import {
   getStudentClearedTimestamp,
   getStudentDismissedIds,
   deduplicateSubmissions,
+  matchesStudent,
 } from '../../store/useAuthStore';
 import { useExamStore, computeAnalyticsSnapshot } from '../../store/useExamStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
@@ -92,21 +93,8 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
     const clearedAt = getStudentClearedTimestamp(studentKey);
     const dismissedIds = getStudentDismissedIds(studentKey);
 
-    const currentRoll = currentStudent.rollNumber ? currentStudent.rollNumber.trim().toLowerCase() : '';
-    const currentId = currentStudent.id ? String(currentStudent.id).trim().toLowerCase() : '';
-    const currentName = currentStudent.name ? currentStudent.name.trim().toLowerCase() : '';
-
     const matching = submissions.filter((s) => {
-      const sRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
-      const sId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
-      const sName = s.studentName ? s.studentName.trim().toLowerCase() : '';
-
-      const isStudentMatch =
-        (currentRoll && (sRoll === currentRoll || sId === currentRoll)) ||
-        (currentId && (sId === currentId || sRoll === currentId)) ||
-        (currentName && sName === currentName);
-
-      if (!isStudentMatch) return false;
+      if (!matchesStudent(s, currentStudent)) return false;
 
       // When student clears history, hide previous attempts from student view (retaining them in admin portal)
       if (clearedAt && s.submittedAt <= clearedAt) {

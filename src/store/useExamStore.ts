@@ -12,6 +12,7 @@ import {
   getStudentClearedTimestamp,
   getStudentDismissedIds,
   deduplicateSubmissions,
+  matchesStudent,
 } from './useAuthStore';
 import { getDataSource } from '../services/dataSource';
 import { dispatchAccessibilityEvent } from '../accessibility';
@@ -530,8 +531,9 @@ export const useExamStore = create<ExamState>((set, get) => ({
    * because the catalog is already seeded from the bundled data.
    */
   loadCatalog: async () => {
-    // Only fetch catalog if a student session is active, avoiding 401 errors on public/login screens
-    if (!useAuthStore.getState().currentStudent) {
+    // Only fetch catalog if student or admin session is active, avoiding 401 errors on public/login screens
+    const { currentStudent, isAdminAuthenticated } = useAuthStore.getState();
+    if (!currentStudent && !isAdminAuthenticated) {
       return;
     }
     set({ isCatalogLoading: true, catalogError: null });
@@ -1287,17 +1289,40 @@ export const useExamStore = create<ExamState>((set, get) => ({
         status: 'submitted',
         questions: (get().questions.length ? get().questions : currentQuestions) as unknown as GradeResult['questions'],
       } as GradeResult;
+    }
 
-      if (examMode === 'practice') {
-        void offlinePracticeStorage.saveOfflineSubmission({
-          examId: currentExam.id,
-          examTitle: currentExam.title,
-          score: report.totalScore,
-          maxScore: report.maxScore,
-          percentage: report.scorePercentage,
-          mode: 'practice',
-        });
-      }
+    const authoritativeAttemptId =
+      attemptId && attemptId !== 'local'
+        ? attemptId
+        : report?.attemptId && report.attemptId !== 'local'
+        ? report.attemptId
+        : `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+    const activeStudent = useAuthStore.getState().currentStudent;
+    const resolvedStudent = activeStudent || {
+      id: 'std-guest',
+      name: 'Guest Candidate',
+      rollNumber: 'DX-GUEST',
+    };
+
+    if (examMode === 'practice') {
+      void offlinePracticeStorage.saveOfflineSubmission({
+        id: authoritativeAttemptId,
+        examId: currentExam.id,
+        examTitle: currentExam.title,
+        examCode: currentExam.code,
+        score: report.totalScore,
+        maxScore: report.maxScore,
+        percentage: report.scorePercentage,
+        correctCount: report.correctCount,
+        incorrectCount: report.incorrectCount,
+        unattemptedCount: report.unattemptedCount,
+        mode: 'practice',
+        studentId: resolvedStudent.id,
+        studentRoll: resolvedStudent.rollNumber,
+        studentName: resolvedStudent.name,
+        submittedAt: Date.now(),
+      });
     }
 
     soundEffects.playSuccess();
@@ -1307,8 +1332,6 @@ export const useExamStore = create<ExamState>((set, get) => ({
     if (report.questions?.length) {
       set({ questions: report.questions as unknown as QuestionItem[] });
     }
-
-    const authoritativeAttemptId = (attemptId && attemptId !== 'local') ? attemptId : (report?.attemptId || undefined);
 
     useAuthStore.getState().addSubmission({
       id: authoritativeAttemptId,
@@ -1326,23 +1349,13 @@ export const useExamStore = create<ExamState>((set, get) => ({
 
     // Instant real-time synchronization:
     // Update live currentAnalytics snapshot immediately so voice assistant & screen reader reflect accurate marks
-    const activeStudent = useAuthStore.getState().currentStudent;
     const initialSubs = useAuthStore.getState().submissions;
     const studentKey = (activeStudent?.rollNumber || activeStudent?.id || '').trim().toLowerCase();
     const clearedAt = getStudentClearedTimestamp(studentKey);
     const dismissedIds = getStudentDismissedIds(studentKey);
 
-    const sRoll = activeStudent?.rollNumber ? activeStudent.rollNumber.trim().toLowerCase() : '';
-    const sId = activeStudent?.id ? String(activeStudent.id).trim().toLowerCase() : '';
-    const sName = activeStudent?.name ? activeStudent.name.trim().toLowerCase() : '';
     const myInitialSubs = initialSubs.filter((s) => {
-      const subRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
-      const subId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
-      const subName = s.studentName ? s.studentName.trim().toLowerCase() : '';
-      const isStudent = (sRoll && (subRoll === sRoll || subId === sRoll)) ||
-                        (sId && (subId === sId || subRoll === sId)) ||
-                        (sName && subName === sName);
-      if (!isStudent) return false;
+      if (!matchesStudent(s, activeStudent)) return false;
       if (clearedAt && s.submittedAt <= clearedAt) return false;
       if (dismissedIds.has(s.id)) return false;
       return true;
@@ -1353,13 +1366,7 @@ export const useExamStore = create<ExamState>((set, get) => ({
     void useAuthStore.getState().syncSubmissions().then(() => {
       const freshSubs = useAuthStore.getState().submissions;
       const myFreshSubs = freshSubs.filter((s) => {
-        const subRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
-        const subId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
-        const subName = s.studentName ? s.studentName.trim().toLowerCase() : '';
-        const isStudent = (sRoll && (subRoll === sRoll || subId === sRoll)) ||
-                          (sId && (subId === sId || subRoll === sId)) ||
-                          (sName && subName === sName);
-        if (!isStudent) return false;
+        if (!matchesStudent(s, activeStudent)) return false;
         if (clearedAt && s.submittedAt <= clearedAt) return false;
         if (dismissedIds.has(s.id)) return false;
         return true;
@@ -1817,8 +1824,11 @@ export const useExamStore = create<ExamState>((set, get) => ({
 
     const unattemptedCount = Math.max(0, totalQuestions - attemptedCount);
     const scorePercentage = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
-    const totalScore = Number((correctCount * 2 - incorrectCount * 0.5).toFixed(2)); // +2 for correct, -0.5 for incorrect
-    const maxScore = totalQuestions * 2;
+    const marksPerQuestion = totalQuestions > 0 && currentExam.totalMarks ? (currentExam.totalMarks / totalQuestions) : 1;
+    const isPracticeMode = get().examMode === 'practice';
+    const negMark = isPracticeMode ? 0 : (currentExam.negativeMarking ? Math.abs(parseFloat(currentExam.negativeMarking)) || 0 : 0);
+    const totalScore = Number(Math.max(0, correctCount * marksPerQuestion - (isPracticeMode ? 0 : incorrectCount * negMark)).toFixed(2));
+    const maxScore = currentExam.totalMarks || (totalQuestions * (marksPerQuestion || 1));
 
     const sectionDiagnostics: SectionDiagnostic[] = Object.entries(sectionMap).map(
       ([secName, stats]) => ({
@@ -1922,17 +1932,8 @@ if (typeof window !== 'undefined') {
     const clearedAt = getStudentClearedTimestamp(studentKey);
     const dismissedIds = getStudentDismissedIds(studentKey);
 
-    const sRoll = activeStudent?.rollNumber ? activeStudent.rollNumber.trim().toLowerCase() : '';
-    const sId = activeStudent?.id ? String(activeStudent.id).trim().toLowerCase() : '';
-    const sName = activeStudent?.name ? activeStudent.name.trim().toLowerCase() : '';
     const mySubs = subs.filter((s) => {
-      const subRoll = s.studentRoll ? s.studentRoll.trim().toLowerCase() : '';
-      const subId = s.studentId ? String(s.studentId).trim().toLowerCase() : '';
-      const subName = s.studentName ? s.studentName.trim().toLowerCase() : '';
-      const isStudent = (sRoll && (subRoll === sRoll || subId === sRoll)) ||
-                        (sId && (subId === sId || subRoll === sId)) ||
-                        (sName && subName === sName);
-      if (!isStudent) return false;
+      if (!matchesStudent(s, activeStudent)) return false;
       if (clearedAt && s.submittedAt <= clearedAt) return false;
       if (dismissedIds.has(s.id)) return false;
       return true;
