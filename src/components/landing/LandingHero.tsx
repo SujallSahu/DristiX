@@ -102,10 +102,10 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
             </div>
 
             {/* Headline — 3 staggered lines with mobile-proportional font scaling */}
-            <h1 className="leading-[1.1] sm:leading-[1.02] tracking-[-0.03em] sm:tracking-[-0.045em] dx-rise text-theme-text">
+            <h1 className="leading-[1.15] sm:leading-[1.08] tracking-[-0.03em] sm:tracking-[-0.045em] dx-rise text-theme-text">
               <span className="block text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black">Exam Portal</span>
-              <span className="block text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-theme-text sm:dx-shimmer-text mt-1">That Speaks</span>
-              <span className="block text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-theme-primary dx-gradient-text mt-1">Your Language.</span>
+              <span className="block text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-theme-text sm:dx-shimmer-text mt-1 pb-1">That Speaks</span>
+              <span className="block text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-theme-primary dx-gradient-text mt-1 pb-1.5 sm:pb-2.5">Your Language.</span>
             </h1>
 
             {/* Sub */}

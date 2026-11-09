@@ -298,6 +298,10 @@
 
 .dx-gradient-text {
   color: var(--primary) !important;
+  display: inline-block;
+  padding-bottom: 0.22em;
+  margin-bottom: -0.22em;
+  overflow: visible;
 }
 @supports (-webkit-background-clip: text) or (background-clip: text) {
   .dx-gradient-text {
@@ -315,6 +319,10 @@
 }
 .dx-shimmer-text {
   color: var(--text-primary);
+  display: inline-block;
+  padding-bottom: 0.22em;
+  margin-bottom: -0.22em;
+  overflow: visible;
 }
 @supports (-webkit-background-clip: text) or (background-clip: text) {
   .dx-shimmer-text {
