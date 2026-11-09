@@ -60,14 +60,16 @@ const SectionHeader: React.FC<{
   heading: React.ReactNode;
   sub?: string;
   center?: boolean;
-}> = ({ pill, heading, sub, center = true }) => (
-  <div className={`${center ? 'text-center mx-auto' : ''} max-w-2xl mb-6 sm:mb-12 lg:mb-16`}>
+  className?: string;
+  subClassName?: string;
+}> = ({ pill, heading, sub, center = true, className = '', subClassName = '' }) => (
+  <div className={`${center ? 'text-center mx-auto' : ''} ${className ? className : 'max-w-2xl'} mb-6 sm:mb-12 lg:mb-16`}>
     <span className="dx-label-pill mb-2.5 sm:mb-4 inline-flex">{pill}</span>
     <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-[-0.03em] sm:tracking-[-0.04em] leading-[1.15] sm:leading-[1.08] text-theme-text mt-1.5 sm:mt-4">
       {heading}
     </h2>
     {sub && (
-      <p className="mt-2.5 sm:mt-4 text-xs sm:text-base lg:text-lg text-theme-text-secondary font-medium leading-relaxed max-w-[58ch] mx-auto">
+      <p className={`mt-2.5 sm:mt-4 text-xs sm:text-base lg:text-lg text-theme-text-secondary font-medium leading-relaxed ${subClassName ? subClassName : 'max-w-[58ch]'} mx-auto`}>
         {sub}
       </p>
     )}
@@ -159,6 +161,8 @@ export const HowItWorks: React.FC = () => (
   <Section accent="center">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       <SectionHeader
+        className="max-w-5xl"
+        subClassName="max-w-none md:whitespace-nowrap"
         pill={<><Zap className="w-3 h-3" aria-hidden="true" />How It Works</>}
         heading={<>Login to Results,{' '}<span className="dx-gradient-text">in 4 Steps</span></>}
         sub="No tutorials or onboarding videos. The platform explains itself — spoken aloud if you need it."
@@ -182,19 +186,17 @@ export const HowItWorks: React.FC = () => (
               {/* Step number badge */}
               <div className="flex items-center gap-4">
                 <div
-                  className="relative w-11 h-11 rounded-2xl grid place-items-center text-theme-primary shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:text-theme-primary-text z-10"
+                  className="relative w-11 h-11 rounded-2xl grid place-items-center text-theme-primary-text shrink-0 transition-all duration-300 group-hover:scale-110 shadow-md group-hover:shadow-lg z-10"
                   style={{
-                    background: 'color-mix(in srgb, var(--primary) 12%, var(--bg-surface))',
-                    border: '1.5px solid color-mix(in srgb, var(--primary) 30%, transparent)',
-                    boxShadow: '0 0 0 4px var(--bg-page)',
+                    background: 'var(--primary-gradient)',
+                    border: '1.5px solid color-mix(in srgb, var(--primary) 40%, transparent)',
+                    boxShadow: '0 4px 16px var(--primary-glow), 0 0 0 4px var(--bg-page)',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-gradient)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'color-mix(in srgb, var(--primary) 12%, var(--bg-surface))')}
                 >
                   <Icon className="w-5 h-5" aria-hidden="true" />
                 </div>
                 <span
-                  className="text-3xl font-black tabular-nums leading-none dx-gradient-text opacity-30 group-hover:opacity-90 transition-opacity duration-300"
+                  className="text-3xl font-black tabular-nums leading-none dx-gradient-text opacity-75 group-hover:opacity-100 transition-opacity duration-300"
                   aria-hidden="true"
                 >
                   {num}
