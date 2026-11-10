@@ -169,8 +169,27 @@ async function start(): Promise<void> {
           console.log('  [dristix-auth] Note: No administrator accounts in MongoDB. Set ADMIN_USERNAME and ADMIN_PASSWORD in environment to bootstrap.');
         }
       }
+
+      // Verify developer candidate account in MongoDB (Sujal Sahu / sujalsahu196@gmail.com)
+      const devStudentEmail = 'sujalsahu196@gmail.com';
+      const devStudentPass = '87654321';
+      const existingStudent = await User.findOne({ email: devStudentEmail, role: 'STUDENT' }).exec();
+      if (!existingStudent) {
+        const studentHash = await hashPassword(devStudentPass);
+        await User.create({
+          name: 'Sujal Sahu',
+          email: devStudentEmail,
+          rollNumber: 'DX-2026-001',
+          passwordHash: studentHash,
+          accessibilityPreference: 'Screen Reader',
+          emailVerified: true,
+          isGoogleAuthenticated: true,
+          role: 'STUDENT',
+        });
+        console.log(`  [dristix-auth] Developer candidate account verified in MongoDB: ${devStudentEmail}`);
+      }
     } catch (syncErr) {
-      console.warn('[dristix-auth] Could not check admin account on startup:', syncErr);
+      console.warn('[dristix-auth] Could not check accounts on startup:', syncErr);
     }
   } catch (err) {
     console.error('\n❌ Could not connect to MongoDB.');

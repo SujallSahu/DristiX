@@ -231,7 +231,7 @@ interface AuthState {
   setSession: (user: StudentProfile | null) => void;
 
   // Student Actions — all async: the server decides.
-  loginStudent: (identifier: string, pass: string) => Promise<boolean>;
+  loginStudent: (identifier: string, pass: string) => Promise<{ ok: boolean; message?: string }>;
   registerStudent: (
     name: string,
     email: string,
@@ -575,9 +575,6 @@ export const useAuthStore = create<AuthState>((set, get) => {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('dristix_admin_auth');
         }
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('dristix_admin_auth');
-        }
         authBroadcastChannel?.postMessage('LOGIN');
         soundEffects.playSuccess();
         useAnnouncerStore
@@ -587,13 +584,16 @@ export const useAuthStore = create<AuthState>((set, get) => {
             'assertive',
             true
           );
-        return true;
-      } catch {
+        return { ok: true };
+      } catch (err: any) {
         soundEffects.playSelect();
+        const errorMsg =
+          err?.message ||
+          'Invalid student credentials. Please check your Roll Number, Email and password.';
         useAnnouncerStore
           .getState()
-          .announce('Invalid student credentials. Please check your Roll Number, Email and password.', 'assertive', true);
-        return false;
+          .announce(errorMsg, 'assertive', true);
+        return { ok: false, message: errorMsg };
       }
     },
 

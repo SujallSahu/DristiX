@@ -51,13 +51,14 @@ async function main(): Promise<void> {
 
   // ── Students ───────────────────────────────────────────────────────
   const students = [
-    { name: 'Rohit Sharma', email: 'rohit@dristix.edu', rollNumber: 'DX-101', pref: 'Screen Reader' },
-    { name: 'Ananya Verma', email: 'ananya@dristix.edu', rollNumber: 'DX-102', pref: 'High Contrast' },
-    { name: 'Vikram Singh', email: 'vikram@dristix.edu', rollNumber: 'DX-103', pref: 'Low Vision' },
+    { name: 'Sujal Sahu', email: 'sujalsahu196@gmail.com', rollNumber: 'DX-2026-001', pref: 'Screen Reader', password: '87654321' },
+    { name: 'Rohit Sharma', email: 'rohit.sharma.dristix@gmail.com', rollNumber: 'DX-101', pref: 'Screen Reader', password: STUDENT_PASSWORD },
+    { name: 'Ananya Verma', email: 'ananya.verma.dristix@gmail.com', rollNumber: 'DX-102', pref: 'High Contrast', password: STUDENT_PASSWORD },
+    { name: 'Vikram Singh', email: 'vikram.singh.dristix@gmail.com', rollNumber: 'DX-103', pref: 'Low Vision', password: STUDENT_PASSWORD },
   ];
 
-  const studentHash = await hashPassword(STUDENT_PASSWORD);
   for (const s of students) {
+    const studentHash = await hashPassword(s.password);
     await User.findOneAndUpdate(
       { email: s.email },
       {
@@ -66,6 +67,8 @@ async function main(): Promise<void> {
           rollNumber: s.rollNumber,
           accessibilityPreference: s.pref,
           passwordHash: studentHash,
+          emailVerified: true,
+          isGoogleAuthenticated: true,
           role: 'STUDENT',
         },
       },

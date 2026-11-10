@@ -26,7 +26,9 @@ const isLocalhost =
 const shouldUseProxy = !isProd || isLocalhost;
 
 const prodFallback = 'https://dristix.onrender.com';
-const rawUrl = (import.meta.env.VITE_API_URL || prodFallback).trim();
+const envUrl = (import.meta.env.VITE_API_URL || '').trim();
+const isPlaceholder = !envUrl || envUrl.includes('your-service-name') || envUrl.includes('example.com') || envUrl.includes('<');
+const rawUrl = isPlaceholder ? prodFallback : envUrl;
 const origin = rawUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
 
 export const BASE_API_URL = shouldUseProxy ? '/api' : (origin ? `${origin}/api` : '/api');

@@ -257,14 +257,24 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
 
     setIsSubmitting(true);
     try {
-      const ok = await loginStudent(email, pass);
+      const res = await loginStudent(email, pass);
+      const ok = typeof res === 'boolean' ? res : res.ok;
       if (!ok) {
-        setLoginError('Invalid Google Mail address or password. Please verify your credentials or click "Forgot Password?" to reset your password.');
+        const message =
+          (typeof res === 'object' && res?.message) ||
+          'Invalid Google Mail address or password. Please verify your credentials or click "Forgot Password?" to reset your password.';
+        setLoginError(message);
         return false;
       } else {
         onAuthenticated?.();
         return true;
       }
+    } catch (err: any) {
+      const errorMsg =
+        err?.message ||
+        'Unable to connect to authentication server. Please check your network connection and try again.';
+      setLoginError(errorMsg);
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -360,7 +370,7 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
           <h1 className="text-2xl sm:text-3xl font-black text-theme-text tracking-tight">
             DristiX Candidate Portal
           </h1>
-          <p className="text-xs sm:text-sm font-medium text-theme-text/80 mt-1 max-w-md mx-auto">
+          <p className="text-[11px] sm:text-sm font-medium text-theme-text/80 mt-1 whitespace-nowrap text-center">
             Accessible online examination &amp; practice platform designed for everyone.
           </p>
         </div>
