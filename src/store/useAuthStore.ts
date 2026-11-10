@@ -340,7 +340,7 @@ if (typeof window !== 'undefined') {
           useAuthStore.setState({ submissions: dedupled });
           window.dispatchEvent(new CustomEvent('dristix:submission-updated'));
         }
-      } catch {}
+      } catch { }
     } else if (event.key === STUDENTS_CACHE && event.newValue) {
       try {
         const parsed = JSON.parse(event.newValue);
@@ -348,7 +348,7 @@ if (typeof window !== 'undefined') {
           useAuthStore.setState({ students: parsed });
           window.dispatchEvent(new CustomEvent('dristix:student-registered'));
         }
-      } catch {}
+      } catch { }
     }
   });
 }
@@ -363,7 +363,7 @@ function getInitialSubmissions(): ExamSubmission[] {
         return deduplicateSubmissions(parsed);
       }
     }
-  } catch {}
+  } catch { }
   return [];
 }
 
@@ -377,7 +377,7 @@ function getInitialStudents(): StudentProfile[] {
         return parsed;
       }
     }
-  } catch {}
+  } catch { }
   return [];
 }
 
@@ -549,10 +549,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
   const initialStudent: StudentProfile | null =
     !initialAdminAuth && storedUser && storedUser.role !== 'ADMIN'
       ? {
-          ...storedUser,
-          accessibilityPreference:
-            (storedUser.accessibilityPreference as AccessibilityPreference | null) ?? null,
-        }
+        ...storedUser,
+        accessibilityPreference:
+          (storedUser.accessibilityPreference as AccessibilityPreference | null) ?? null,
+      }
       : null;
 
   return {
@@ -593,464 +593,464 @@ export const useAuthStore = create<AuthState>((set, get) => {
         useAnnouncerStore
           .getState()
           .announce(errorMsg, 'assertive', true);
-        return { ok: false, message: errorMsg };
+    return { ok: false, message: errorMsg };
+  }
+},
+
+  registerStudent: async (name, email, roll, preference, pass, verificationToken) => {
+    try {
+      const { user } = await getDataSource().auth.register({
+        name,
+        email,
+        rollNumber: roll,
+        password: pass,
+        accessibilityPreference: preference ?? undefined,
+        verificationToken,
+      });
+
+      // Rule 5: User Registration and Login Notification Logic
+      // Record registration timestamp so newly registered candidate starts with empty inbox
+      const regTimestamp = user.createdAt || new Date().toISOString();
+      if (typeof window !== 'undefined') {
+        if (user.id) localStorage.setItem(`dristix_user_registered_at_${user.id}`, regTimestamp);
+        if (user.email) localStorage.setItem(`dristix_user_registered_at_${user.email.toLowerCase()}`, regTimestamp);
+        if (user.rollNumber) localStorage.setItem(`dristix_user_registered_at_${user.rollNumber.toLowerCase()}`, regTimestamp);
       }
-    },
 
-    registerStudent: async (name, email, roll, preference, pass, verificationToken) => {
-      try {
-        const { user } = await getDataSource().auth.register({
-          name,
-          email,
-          rollNumber: roll,
-          password: pass,
-          accessibilityPreference: preference ?? undefined,
-          verificationToken,
-        });
-
-        // Rule 5: User Registration and Login Notification Logic
-        // Record registration timestamp so newly registered candidate starts with empty inbox
-        const regTimestamp = user.createdAt || new Date().toISOString();
-        if (typeof window !== 'undefined') {
-          if (user.id) localStorage.setItem(`dristix_user_registered_at_${user.id}`, regTimestamp);
-          if (user.email) localStorage.setItem(`dristix_user_registered_at_${user.email.toLowerCase()}`, regTimestamp);
-          if (user.rollNumber) localStorage.setItem(`dristix_user_registered_at_${user.rollNumber.toLowerCase()}`, regTimestamp);
-        }
-
-        const studentProfile = { ...user, createdAt: regTimestamp };
-        set({ currentStudent: studentProfile, isAdminAuthenticated: false });
-        sessionStorage.removeItem('dristix_admin_auth');
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('dristix_admin_auth');
-        }
-        authBroadcastChannel?.postMessage('LOGIN');
-        try {
-          authBroadcastChannel?.postMessage({
-            type: 'STUDENT_REGISTERED',
-            student: studentProfile,
-            timestamp: Date.now(),
-          });
-        } catch {}
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(
-            new CustomEvent('dristix:student-registered', { detail: studentProfile })
-          );
-        }
-        // Keep the roster fresh so admin views and the demo list stay accurate.
-        void getDataSource().auth
-          .listStudents()
-          .then((students) => {
-            set({ students });
-            saveStored(STUDENTS_CACHE, students);
-          })
-          .catch(() => undefined);
-
-        soundEffects.playSuccess();
-        useAnnouncerStore
-          .getState()
-          .announce(`Registration successful! Welcome to DristiX, ${user.name}.`, 'assertive', true);
-        return true;
-      } catch (err: any) {
-        useAnnouncerStore
-          .getState()
-          .announce(
-            err?.message || 'Registration failed. That Email or Roll Number may already be registered.',
-            'assertive',
-            true
-          );
-        return false;
-      }
-    },
-
-    sendRegistrationOtp: async (email: string, name?: string) => {
-      return getDataSource().auth.sendRegistrationOtp(email, name);
-    },
-
-    verifyRegistrationOtp: async (email: string, code: string, verificationToken: string) => {
-      return getDataSource().auth.verifyRegistrationOtp(email, code, verificationToken);
-    },
-
-    logoutStudent: async () => {
-      try {
-        await getDataSource().auth.logout();
-      } catch {
-        // Clearing local state matters more than the server round trip.
-      }
-      clearSessionTokens();
+      const studentProfile = { ...user, createdAt: regTimestamp };
+      set({ currentStudent: studentProfile, isAdminAuthenticated: false });
       sessionStorage.removeItem('dristix_admin_auth');
       if (typeof window !== 'undefined') {
         localStorage.removeItem('dristix_admin_auth');
       }
-      set({ currentStudent: null, submissions: [], students: [] });
-      authBroadcastChannel?.postMessage('LOGOUT');
-      soundEffects.playNavigate();
-      useAnnouncerStore.getState().announce('Signed out of student account.', 'polite', true);
-    },
-
-    loginAdmin: async (username: string, pass: string) => {
-      try {
-        await getDataSource().auth.adminLogin(username, pass);
-        set({ isAdminAuthenticated: true, currentStudent: null });
-        sessionStorage.setItem('dristix_admin_auth', 'true');
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('dristix_admin_auth', 'true');
-        }
-        // Authoritative sync: immediately fetch full cohort submissions and roster for Admin Studio
-        void get().syncSubmissions();
-        void get().fetchStudents();
-        try {
-          const { useExamStore } = await import('./useExamStore');
-          void useExamStore.getState().loadCatalog();
-        } catch {}
-        soundEffects.playSuccess();
-        useAnnouncerStore
-          .getState()
-          .announce('Admin authentication successful. Welcome to DristiX Admin Studio.', 'assertive', true);
-        return true;
-      } catch {
-        useAnnouncerStore
-          .getState()
-          .announce('Authentication failed. Invalid administrator username or password.', 'assertive', true);
-        return false;
-      }
-    },
-
-    logoutAdmin: () => {
-      clearSessionTokens();
-      sessionStorage.removeItem('dristix_admin_auth');
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('dristix_admin_auth');
-      }
-      try {
-        void getDataSource().auth.logout();
-      } catch {}
-      set({ isAdminAuthenticated: false, submissions: [] });
-      soundEffects.playNavigate();
-      useAnnouncerStore.getState().announce('Logged out of Admin Studio.', 'polite', true);
-    },
-
-    fetchStudents: async () => {
-      try {
-        const students = await getDataSource().auth.listStudents();
-        set({ students });
-        saveStored(STUDENTS_CACHE, students);
-      } catch (err) {
-        console.error('[dristix] fetchStudents error', err);
-      }
-    },
-
-    deleteStudent: async (studentId: string) => {
-      try {
-        const student = get().students.find((s) => s.id === studentId);
-        await getDataSource().auth.deleteStudent(studentId);
-
-        // Also clean up submissions belonging to that student
-        const targetRoll = student?.rollNumber ? student.rollNumber.trim().toLowerCase() : '';
-        const targetId = studentId.trim().toLowerCase();
-        const removedIds: string[] = [];
-        const updatedSubs = get().submissions.filter((sub) => {
-          const sRoll = sub.studentRoll ? sub.studentRoll.trim().toLowerCase() : '';
-          const sId = sub.studentId ? String(sub.studentId).trim().toLowerCase() : '';
-          if (sId === targetId || (targetRoll && sRoll === targetRoll)) {
-            removedIds.push(sub.id);
-            return false;
-          }
-          return true;
-        });
-
-        addAdminDeletedSubmissionIds(removedIds);
-        set((state) => ({
-          students: state.students.filter((s) => s.id !== studentId),
-          submissions: updatedSubs,
-        }));
-        saveStored(SUBMISSIONS_CACHE, updatedSubs);
-
-        // Broadcast across tabs
-        try {
-          authBroadcastChannel?.postMessage({
-            type: 'STUDENT_DELETED',
-            studentId,
-            rollNumber: student?.rollNumber,
-            timestamp: Date.now(),
-          });
-          authBroadcastChannel?.postMessage({ type: 'SUBMISSION_DELETED', timestamp: Date.now() });
-        } catch { }
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('dristix:submission-updated'));
-        }
-
-        soundEffects.playSuccess();
-        useAnnouncerStore.getState().announce('Student account successfully removed.', 'assertive', true);
-        return true;
-      } catch (err) {
-        console.error('[dristix] deleteStudent error', err);
-        useAnnouncerStore.getState().announce('Could not delete student account.', 'assertive', true);
-        return false;
-      }
-    },
-
-    requestPasswordReset: async (identifier: string, portal: 'student' | 'admin' = 'student') => {
-      return getDataSource().auth.requestPasswordReset(identifier, portal);
-    },
-
-    verifyResetCode: async (email: string, code: string) => {
-      return getDataSource().auth.verifyResetCode(email, code);
-    },
-
-    resetPassword: async (email: string, resetToken: string, newPassword: string) => {
-      const res = await getDataSource().auth.resetPassword(email, resetToken, newPassword);
-      if (res.ok || res.success) {
-        soundEffects.playSuccess();
-      }
-      return res;
-    },
-
-    syncSubmissions: async () => {
-      // Single data source: always refresh from the backend.
-      try {
-        const source = getDataSource();
-        const isAdmin = get().isAdminAuthenticated;
-        // Admins see the whole cohort; a student only their own attempts.
-        const rows = isAdmin
-          ? (await source.exams.listAllSubmissions()).map((a) => toSubmission(a, a.student))
-          : (await source.exams.listAttempts()).map((a) => {
-            const me = get().currentStudent;
-            return toSubmission(a, me ? { id: me.id, name: me.name, rollNumber: me.rollNumber } : undefined);
-          });
-
-        // For admin portal: filter out any explicitly deleted IDs
-        const adminDeletedIds = getAdminDeletedSubmissionIds();
-        const validRows = isAdmin
-          ? rows.filter((r) => !adminDeletedIds.has(r.id))
-          : rows.filter((r) => r.submittedAt > 0);
-
-        // Load any offline practice drills so practice arena attempts are never lost
-        let offlineDrills: ExamSubmission[] = [];
-        try {
-          const offlineRecords = await offlinePracticeStorage.getOfflineSubmissions();
-          if (offlineRecords && offlineRecords.length > 0) {
-            offlineDrills = offlineRecords.map((o: any) => ({
-              id: String(
-                o.id
-                  ? String(o.id).startsWith('sub-')
-                    ? o.id
-                    : `sub-offline-${o.id}`
-                  : o.attemptId || `sub-offline-${Date.now()}`
-              ),
-              examId: o.examId || '',
-              examTitle: o.examTitle || 'Practice Drill',
-              examCode: o.examCode || 'PRACTICE',
-              examType: 'practice' as const,
-              studentId: o.studentId || (get().currentStudent?.id ?? 'std-guest'),
-              studentName: o.studentName || (get().currentStudent?.name ?? 'Candidate'),
-              studentRoll: o.studentRoll || (get().currentStudent?.rollNumber ?? 'DX-GUEST'),
-              score: typeof o.score === 'number' ? Number(o.score.toFixed(2)) : 0,
-              maxScore: typeof o.maxScore === 'number' ? o.maxScore : 0,
-              percentage: typeof o.percentage === 'number' ? Math.round(o.percentage) : 0,
-              correctCount: o.correctCount ?? 0,
-              incorrectCount: o.incorrectCount ?? 0,
-              unattemptedCount: o.unattemptedCount ?? 0,
-              submittedAt: Number(o.recordedAt || o.submittedAt || Date.now()),
-            }));
-          }
-        } catch {}
-
-        // Preserve any recent local-only / in-progress submissions
-        // only if they have not already been persisted to the server.
-        const currentSubs = get().submissions;
-        const serverIds = new Set(validRows.map((r) => r.id));
-        const localOnly = currentSubs.filter((s) => {
-          if (serverIds.has(s.id)) return false;
-          // Discard provisional if a matching server attempt exists
-          const matchedOnServer = validRows.some(
-            (vr) =>
-              (vr.examId === s.examId || (s.examCode && vr.examCode === s.examCode)) &&
-              Math.abs(vr.submittedAt - s.submittedAt) < 300000
-          );
-          return !matchedOnServer;
-        });
-
-        const mergedRows = deduplicateSubmissions([...validRows, ...localOnly, ...offlineDrills]);
-
-        set({ submissions: mergedRows });
-        saveStored(SUBMISSIONS_CACHE, mergedRows);
-      } catch (err) {
-        // Keep whatever we already have; a failed refresh is not worth a disruptive empty state.
-        console.warn('[dristix] syncSubmissions background sync failed:', err);
-      }
-    },
-
-    addSubmission: (sub) => {
-      const student = get().currentStudent || {
-        id: 'std-guest',
-        name: 'Guest Candidate',
-        rollNumber: 'DX-GUEST',
-      };
-
-      const resolvedId =
-        sub.id && sub.id !== 'local'
-          ? sub.id
-          : `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      const newSub: ExamSubmission = {
-        ...sub,
-        id: resolvedId,
-        studentId: student.id,
-        studentName: student.name,
-        studentRoll: student.rollNumber,
-        submittedAt: sub.submittedAt || Date.now(),
-      };
-
-      const existing = get().submissions.filter((s) => s.id !== newSub.id);
-      const updated = deduplicateSubmissions([newSub, ...existing]);
-      set({ submissions: updated });
-      saveStored(SUBMISSIONS_CACHE, updated);
-
-      // Notify cross-tab and active components in real time
+      authBroadcastChannel?.postMessage('LOGIN');
       try {
         authBroadcastChannel?.postMessage({
-          type: 'SUBMISSION_UPDATED',
-          submission: newSub,
+          type: 'STUDENT_REGISTERED',
+          student: studentProfile,
           timestamp: Date.now(),
         });
-      } catch {
-        // BroadcastChannel unavailable
-      }
+      } catch { }
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
-          new CustomEvent('dristix:submission-updated', { detail: newSub })
+          new CustomEvent('dristix:student-registered', { detail: studentProfile })
         );
       }
-    },
+      // Keep the roster fresh so admin views and the demo list stay accurate.
+      void getDataSource().auth
+        .listStudents()
+        .then((students) => {
+          set({ students });
+          saveStored(STUDENTS_CACHE, students);
+        })
+        .catch(() => undefined);
 
-    deleteSubmission: async (submissionId: string) => {
-      addAdminDeletedSubmissionId(submissionId);
-      const updated = get().submissions.filter((s) => s.id !== submissionId);
-      set({ submissions: updated });
-      saveStored(SUBMISSIONS_CACHE, updated);
-
-      // Best effort backend deletion for admin
-      try {
-        await (getDataSource().exams as any).deleteSubmission?.(submissionId);
-      } catch {
-        // Fallback gracefully
-      }
-
-      // Notify other tabs and components in real time
-      try {
-        authBroadcastChannel?.postMessage({
-          type: 'SUBMISSION_DELETED',
-          submissionId,
-          timestamp: Date.now(),
-        });
-      } catch {
-        // BroadcastChannel unavailable
-      }
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('dristix:submission-deleted', { detail: { submissionId } })
-        );
-      }
-
-      soundEffects.playSelect();
-      useAnnouncerStore.getState().announce('Test submission record deleted by administrator.', 'polite', true);
+      soundEffects.playSuccess();
+      useAnnouncerStore
+        .getState()
+        .announce(`Registration successful! Welcome to DristiX, ${user.name}.`, 'assertive', true);
       return true;
-    },
-
-    /**
-     * Resets the candidate-facing test history in the Student Portal only.
-     * Does NOT delete or alter actual test attempts in the admin portal or database,
-     * ensuring administrators retain complete candidate records and analytics.
-     */
-    clearStudentHistory: () => {
-      const student = get().currentStudent;
-      if (!student) return;
-      const key = (student.rollNumber || student.id || '').trim().toLowerCase();
-      const now = Date.now();
-      setStudentClearedTimestamp(key, now);
-
-      // Inform server to mark student attempts clearedByStudent: true
-      void (getDataSource().exams as any).clearStudentAttempts?.();
-
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('dristix:student-history-cleared', { detail: { studentKey: key, clearedAt: now } })
-        );
-      }
-
-      soundEffects.playSelect();
+    } catch (err: any) {
       useAnnouncerStore
         .getState()
-        .announce('Your test history has been cleared from your student view. Your actual test submissions remain securely recorded for administrative evaluation.', 'assertive', true);
-    },
-
-    /**
-     * Removes an individual test attempt from the student's personal view only,
-     * leaving administrative records and database intact.
-     */
-    dismissStudentSubmission: (submissionId: string) => {
-      const student = get().currentStudent;
-      if (!student) return;
-      const key = (student.rollNumber || student.id || '').trim().toLowerCase();
-      addStudentDismissedId(key, submissionId);
-
-      // Inform server to mark attempt clearedByStudent: true
-      void (getDataSource().exams as any).dismissStudentAttempt?.(submissionId);
-
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('dristix:student-history-cleared', { detail: { studentKey: key, submissionId } })
+        .announce(
+          err?.message || 'Registration failed. That Email or Roll Number may already be registered.',
+          'assertive',
+          true
         );
+      return false;
+    }
+  },
+
+  sendRegistrationOtp: async (email: string, name?: string) => {
+    return getDataSource().auth.sendRegistrationOtp(email, name);
+  },
+
+  verifyRegistrationOtp: async (email: string, code: string, verificationToken: string) => {
+    return getDataSource().auth.verifyRegistrationOtp(email, code, verificationToken);
+  },
+
+  logoutStudent: async () => {
+    try {
+      await getDataSource().auth.logout();
+    } catch {
+      // Clearing local state matters more than the server round trip.
+    }
+    clearSessionTokens();
+    sessionStorage.removeItem('dristix_admin_auth');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('dristix_admin_auth');
+    }
+    set({ currentStudent: null, submissions: [], students: [] });
+    authBroadcastChannel?.postMessage('LOGOUT');
+    soundEffects.playNavigate();
+    useAnnouncerStore.getState().announce('Signed out of student account.', 'polite', true);
+  },
+
+  loginAdmin: async (username: string, pass: string) => {
+    try {
+      await getDataSource().auth.adminLogin(username, pass);
+      set({ isAdminAuthenticated: true, currentStudent: null });
+      sessionStorage.setItem('dristix_admin_auth', 'true');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('dristix_admin_auth', 'true');
       }
-
-      soundEffects.playSelect();
-      useAnnouncerStore
-        .getState()
-        .announce('Test attempt removed from your student view.', 'polite', true);
-    },
-
-    /**
-     * Purges all submission records across the cohort from the Admin Portal (admin only).
-     * Marks MongoDB attempts clearedByAdmin: true so student-side history is completely unaffected!
-     */
-    clearAllSubmissions: async () => {
-      if (!get().isAdminAuthenticated) return false;
-
+      // Authoritative sync: immediately fetch full cohort submissions and roster for Admin Studio
+      void get().syncSubmissions();
+      void get().fetchStudents();
       try {
-        await (getDataSource().exams as any).clearAllSubmissions?.();
-      } catch (err) {
-        console.warn('[dristix] clearAllSubmissions error:', err);
-      }
+        const { useExamStore } = await import('./useExamStore');
+        void useExamStore.getState().loadCatalog();
+      } catch { }
+      soundEffects.playSuccess();
+      useAnnouncerStore
+        .getState()
+        .announce('Admin authentication successful. Welcome to DristiX Admin Studio.', 'assertive', true);
+      return true;
+    } catch {
+      useAnnouncerStore
+        .getState()
+        .announce('Authentication failed. Invalid administrator username or password.', 'assertive', true);
+      return false;
+    }
+  },
 
-      set({ submissions: [] });
-      saveStored(SUBMISSIONS_CACHE, []);
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.removeItem(ADMIN_DELETED_SUBMISSIONS_KEY);
-        } catch { }
-      }
+  logoutAdmin: () => {
+    clearSessionTokens();
+    sessionStorage.removeItem('dristix_admin_auth');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('dristix_admin_auth');
+    }
+    try {
+      void getDataSource().auth.logout();
+    } catch { }
+    set({ isAdminAuthenticated: false, submissions: [] });
+    soundEffects.playNavigate();
+    useAnnouncerStore.getState().announce('Logged out of Admin Studio.', 'polite', true);
+  },
 
-      // Notify cross-tab and active components in real time
+  fetchStudents: async () => {
+    try {
+      const students = await getDataSource().auth.listStudents();
+      set({ students });
+      saveStored(STUDENTS_CACHE, students);
+    } catch (err) {
+      console.error('[dristix] fetchStudents error', err);
+    }
+  },
+
+  deleteStudent: async (studentId: string) => {
+    try {
+      const student = get().students.find((s) => s.id === studentId);
+      await getDataSource().auth.deleteStudent(studentId);
+
+      // Also clean up submissions belonging to that student
+      const targetRoll = student?.rollNumber ? student.rollNumber.trim().toLowerCase() : '';
+      const targetId = studentId.trim().toLowerCase();
+      const removedIds: string[] = [];
+      const updatedSubs = get().submissions.filter((sub) => {
+        const sRoll = sub.studentRoll ? sub.studentRoll.trim().toLowerCase() : '';
+        const sId = sub.studentId ? String(sub.studentId).trim().toLowerCase() : '';
+        if (sId === targetId || (targetRoll && sRoll === targetRoll)) {
+          removedIds.push(sub.id);
+          return false;
+        }
+        return true;
+      });
+
+      addAdminDeletedSubmissionIds(removedIds);
+      set((state) => ({
+        students: state.students.filter((s) => s.id !== studentId),
+        submissions: updatedSubs,
+      }));
+      saveStored(SUBMISSIONS_CACHE, updatedSubs);
+
+      // Broadcast across tabs
       try {
         authBroadcastChannel?.postMessage({
-          type: 'SUBMISSION_CLEARED_ALL',
+          type: 'STUDENT_DELETED',
+          studentId,
+          rollNumber: student?.rollNumber,
           timestamp: Date.now(),
         });
-      } catch {
-        // BroadcastChannel unavailable
-      }
-
+        authBroadcastChannel?.postMessage({ type: 'SUBMISSION_DELETED', timestamp: Date.now() });
+      } catch { }
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('dristix:submission-cleared', { detail: { timestamp: Date.now() } })
-        );
+        window.dispatchEvent(new CustomEvent('dristix:submission-updated'));
       }
 
-      soundEffects.playSelect();
-      useAnnouncerStore
-        .getState()
-        .announce('All examination submissions have been cleared from Admin Portal.', 'assertive', true);
+      soundEffects.playSuccess();
+      useAnnouncerStore.getState().announce('Student account successfully removed.', 'assertive', true);
       return true;
-    },
+    } catch (err) {
+      console.error('[dristix] deleteStudent error', err);
+      useAnnouncerStore.getState().announce('Could not delete student account.', 'assertive', true);
+      return false;
+    }
+  },
+
+  requestPasswordReset: async (identifier: string, portal: 'student' | 'admin' = 'student') => {
+    return getDataSource().auth.requestPasswordReset(identifier, portal);
+  },
+
+  verifyResetCode: async (email: string, code: string) => {
+    return getDataSource().auth.verifyResetCode(email, code);
+  },
+
+  resetPassword: async (email: string, resetToken: string, newPassword: string) => {
+    const res = await getDataSource().auth.resetPassword(email, resetToken, newPassword);
+    if (res.ok || res.success) {
+      soundEffects.playSuccess();
+    }
+    return res;
+  },
+
+  syncSubmissions: async () => {
+    // Single data source: always refresh from the backend.
+    try {
+      const source = getDataSource();
+      const isAdmin = get().isAdminAuthenticated;
+      // Admins see the whole cohort; a student only their own attempts.
+      const rows = isAdmin
+        ? (await source.exams.listAllSubmissions()).map((a) => toSubmission(a, a.student))
+        : (await source.exams.listAttempts()).map((a) => {
+          const me = get().currentStudent;
+          return toSubmission(a, me ? { id: me.id, name: me.name, rollNumber: me.rollNumber } : undefined);
+        });
+
+      // For admin portal: filter out any explicitly deleted IDs
+      const adminDeletedIds = getAdminDeletedSubmissionIds();
+      const validRows = isAdmin
+        ? rows.filter((r) => !adminDeletedIds.has(r.id))
+        : rows.filter((r) => r.submittedAt > 0);
+
+      // Load any offline practice drills so practice arena attempts are never lost
+      let offlineDrills: ExamSubmission[] = [];
+      try {
+        const offlineRecords = await offlinePracticeStorage.getOfflineSubmissions();
+        if (offlineRecords && offlineRecords.length > 0) {
+          offlineDrills = offlineRecords.map((o: any) => ({
+            id: String(
+              o.id
+                ? String(o.id).startsWith('sub-')
+                  ? o.id
+                  : `sub-offline-${o.id}`
+                : o.attemptId || `sub-offline-${Date.now()}`
+            ),
+            examId: o.examId || '',
+            examTitle: o.examTitle || 'Practice Drill',
+            examCode: o.examCode || 'PRACTICE',
+            examType: 'practice' as const,
+            studentId: o.studentId || (get().currentStudent?.id ?? 'std-guest'),
+            studentName: o.studentName || (get().currentStudent?.name ?? 'Candidate'),
+            studentRoll: o.studentRoll || (get().currentStudent?.rollNumber ?? 'DX-GUEST'),
+            score: typeof o.score === 'number' ? Number(o.score.toFixed(2)) : 0,
+            maxScore: typeof o.maxScore === 'number' ? o.maxScore : 0,
+            percentage: typeof o.percentage === 'number' ? Math.round(o.percentage) : 0,
+            correctCount: o.correctCount ?? 0,
+            incorrectCount: o.incorrectCount ?? 0,
+            unattemptedCount: o.unattemptedCount ?? 0,
+            submittedAt: Number(o.recordedAt || o.submittedAt || Date.now()),
+          }));
+        }
+      } catch { }
+
+      // Preserve any recent local-only / in-progress submissions
+      // only if they have not already been persisted to the server.
+      const currentSubs = get().submissions;
+      const serverIds = new Set(validRows.map((r) => r.id));
+      const localOnly = currentSubs.filter((s) => {
+        if (serverIds.has(s.id)) return false;
+        // Discard provisional if a matching server attempt exists
+        const matchedOnServer = validRows.some(
+          (vr) =>
+            (vr.examId === s.examId || (s.examCode && vr.examCode === s.examCode)) &&
+            Math.abs(vr.submittedAt - s.submittedAt) < 300000
+        );
+        return !matchedOnServer;
+      });
+
+      const mergedRows = deduplicateSubmissions([...validRows, ...localOnly, ...offlineDrills]);
+
+      set({ submissions: mergedRows });
+      saveStored(SUBMISSIONS_CACHE, mergedRows);
+    } catch (err) {
+      // Keep whatever we already have; a failed refresh is not worth a disruptive empty state.
+      console.warn('[dristix] syncSubmissions background sync failed:', err);
+    }
+  },
+
+  addSubmission: (sub) => {
+    const student = get().currentStudent || {
+      id: 'std-guest',
+      name: 'Guest Candidate',
+      rollNumber: 'DX-GUEST',
+    };
+
+    const resolvedId =
+      sub.id && sub.id !== 'local'
+        ? sub.id
+        : `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const newSub: ExamSubmission = {
+      ...sub,
+      id: resolvedId,
+      studentId: student.id,
+      studentName: student.name,
+      studentRoll: student.rollNumber,
+      submittedAt: sub.submittedAt || Date.now(),
+    };
+
+    const existing = get().submissions.filter((s) => s.id !== newSub.id);
+    const updated = deduplicateSubmissions([newSub, ...existing]);
+    set({ submissions: updated });
+    saveStored(SUBMISSIONS_CACHE, updated);
+
+    // Notify cross-tab and active components in real time
+    try {
+      authBroadcastChannel?.postMessage({
+        type: 'SUBMISSION_UPDATED',
+        submission: newSub,
+        timestamp: Date.now(),
+      });
+    } catch {
+      // BroadcastChannel unavailable
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('dristix:submission-updated', { detail: newSub })
+      );
+    }
+  },
+
+  deleteSubmission: async (submissionId: string) => {
+    addAdminDeletedSubmissionId(submissionId);
+    const updated = get().submissions.filter((s) => s.id !== submissionId);
+    set({ submissions: updated });
+    saveStored(SUBMISSIONS_CACHE, updated);
+
+    // Best effort backend deletion for admin
+    try {
+      await (getDataSource().exams as any).deleteSubmission?.(submissionId);
+    } catch {
+      // Fallback gracefully
+    }
+
+    // Notify other tabs and components in real time
+    try {
+      authBroadcastChannel?.postMessage({
+        type: 'SUBMISSION_DELETED',
+        submissionId,
+        timestamp: Date.now(),
+      });
+    } catch {
+      // BroadcastChannel unavailable
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('dristix:submission-deleted', { detail: { submissionId } })
+      );
+    }
+
+    soundEffects.playSelect();
+    useAnnouncerStore.getState().announce('Test submission record deleted by administrator.', 'polite', true);
+    return true;
+  },
+
+  /**
+   * Resets the candidate-facing test history in the Student Portal only.
+   * Does NOT delete or alter actual test attempts in the admin portal or database,
+   * ensuring administrators retain complete candidate records and analytics.
+   */
+  clearStudentHistory: () => {
+    const student = get().currentStudent;
+    if (!student) return;
+    const key = (student.rollNumber || student.id || '').trim().toLowerCase();
+    const now = Date.now();
+    setStudentClearedTimestamp(key, now);
+
+    // Inform server to mark student attempts clearedByStudent: true
+    void (getDataSource().exams as any).clearStudentAttempts?.();
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('dristix:student-history-cleared', { detail: { studentKey: key, clearedAt: now } })
+      );
+    }
+
+    soundEffects.playSelect();
+    useAnnouncerStore
+      .getState()
+      .announce('Your test history has been cleared from your student view. Your actual test submissions remain securely recorded for administrative evaluation.', 'assertive', true);
+  },
+
+  /**
+   * Removes an individual test attempt from the student's personal view only,
+   * leaving administrative records and database intact.
+   */
+  dismissStudentSubmission: (submissionId: string) => {
+    const student = get().currentStudent;
+    if (!student) return;
+    const key = (student.rollNumber || student.id || '').trim().toLowerCase();
+    addStudentDismissedId(key, submissionId);
+
+    // Inform server to mark attempt clearedByStudent: true
+    void (getDataSource().exams as any).dismissStudentAttempt?.(submissionId);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('dristix:student-history-cleared', { detail: { studentKey: key, submissionId } })
+      );
+    }
+
+    soundEffects.playSelect();
+    useAnnouncerStore
+      .getState()
+      .announce('Test attempt removed from your student view.', 'polite', true);
+  },
+
+  /**
+   * Purges all submission records across the cohort from the Admin Portal (admin only).
+   * Marks MongoDB attempts clearedByAdmin: true so student-side history is completely unaffected!
+   */
+  clearAllSubmissions: async () => {
+    if (!get().isAdminAuthenticated) return false;
+
+    try {
+      await (getDataSource().exams as any).clearAllSubmissions?.();
+    } catch (err) {
+      console.warn('[dristix] clearAllSubmissions error:', err);
+    }
+
+    set({ submissions: [] });
+    saveStored(SUBMISSIONS_CACHE, []);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(ADMIN_DELETED_SUBMISSIONS_KEY);
+      } catch { }
+    }
+
+    // Notify cross-tab and active components in real time
+    try {
+      authBroadcastChannel?.postMessage({
+        type: 'SUBMISSION_CLEARED_ALL',
+        timestamp: Date.now(),
+      });
+    } catch {
+      // BroadcastChannel unavailable
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('dristix:submission-cleared', { detail: { timestamp: Date.now() } })
+      );
+    }
+
+    soundEffects.playSelect();
+    useAnnouncerStore
+      .getState()
+      .announce('All examination submissions have been cleared from Admin Portal.', 'assertive', true);
+    return true;
+  },
   };
 });
 
