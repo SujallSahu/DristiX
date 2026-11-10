@@ -83,6 +83,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
     syncSubmissions,
     fetchStudents,
     deleteStudent,
+    isSubmissionsLoading,
   } = useAuthStore();
 
   const {
@@ -97,7 +98,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
   const { announce } = useAnnouncerStore();
 
   const { fontSize, setFontSize, theme, setTheme } = usePreferencesStore();
-  const [activeAdminTab, setActiveAdminTab] = useState<'dashboard' | 'manage' | 'create' | 'students' | 'submissions' | 'notifications'>('dashboard');
+  const [activeAdminTab, setActiveAdminTabState] = useState<'dashboard' | 'manage' | 'create' | 'students' | 'submissions' | 'notifications'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('dristix_admin_tab');
+        if (saved && ['dashboard', 'manage', 'create', 'students', 'submissions', 'notifications'].includes(saved)) {
+          return saved as any;
+        }
+      } catch {}
+    }
+    return 'dashboard';
+  });
+
+  const setActiveAdminTab = (tab: 'dashboard' | 'manage' | 'create' | 'students' | 'submissions' | 'notifications') => {
+    setActiveAdminTabState(tab);
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('dristix_admin_tab', tab);
+      } catch {}
+    }
+  };
+
   const [manageSubTab, setManageSubTab] = useState<'exams' | 'practice'>('exams');
   const [globalSearch, setGlobalSearch] = useState('');
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -124,7 +145,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
       if (e.key === 'Escape') {
         setIsCommandPaletteOpen(false);
-              } else if (e.key === '/') {
+        return;
+      }
+
+      // CRITICAL: Never intercept browser hotkeys (Ctrl+R reload, Ctrl+S save, Ctrl+C copy, etc.)
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        return;
+      }
+
+      if (e.key === '/') {
         e.preventDefault();
         searchInputRef.current?.focus();
         soundEffects.playSelect();
@@ -192,6 +221,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
       void fetchStudents();
     };
 
+    let lastFocusRefresh = Date.now();
+    const handleFocusRefresh = () => {
+      // Throttle window focus refresh to avoid hammering backend and re-rendering on rapid window clicks
+      if (Date.now() - lastFocusRefresh > 15000) {
+        lastFocusRefresh = Date.now();
+        void syncSubmissions();
+        void fetchStudents();
+      }
+    };
+
     const handleCatalogRefresh = () => {
       void useExamStore.getState().loadCatalog();
     };
@@ -202,13 +241,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
     window.addEventListener('dristix:student-history-cleared', handleDataRefresh);
     window.addEventListener('dristix:student-registered', handleDataRefresh);
     window.addEventListener('dristix:catalog-updated', handleCatalogRefresh);
-    window.addEventListener('focus', handleDataRefresh);
+    window.addEventListener('focus', handleFocusRefresh);
 
     const interval = setInterval(() => {
       // Auto-poll quietly in the background so test completions reflect in real time without manual reload
       void syncSubmissions();
       void fetchStudents();
-    }, 10000);
+    }, 15000);
 
     return () => {
       window.removeEventListener('dristix:submission-updated', handleDataRefresh);
@@ -217,10 +256,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
       window.removeEventListener('dristix:student-history-cleared', handleDataRefresh);
       window.removeEventListener('dristix:student-registered', handleDataRefresh);
       window.removeEventListener('dristix:catalog-updated', handleCatalogRefresh);
-      window.removeEventListener('focus', handleDataRefresh);
+      window.removeEventListener('focus', handleFocusRefresh);
       clearInterval(interval);
     };
-  }, [syncSubmissions, fetchStudents, activeAdminTab]);
+  }, [syncSubmissions, fetchStudents]);
 
   const [submissionSearch, setSubmissionSearch] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
@@ -1315,7 +1354,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 setIsMobileSidebarOpen(false);
                 soundEffects.playSelect();
               }}
-              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
+              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-colors duration-150 relative overflow-hidden group ${
                 activeAdminTab === 'dashboard'
                   ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
@@ -1343,7 +1382,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 setIsMobileSidebarOpen(false);
                 soundEffects.playSelect();
               }}
-              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
+              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-colors duration-150 relative overflow-hidden group ${
                 activeAdminTab === 'manage'
                   ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
@@ -1357,7 +1396,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 <span>Manage Exams</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#021417] text-teal-200 border border-[#0d4a57]/40">
+                <span className="min-w-[1.5rem] text-center px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#021417] text-teal-200 border border-[#0d4a57]/40 tabular-nums">
                   {availableExams.length + availablePracticeDrills.length}
                 </span>
                 <kbd className="hidden sm:inline-block px-1 py-0.5 rounded text-[9px] font-mono font-bold bg-black/25 text-teal-200/60">
@@ -1376,7 +1415,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 setIsMobileSidebarOpen(false);
                 soundEffects.playSelect();
               }}
-              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
+              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-colors duration-150 relative overflow-hidden group ${
                 activeAdminTab === 'create'
                   ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
@@ -1409,7 +1448,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 setIsMobileSidebarOpen(false);
                 soundEffects.playSelect();
               }}
-              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
+              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-colors duration-150 relative overflow-hidden group ${
                 activeAdminTab === 'students'
                   ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
@@ -1423,7 +1462,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 <span>Student Roster</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#021417] text-teal-200 border border-[#0d4a57]/40">
+                <span className="min-w-[1.5rem] text-center px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#021417] text-teal-200 border border-[#0d4a57]/40 tabular-nums">
                   {students.length}
                 </span>
                 <kbd className="hidden sm:inline-block px-1 py-0.5 rounded text-[9px] font-mono font-bold bg-black/25 text-teal-200/60">
@@ -1442,7 +1481,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 setIsMobileSidebarOpen(false);
                 soundEffects.playSelect();
               }}
-              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
+              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-colors duration-150 relative overflow-hidden group ${
                 activeAdminTab === 'submissions'
                   ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
@@ -1456,7 +1495,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 <span>Submissions & Reports</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#021417] text-teal-200 border border-[#0d4a57]/40">
+                <span className="min-w-[1.5rem] text-center px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#021417] text-teal-200 border border-[#0d4a57]/40 tabular-nums">
                   {submissions.length}
                 </span>
                 <kbd className="hidden sm:inline-block px-1 py-0.5 rounded text-[9px] font-mono font-bold bg-black/25 text-teal-200/60">
@@ -1475,7 +1514,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 setIsMobileSidebarOpen(false);
                 soundEffects.playSelect();
               }}
-              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all relative overflow-hidden group ${
+              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-colors duration-150 relative overflow-hidden group ${
                 activeAdminTab === 'notifications'
                   ? 'bg-gradient-to-r from-[#006d5c] to-[#005a4c] text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:text-white hover:bg-[#083038]'
@@ -2327,7 +2366,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 uppercase tracking-wider">
                       Audit Terminal
                     </span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                     <span className="text-xs text-theme-text/60 font-medium">Real-Time Evaluation Records</span>
                   </div>
                   <h2 id="submissions-heading" className="text-xl sm:text-2xl font-black text-theme-text tracking-tight mt-1 flex items-center gap-2">
@@ -2366,28 +2405,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 <div className="flex items-center gap-6 flex-wrap">
                   <div className="flex items-center gap-2">
                     <span className="text-theme-text/60">Total Records:</span>
-                    <span className="font-mono font-black text-sm text-theme-text">{totalSubmissions}</span>
+                    <span className="font-mono font-black text-sm text-theme-text tabular-nums">
+                      {isSubmissionsLoading && submissions.length === 0 ? '—' : totalSubmissions}
+                    </span>
                   </div>
                   <div className="h-4 w-px bg-theme-border hidden sm:block" />
                   <div className="flex items-center gap-2">
                     <span className="text-theme-text/60">Cohort Accuracy:</span>
-                    <span className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400">{avgScore}%</span>
+                    <span className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400 tabular-nums">
+                      {isSubmissionsLoading && submissions.length === 0 ? '—' : `${avgScore}%`}
+                    </span>
                   </div>
                   <div className="h-4 w-px bg-theme-border hidden sm:block" />
                   <div className="flex items-center gap-2">
                     <span className="text-theme-text/60">Distinction Rate (≥80%):</span>
-                    <span className="font-mono font-black text-sm text-purple-600 dark:text-purple-400">{distinctionRate}%</span>
+                    <span className="font-mono font-black text-sm text-purple-600 dark:text-purple-400 tabular-nums">
+                      {isSubmissionsLoading && submissions.length === 0 ? '—' : `${distinctionRate}%`}
+                    </span>
                   </div>
                   <div className="h-4 w-px bg-theme-border hidden sm:block" />
                   <div className="flex items-center gap-2">
                     <span className="text-theme-text/60">Top Candidate:</span>
-                    <span className="font-black text-sm text-[#005a4c] dark:text-teal-300">{students[0]?.name || 'N/A'}</span>
+                    <span className="font-black text-sm text-[#005a4c] dark:text-teal-300">
+                      {isSubmissionsLoading && submissions.length === 0
+                        ? '—'
+                        : (topPerformingStudents[0]?.name || students[0]?.name || 'N/A')}
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 text-theme-text/60 font-mono text-[11px]">
-                  <Activity className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-                  <span>Ledger Status: Synchronized</span>
+                  <Activity className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Ledger Status: {isSubmissionsLoading && submissions.length === 0 ? 'Synchronizing...' : 'Synchronized'}</span>
                 </div>
               </div>
 
@@ -2542,7 +2591,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-theme-border/50">
-                      {paginatedAdminSubmissions.length === 0 ? (
+                      {isSubmissionsLoading && submissions.length === 0 ? (
+                        <>
+                          {[1, 2, 3].map((idx) => (
+                            <tr key={`skeleton-${idx}`} className="animate-pulse">
+                              <td className="py-3.5 px-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-9 h-9 rounded-xl bg-theme-border/50 shrink-0" />
+                                  <div className="space-y-1.5 flex-1">
+                                    <div className="h-3.5 w-28 bg-theme-border/50 rounded" />
+                                    <div className="h-2.5 w-16 bg-theme-border/30 rounded" />
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <div className="h-3.5 w-44 bg-theme-border/50 rounded mb-1.5" />
+                                <div className="h-2.5 w-20 bg-theme-border/30 rounded" />
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <div className="h-3.5 w-20 bg-theme-border/40 rounded mb-1" />
+                                <div className="h-2.5 w-12 bg-theme-border/30 rounded" />
+                              </td>
+                              <td className="py-3.5 px-4 text-center">
+                                <div className="h-4 w-12 bg-theme-border/50 rounded mx-auto" />
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <div className="h-4 w-20 bg-theme-border/40 rounded" />
+                              </td>
+                              <td className="py-3.5 px-4 text-right">
+                                <div className="h-7 w-16 bg-theme-border/40 rounded ml-auto" />
+                              </td>
+                            </tr>
+                          ))}
+                        </>
+                      ) : paginatedAdminSubmissions.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="py-12 text-center text-theme-text/60">
                             <div className="space-y-2">

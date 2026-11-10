@@ -21,8 +21,11 @@ interface LandingHeaderProps {
 const NAV_ITEMS = [
   { label: 'Home', href: '#top' },
   { label: 'Features', href: '#features' },
+  { label: 'How It Works', href: '#how-it-works' },
+  { label: 'Demo', href: '#voice-demo' },
   { label: 'Exams', href: '#exams' },
   { label: 'Why DristiX', href: '#why' },
+  { label: 'FAQ', href: '#faq' },
 ] as const;
 
 const MOBILE_NAV_ITEMS = [
@@ -166,9 +169,9 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
         boxShadow: scrolled ? '0 4px 32px rgba(0,0,0,0.12)' : 'none',
       }}
     >
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 xl:gap-6">
         {/* Top bar on Mobile / Left on Desktop */}
-        <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+        <div className="flex items-center justify-between w-full sm:w-auto gap-3 shrink-0">
           {/* Brand */}
           <a href="#top" className="flex items-center gap-2 sm:gap-3 rounded-xl no-underline group shrink-0">
             <div className="relative w-8 h-8 sm:w-9 sm:h-9">
@@ -232,13 +235,13 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
         </div>
 
         {/* Nav — desktop */}
-        <nav aria-label="Primary navigation" className="hidden lg:block">
-          <ul className="flex items-center gap-1 list-none m-0 p-0">
+        <nav aria-label="Primary navigation" className="hidden lg:block shrink-0">
+          <ul className="flex items-center gap-0.5 xl:gap-1 list-none m-0 p-0">
             {NAV_ITEMS.map((item) => (
-              <li key={item.href}>
+              <li key={item.href} className="shrink-0">
                 <a
                   href={item.href}
-                  className="px-4 py-2 rounded-xl text-sm font-bold text-theme-text-secondary no-underline hover:bg-theme-surface hover:text-theme-primary transition-all duration-150 block"
+                  className="px-2 xl:px-3.5 py-1.5 rounded-xl text-xs xl:text-sm font-bold text-theme-text-secondary no-underline hover:bg-theme-surface hover:text-theme-primary transition-all duration-150 block whitespace-nowrap"
                 >
                   {item.label}
                 </a>

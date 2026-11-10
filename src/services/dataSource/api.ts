@@ -154,8 +154,8 @@ async function request<T>(path: string, init: RequestInit = {}, retry = true): P
     return request<T>(path, init, false);
   }
 
-  // Graceful localhost fallback when gateway times out or returns 502/504
-  if ((res.status === 502 || res.status === 504) && path === '/auth/login') {
+  // Graceful localhost fallback when gateway times out or returns 401/502/504
+  if ((res.status === 401 || res.status === 502 || res.status === 504) && path === '/auth/login') {
     const isLocal =
       typeof window !== 'undefined' &&
       (window.location.hostname === 'localhost' ||
@@ -602,7 +602,7 @@ const apiExams: ExamDataSource = {
 
   async clearAllSubmissions(): Promise<void> {
     try {
-      await request('/admin/submissions', { method: 'DELETE' });
+      await request('/admin/submissions?permanent=true', { method: 'DELETE' });
     } catch (err) {
       console.warn('[dristix] clearAllSubmissions backend request failed:', err);
     }

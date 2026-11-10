@@ -209,10 +209,13 @@ export const ExamScreen: React.FC = () => {
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               type="button"
-              onClick={() => announceCurrentQuestion(true)}
-              title="Read this question and all options aloud"
+              onClick={(e) => {
+                e.stopPropagation();
+                announceCurrentQuestion(true);
+              }}
+              title="Read this question and all options aloud (Shortcut: R)"
               aria-label={`Read Question ${currentQ.questionNumber} and options aloud (Shortcut: R)`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-theme-border bg-theme-primary text-theme-primary-text hover:brightness-110 font-bold text-xs transition shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-theme-border bg-theme-primary text-theme-primary-text hover:brightness-110 font-bold text-xs transition shadow-sm cursor-pointer active:scale-95"
             >
               <Volume2 className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Speak <kbd className="font-mono opacity-70">(R)</kbd></span>
@@ -220,10 +223,13 @@ export const ExamScreen: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => useAnnouncerStore.getState().stopSpeech()}
+              onClick={(e) => {
+                e.stopPropagation();
+                useAnnouncerStore.getState().stopSpeech();
+              }}
               title="Stop voice immediately (Shortcut: S or Esc)"
               aria-label="Stop voice reading (Shortcut: S or Esc)"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-theme-border bg-theme-bg hover:bg-theme-surface text-theme-text font-bold text-xs transition"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-theme-border bg-theme-bg hover:bg-theme-surface text-theme-text font-bold text-xs transition cursor-pointer active:scale-95"
             >
               <VolumeX className="w-3.5 h-3.5 text-theme-danger" aria-hidden="true" />
               <span>Stop <kbd className="font-mono opacity-70">(S)</kbd></span>

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import mongoose from 'mongoose';
-import { Exam } from '../models/index.js';
+import { Exam, DeletedExam } from '../models/index.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 
@@ -99,6 +99,21 @@ examRouter.get(
       .trim();
 
     const searchKeys = Array.from(new Set([rawId, cleanId].filter(Boolean)));
+
+    const isDeleted = await DeletedExam.exists({
+      $or: [
+        { examId: { $in: searchKeys } },
+        { code: { $in: searchKeys.map((k) => k.toUpperCase()) } },
+      ],
+    }).exec();
+
+    if (isDeleted) {
+      throw new HttpError(
+        410,
+        'exam_deleted',
+        'This examination has been removed by the administrator and is no longer available.'
+      );
+    }
 
     // Tier 1: Exact match by ObjectId (highest priority)
     let matchFilter: Record<string, unknown> | null = null;

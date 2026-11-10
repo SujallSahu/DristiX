@@ -9,7 +9,6 @@ import {
   useAuthStore,
   type ExamSubmission,
   authBroadcastChannel,
-  getStudentClearedTimestamp,
   getStudentDismissedIds,
   deduplicateSubmissions,
   matchesStudent,
@@ -17,7 +16,6 @@ import {
 import { getDataSource } from '../services/dataSource';
 import { dispatchAccessibilityEvent } from '../accessibility';
 import { offlinePracticeStorage } from '../services/offlinePracticeStorage';
-import { resolveNotificationTestDetails } from './useNotificationStore';
 import type { GradeResult, StartAttemptResult } from '../../shared/types';
 
 export interface SectionDiagnostic {
@@ -69,6 +67,14 @@ export interface AnalyticsSnapshot {
     incorrectCount: number;
     unattemptedCount: number;
   }>;
+}
+
+export interface UnavailableModalState {
+  isOpen: boolean;
+  testTitle?: string;
+  testCode?: string;
+  testType?: 'exam' | 'practice';
+  reason?: string;
 }
 
 export function computeAnalyticsSnapshot(subs: ExamSubmission[]): AnalyticsSnapshot {
@@ -158,6 +164,8 @@ interface ExamState {
   isSubmitModalOpen: boolean;
   isSubmitting: boolean;
   activeSectionFilter: string;
+  unavailableModal: UnavailableModalState;
+  setUnavailableModal: (modal: Partial<UnavailableModalState>) => void;
 
   /**
    * True while the catalog is being fetched or lazily seeded. The listing
@@ -330,6 +338,20 @@ export const useExamStore = create<ExamState>((set, get) => ({
     isSubmitting: false,
     isSubmitted: false,
   },
+  unavailableModal: {
+    isOpen: false,
+    testTitle: '',
+    testCode: '',
+    testType: 'exam',
+    reason: 'deleted_by_admin',
+  },
+  setUnavailableModal: (modal) =>
+    set((state) => ({
+      unavailableModal: {
+        ...state.unavailableModal,
+        ...modal,
+      },
+    })),
   setSuppressAutoRead: (val: boolean) => set({ suppressAutoRead: val }),
 
   nextQuestion: (options?: { announce?: boolean }) => {
@@ -725,11 +747,11 @@ export const useExamStore = create<ExamState>((set, get) => ({
         .announce(
           offline
             ? (isHindiPreferred()
-                ? 'ऑफलाइन मोड: आपका फीडबैक सुरक्षित कर लिया गया है और ऑनलाइन आने पर सिंक होगा। धन्यवाद!'
-                : 'Offline mode: Your feedback has been saved and will sync when online. Thank you!')
+              ? 'ऑफलाइन मोड: आपका फीडबैक सुरक्षित कर लिया गया है और ऑनलाइन आने पर सिंक होगा। धन्यवाद!'
+              : 'Offline mode: Your feedback has been saved and will sync when online. Thank you!')
             : (isHindiPreferred()
-                ? 'आपका फीडबैक सफलतापूर्वक दर्ज कर लिया गया है। धन्यवाद!'
-                : 'Thank you! Your feedback has been submitted successfully.'),
+              ? 'आपका फीडबैक सफलतापूर्वक दर्ज कर लिया गया है। धन्यवाद!'
+              : 'Thank you! Your feedback has been submitted successfully.'),
           'assertive',
           true
         );
@@ -781,8 +803,8 @@ export const useExamStore = create<ExamState>((set, get) => ({
       .getState()
       .announce(
         tab === 'exams'
-           ? 'Switched to Mock Examinations Catalog. Showing timed tests with negative marking.'
-           : 'Switched to Practice Arena. Showing topic-wise drills with helpful hints and step-by-step solutions.',
+          ? 'Switched to Mock Examinations Catalog. Showing timed tests with negative marking.'
+          : 'Switched to Practice Arena. Showing topic-wise drills with helpful hints and step-by-step solutions.',
         'assertive',
         true
       );
@@ -813,18 +835,9 @@ export const useExamStore = create<ExamState>((set, get) => ({
     }
 
     const { availableExams, availablePracticeDrills } = get();
-    const allAvailable = [
-      ...availableExams,
-      ...availablePracticeDrills,
-      ...offlinePracticeStorage.bundledDrills,
-    ];
 
-    const testDetails =
-      options?.testDetails ||
-      resolveNotificationTestDetails({
-        title: examId,
-        message: examId,
-      });
+    // Only resolve test details from notification if explicitly passed in options
+    const testDetails = options?.testDetails ?? null;
 
     const targetKey = (examId || '').trim();
     const targetLower = targetKey.toLowerCase();
@@ -837,28 +850,51 @@ export const useExamStore = create<ExamState>((set, get) => ({
     const dtCode = (testDetails?.code || '').trim();
     const dtTitle = (testDetails?.testTitle || '').trim();
 
+    // Preliminary mode determination to scope list search order
+    const isExplicitPractice =
+      forceMode === 'practice' ||
+      testDetails?.testType === 'practice' ||
+      targetLower.includes('practice') ||
+      targetLower.includes('drill') ||
+      cleanKey.toLowerCase().startsWith('di-') ||
+      cleanKey.toLowerCase().startsWith('practice-');
+
+    const isOnline = typeof navigator === 'undefined' || navigator.onLine;
+
+    const searchList = isExplicitPractice
+      ? [
+        ...availablePracticeDrills,
+        ...(!isOnline ? offlinePracticeStorage.bundledDrills : []),
+        ...availableExams,
+      ]
+      : [
+        ...availableExams,
+        ...availablePracticeDrills,
+        ...(!isOnline ? offlinePracticeStorage.bundledDrills : []),
+      ];
+
     // Universal hierarchical matching that prioritizes exact matches across catalog
     const matchInList = (list: Exam[]): Exam | null => {
-      // 1. Exact ID Match (MongoDB _id or custom id)
-      if (dtId) {
-        const found = list.find(
-          (e) =>
-            e.id.toLowerCase() === dtId.toLowerCase() ||
-            String((e as any)._id).toLowerCase() === dtId.toLowerCase()
-        );
-        if (found) return found;
-      }
+      // 1. Exact ID Match (Direct targetLower match has highest priority)
       if (targetLower) {
         const found = list.find(
           (e) =>
             e.id.toLowerCase() === targetLower ||
-            String((e as any)._id).toLowerCase() === targetLower
+            String((e as any)._id || '').toLowerCase() === targetLower
+        );
+        if (found) return found;
+      }
+      if (dtId) {
+        const found = list.find(
+          (e) =>
+            e.id.toLowerCase() === dtId.toLowerCase() ||
+            String((e as any)._id || '').toLowerCase() === dtId.toLowerCase()
         );
         if (found) return found;
       }
 
       // 2. Exact Code Match (case-insensitive & whitespace/hyphen agnostic)
-      const codeCandidates = [dtCode, targetKey, cleanKey].filter(Boolean);
+      const codeCandidates = [targetKey, cleanKey, dtCode].filter(Boolean);
       for (const candidate of codeCandidates) {
         const candNorm = candidate.toLowerCase().replace(/[-_\s]+/g, '');
         if (candNorm.length < 2) continue;
@@ -871,17 +907,18 @@ export const useExamStore = create<ExamState>((set, get) => ({
       }
 
       // 3. Exact Title Match (case-insensitive & trimmed)
-      const titleCandidates = [dtTitle, cleanKey, targetKey].filter((t) => t && t.length >= 2);
+      const titleCandidates = [cleanKey, targetKey, dtTitle].filter((t) => t && t.length >= 2);
       for (const candidate of titleCandidates) {
         const candLower = candidate.toLowerCase().trim();
         const found = list.find((e) => e.title && e.title.toLowerCase().trim() === candLower);
         if (found) return found;
       }
 
-      // 4. Substring Title Match (title contains candidate or candidate contains title)
+      // 4. Substring Title Match (title contains candidate or candidate contains title, excluding generic tokens)
+      const genericTerms = new Set(['mock', 'test', 'exam', 'practice', 'quiz', 'series']);
       for (const candidate of titleCandidates) {
         const candLower = candidate.toLowerCase().trim();
-        if (candLower.length >= 3) {
+        if (candLower.length >= 3 && !genericTerms.has(candLower)) {
           const found = list.find((e) => {
             if (!e.title) return false;
             const eLower = e.title.toLowerCase().trim();
@@ -894,17 +931,23 @@ export const useExamStore = create<ExamState>((set, get) => ({
       return null;
     };
 
-    let exam: Exam | null = matchInList(allAvailable);
+    let exam: Exam | null = matchInList(searchList);
 
     // If not found in current memory cache, refresh catalog from server and search again
     if (!exam) {
       await get().loadCatalog();
-      const freshAll = [
-        ...get().availableExams,
-        ...get().availablePracticeDrills,
-        ...offlinePracticeStorage.bundledDrills,
-      ];
-      exam = matchInList(freshAll);
+      const freshList = isExplicitPractice
+        ? [
+          ...get().availablePracticeDrills,
+          ...(!isOnline ? offlinePracticeStorage.bundledDrills : []),
+          ...get().availableExams,
+        ]
+        : [
+          ...get().availableExams,
+          ...get().availablePracticeDrills,
+          ...(!isOnline ? offlinePracticeStorage.bundledDrills : []),
+        ];
+      exam = matchInList(freshList);
     }
 
     // Determine target mode
@@ -912,20 +955,37 @@ export const useExamStore = create<ExamState>((set, get) => ({
       forceMode === 'practice' ||
       testDetails?.testType === 'practice' ||
       Boolean(
-        exam &&
-        (get().availablePracticeDrills.some((e) => e.id === exam!.id || e.code === exam!.code) ||
-          offlinePracticeStorage.bundledDrills.some((e) => e.id === exam!.id || e.code === exam!.code) ||
-          (exam.id && (exam.id.includes('drill') || exam.id.includes('practice'))) ||
-          (exam.code &&
-            (exam.code.startsWith('PRACTICE-') ||
-              exam.code.startsWith('DI-') ||
-              exam.code.includes('DRILL') ||
-              exam.code.includes('PO-02'))) ||
-          exam.negativeMarking === 'No negative marking (Practice)' ||
-          String(exam.negativeMarking) === '0')
+        isExplicitPractice ||
+        targetLower.includes('practice') ||
+        cleanKey.toLowerCase().startsWith('di-') ||
+        cleanKey.toLowerCase().startsWith('practice-') ||
+        (exam &&
+          (get().availablePracticeDrills.some((e) => e.id === exam!.id || e.code === exam!.code) ||
+            (exam.id && (exam.id.includes('drill') || exam.id.includes('practice'))) ||
+            (exam.code &&
+              (exam.code.startsWith('PRACTICE-') ||
+                exam.code.startsWith('DI-') ||
+                exam.code.includes('DRILL') ||
+                exam.code.includes('PO-02'))) ||
+            exam.negativeMarking === 'No negative marking (Practice)' ||
+            String(exam.negativeMarking) === '0'))
       );
 
     const targetMode: 'exam' | 'practice' = forceMode || (isPracticeMode ? 'practice' : 'exam');
+
+    // IF NOT FOUND: The test is NOT in the student portal mock tests or practice tests!
+    // Show pop-up message of test unavailability or delete through admin.
+    if (!exam) {
+      soundEffects.playTimerAlert();
+      get().setUnavailableModal({
+        isOpen: true,
+        testTitle: dtTitle || cleanKey || examId,
+        testCode: dtCode || (cleanKey.length <= 15 ? cleanKey : ''),
+        testType: targetMode,
+        reason: 'deleted_by_admin',
+      });
+      return;
+    }
 
     const launchOfflineDrill = async (drillExam: Exam, drillQuestions: QuestionItem[]) => {
       const durationSec = (drillExam.durationMinutes || 30) * 60;
@@ -1002,44 +1062,14 @@ export const useExamStore = create<ExamState>((set, get) => ({
         }
       }
     } catch (err) {
-      // If server could not start this exam, try offline cached practice if applicable
-      if (targetMode === 'practice' && exam) {
-        const cachedQuestions = await offlinePracticeStorage.getCachedDrillQuestions(exam.id, exam.code);
-        if (cachedQuestions && cachedQuestions.length > 0) {
-          await launchOfflineDrill(exam, cachedQuestions);
-          return;
-        }
-      }
-
-      // Check if user made a generic "mock test" request (not a specific test name/id)
-      const isGenericRequest =
-        !cleanKey ||
-        cleanKey === 'mock' ||
-        cleanKey === 'mock test' ||
-        cleanKey === 'test' ||
-        cleanKey === 'new test' ||
-        cleanKey === 'latest' ||
-        cleanKey === 'latest test' ||
-        cleanKey === 'new mock test';
-
-      if (isGenericRequest && !testDetails) {
-        const fallbackList =
-          targetMode === 'practice'
-            ? [...get().availablePracticeDrills, ...offlinePracticeStorage.bundledDrills]
-            : get().availableExams;
-        if (fallbackList.length > 0 && fallbackList[0].id !== targetExamId) {
-          return get().selectExam(fallbackList[0].id, targetMode, options);
-        }
-      }
-
       soundEffects.playTimerAlert();
-      useAnnouncerStore
-        .getState()
-        .announce(
-          err instanceof Error ? err.message : 'Could not start the requested examination.',
-          'assertive',
-          true
-        );
+      get().setUnavailableModal({
+        isOpen: true,
+        testTitle: exam?.title || dtTitle || cleanKey || 'Selected Examination',
+        testCode: exam?.code || dtCode || (cleanKey.length <= 15 ? cleanKey : ''),
+        testType: targetMode,
+        reason: 'deleted_by_admin',
+      });
       return;
     }
 
@@ -1162,8 +1192,15 @@ export const useExamStore = create<ExamState>((set, get) => ({
 
     set({
       activeView: 'catalog',
-      portalTab: 'exams',
+      portalTab: get().examMode === 'practice' ? 'practice' : 'exams',
+      attemptId: null,
       isSubmitted: false,
+      submissionTime: null,
+      serverReport: null,
+      currentIndex: 0,
+      selectedOptions: {},
+      markedForReview: {},
+      visitedQuestions: {},
       isPaletteOpen: false,
       isSubmitModalOpen: false,
       isSettingsOpen: false,
@@ -1226,189 +1263,189 @@ export const useExamStore = create<ExamState>((set, get) => ({
     let report: GradeResult | null = null;
     try {
 
-    if (attemptId) {
-      try {
-        // Authoritative grading. The server holds the answer key, so the score
-        // shown to the student is the server's, never the browser's.
-        // Send final selected options directly with the submit call so debounced autosaves don't drop answers.
-        const finalState = {
-          currentIndex: get().currentIndex,
-          selectedOptions: get().selectedOptions,
-          markedForReview: get().markedForReview,
-          visitedQuestions: get().visitedQuestions,
-        };
-        report = await getDataSource().exams.submitAttempt(attemptId, finalState);
-      } catch (err) {
-        if (examMode === 'practice') {
-          console.warn('[OfflinePractice] Server submit failed (offline). Evaluating practice drill locally:', err);
-          report = null;
-        } else {
-          useAnnouncerStore
-            .getState()
-            .announce(
-              err instanceof Error
-                ? `Could not submit: ${err.message}`
-                : 'Could not submit this examination. Please try again.',
-              'assertive',
-              true
-            );
-          return;
+      if (attemptId) {
+        try {
+          // Authoritative grading. The server holds the answer key, so the score
+          // shown to the student is the server's, never the browser's.
+          // Send final selected options directly with the submit call so debounced autosaves don't drop answers.
+          const finalState = {
+            currentIndex: get().currentIndex,
+            selectedOptions: get().selectedOptions,
+            markedForReview: get().markedForReview,
+            visitedQuestions: get().visitedQuestions,
+          };
+          report = await getDataSource().exams.submitAttempt(attemptId, finalState);
+        } catch (err) {
+          if (examMode === 'practice') {
+            console.warn('[OfflinePractice] Server submit failed (offline). Evaluating practice drill locally:', err);
+            report = null;
+          } else {
+            useAnnouncerStore
+              .getState()
+              .announce(
+                err instanceof Error
+                  ? `Could not submit: ${err.message}`
+                  : 'Could not submit this examination. Please try again.',
+                'assertive',
+                true
+              );
+            return;
+          }
         }
       }
-    }
 
-    // Offline mode still grades locally, because there is no server to ask.
-    if (!report) {
-      // If questions in state are missing correctOption (e.g. attempt was started online then went offline),
-      // enrich them from cached/bundled drill questions so local grading has the complete answer key
-      let currentQuestions = get().questions;
-      if (examMode === 'practice' && currentQuestions.some((q) => q.correctOption === undefined)) {
-        const fullQuestions = await offlinePracticeStorage.getCachedDrillQuestions(currentExam.id, currentExam.code);
-        if (fullQuestions && fullQuestions.length) {
-          const map = new Map(fullQuestions.map((q) => [q.id, q]));
-          currentQuestions = currentQuestions.map((q) => {
-            const full = map.get(q.id);
-            return full
-              ? {
+      // Offline mode still grades locally, because there is no server to ask.
+      if (!report) {
+        // If questions in state are missing correctOption (e.g. attempt was started online then went offline),
+        // enrich them from cached/bundled drill questions so local grading has the complete answer key
+        let currentQuestions = get().questions;
+        if (examMode === 'practice' && currentQuestions.some((q) => q.correctOption === undefined)) {
+          const fullQuestions = await offlinePracticeStorage.getCachedDrillQuestions(currentExam.id, currentExam.code);
+          if (fullQuestions && fullQuestions.length) {
+            const map = new Map(fullQuestions.map((q) => [q.id, q]));
+            currentQuestions = currentQuestions.map((q) => {
+              const full = map.get(q.id);
+              return full
+                ? {
                   ...q,
                   correctOption: full.correctOption,
                   explanation: full.explanation,
                   hint: full.hint,
                 }
-              : q;
-          });
-          set({ questions: currentQuestions });
+                : q;
+            });
+            set({ questions: currentQuestions });
+          }
         }
+
+        const local = get().getDiagnosticReport();
+        report = {
+          ...local,
+          attemptId: attemptId ?? 'local',
+          examTitle: local.examTitle,
+          status: 'submitted',
+          questions: (get().questions.length ? get().questions : currentQuestions) as unknown as GradeResult['questions'],
+        } as GradeResult;
       }
 
-      const local = get().getDiagnosticReport();
-      report = {
-        ...local,
-        attemptId: attemptId ?? 'local',
-        examTitle: local.examTitle,
-        status: 'submitted',
-        questions: (get().questions.length ? get().questions : currentQuestions) as unknown as GradeResult['questions'],
-      } as GradeResult;
-    }
+      const authoritativeAttemptId =
+        attemptId && attemptId !== 'local'
+          ? attemptId
+          : report?.attemptId && report.attemptId !== 'local'
+            ? report.attemptId
+            : `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-    const authoritativeAttemptId =
-      attemptId && attemptId !== 'local'
-        ? attemptId
-        : report?.attemptId && report.attemptId !== 'local'
-        ? report.attemptId
-        : `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const activeStudent = useAuthStore.getState().currentStudent;
+      const resolvedStudent = activeStudent || {
+        id: 'std-guest',
+        name: 'Guest Candidate',
+        rollNumber: 'DX-GUEST',
+      };
 
-    const activeStudent = useAuthStore.getState().currentStudent;
-    const resolvedStudent = activeStudent || {
-      id: 'std-guest',
-      name: 'Guest Candidate',
-      rollNumber: 'DX-GUEST',
-    };
+      if (examMode === 'practice') {
+        void offlinePracticeStorage.saveOfflineSubmission({
+          id: authoritativeAttemptId,
+          examId: currentExam.id,
+          examTitle: currentExam.title,
+          examCode: currentExam.code,
+          score: report.totalScore,
+          maxScore: report.maxScore,
+          percentage: report.scorePercentage,
+          correctCount: report.correctCount,
+          incorrectCount: report.incorrectCount,
+          unattemptedCount: report.unattemptedCount,
+          mode: 'practice',
+          studentId: resolvedStudent.id,
+          studentRoll: resolvedStudent.rollNumber,
+          studentName: resolvedStudent.name,
+          submittedAt: Date.now(),
+        });
+      }
 
-    if (examMode === 'practice') {
-      void offlinePracticeStorage.saveOfflineSubmission({
+      soundEffects.playSuccess();
+
+      // The server's graded questions now legitimately carry correctOption and
+      // explanation, so swapping them in lets DiagnosticReport work unchanged.
+      if (report.questions?.length) {
+        set({ questions: report.questions as unknown as QuestionItem[] });
+      }
+
+      useAuthStore.getState().addSubmission({
         id: authoritativeAttemptId,
         examId: currentExam.id,
         examTitle: currentExam.title,
         examCode: currentExam.code,
+        examType: examMode,
         score: report.totalScore,
         maxScore: report.maxScore,
         percentage: report.scorePercentage,
         correctCount: report.correctCount,
         incorrectCount: report.incorrectCount,
         unattemptedCount: report.unattemptedCount,
-        mode: 'practice',
-        studentId: resolvedStudent.id,
-        studentRoll: resolvedStudent.rollNumber,
-        studentName: resolvedStudent.name,
-        submittedAt: Date.now(),
+        timeTakenSeconds: currentExam.durationMinutes
+          ? Math.max(0, currentExam.durationMinutes * 60 - (get().timeRemaining || 0))
+          : 0,
       });
-    }
 
-    soundEffects.playSuccess();
+      // Instant real-time synchronization:
+      // Update live currentAnalytics snapshot immediately so voice assistant & screen reader reflect accurate marks
+      const initialSubs = useAuthStore.getState().submissions;
+      const studentKey = (activeStudent?.rollNumber || activeStudent?.id || '').trim().toLowerCase();
+      const dismissedIds = getStudentDismissedIds(studentKey);
 
-    // The server's graded questions now legitimately carry correctOption and
-    // explanation, so swapping them in lets DiagnosticReport work unchanged.
-    if (report.questions?.length) {
-      set({ questions: report.questions as unknown as QuestionItem[] });
-    }
-
-    useAuthStore.getState().addSubmission({
-      id: authoritativeAttemptId,
-      examId: currentExam.id,
-      examTitle: currentExam.title,
-      examCode: currentExam.code,
-      examType: examMode,
-      score: report.totalScore,
-      maxScore: report.maxScore,
-      percentage: report.scorePercentage,
-      correctCount: report.correctCount,
-      incorrectCount: report.incorrectCount,
-      unattemptedCount: report.unattemptedCount,
-    });
-
-    // Instant real-time synchronization:
-    // Update live currentAnalytics snapshot immediately so voice assistant & screen reader reflect accurate marks
-    const initialSubs = useAuthStore.getState().submissions;
-    const studentKey = (activeStudent?.rollNumber || activeStudent?.id || '').trim().toLowerCase();
-    const clearedAt = getStudentClearedTimestamp(studentKey);
-    const dismissedIds = getStudentDismissedIds(studentKey);
-
-    const myInitialSubs = initialSubs.filter((s) => {
-      if (!matchesStudent(s, activeStudent)) return false;
-      if (clearedAt && s.submittedAt <= clearedAt) return false;
-      if (dismissedIds.has(s.id)) return false;
-      return true;
-    });
-    set({ currentAnalytics: computeAnalyticsSnapshot(myInitialSubs) });
-
-    // Background server sync to maintain authoritative state without blocking user
-    void useAuthStore.getState().syncSubmissions().then(() => {
-      const freshSubs = useAuthStore.getState().submissions;
-      const myFreshSubs = freshSubs.filter((s) => {
+      const myInitialSubs = initialSubs.filter((s) => {
         if (!matchesStudent(s, activeStudent)) return false;
-        if (clearedAt && s.submittedAt <= clearedAt) return false;
         if (dismissedIds.has(s.id)) return false;
         return true;
       });
-      set({ currentAnalytics: computeAnalyticsSnapshot(myFreshSubs) });
-    });
+      set({ currentAnalytics: computeAnalyticsSnapshot(myInitialSubs) });
 
-    set({
-      isSubmitted: true,
-      isSubmitModalOpen: false,
-      submissionTime: Date.now(),
-      serverReport: report,
-      feedback: {
-        isOpen: false,
-        rating: 0,
-        tags: [],
-        comment: '',
-        inputMethod: 'keyboard',
-        isSubmitting: false,
-        isSubmitted: false,
-      },
-    });
+      // Background server sync to maintain authoritative state without blocking user
+      void useAuthStore.getState().syncSubmissions().then(() => {
+        const freshSubs = useAuthStore.getState().submissions;
+        const myFreshSubs = freshSubs.filter((s) => {
+          if (!matchesStudent(s, activeStudent)) return false;
+          if (dismissedIds.has(s.id)) return false;
+          return true;
+        });
+        set({ currentAnalytics: computeAnalyticsSnapshot(myFreshSubs) });
+      });
 
-    const verbalDetails =
-      report.verbalSummary && report.verbalSummary.length > 0
-        ? report.verbalSummary.join(' ')
-        : `Overall Score: ${report.totalScore} out of ${report.maxScore} points (${report.scorePercentage}% correct). Attempted: ${report.attemptedCount} of ${report.totalQuestions} questions (${report.correctCount} correct, ${report.incorrectCount} incorrect). Unattempted: ${report.unattemptedCount} questions.`;
+      set({
+        isSubmitted: true,
+        isSubmitModalOpen: false,
+        submissionTime: Date.now(),
+        serverReport: report,
+        feedback: {
+          isOpen: false,
+          rating: 0,
+          tags: [],
+          comment: '',
+          inputMethod: 'keyboard',
+          isSubmitting: false,
+          isSubmitted: false,
+        },
+      });
 
-    const fullResultAnnouncement = `Exam successfully submitted! Here is your performance diagnostic and analytics report for ${report.examTitle}: You scored ${report.totalScore} out of ${report.maxScore} maximum points, which is ${report.scorePercentage} percent. ${verbalDetails} You can say "Read summary" to hear this again, "Retake test", or "Choose another exam".`;
+      const verbalDetails =
+        report.verbalSummary && report.verbalSummary.length > 0
+          ? report.verbalSummary.join(' ')
+          : `Overall Score: ${report.totalScore} out of ${report.maxScore} points (${report.scorePercentage}% correct). Attempted: ${report.attemptedCount} of ${report.totalQuestions} questions (${report.correctCount} correct, ${report.incorrectCount} incorrect). Unattempted: ${report.unattemptedCount} questions.`;
 
-    useAnnouncerStore.getState().announce(
-      fullResultAnnouncement,
-      'assertive',
-      true
-    );
-    // Prompt for candidate feedback after the diagnostic report announcement
-    setTimeout(() => {
-      const s = get();
-      if (s.isSubmitted && !s.feedback.isSubmitted && s.activeView === 'exam') {
-        s.openFeedbackModal();
-      }
-    }, 6000);
+      const fullResultAnnouncement = `Exam successfully submitted! Here is your performance diagnostic and analytics report for ${report.examTitle}: You scored ${report.totalScore} out of ${report.maxScore} maximum points, which is ${report.scorePercentage} percent. ${verbalDetails} You can say "Read summary" to hear this again, "Retake test", or "Choose another exam".`;
+
+      useAnnouncerStore.getState().announce(
+        fullResultAnnouncement,
+        'assertive',
+        true
+      );
+      // Prompt for candidate feedback after the diagnostic report announcement
+      setTimeout(() => {
+        const s = get();
+        if (s.isSubmitted && !s.feedback.isSubmitted && s.activeView === 'exam') {
+          s.openFeedbackModal();
+        }
+      }, 6000);
     } finally {
       set({ isSubmitting: false });
     }
@@ -1438,7 +1475,7 @@ export const useExamStore = create<ExamState>((set, get) => ({
         examId: created?.id || newExam.id,
         timestamp: Date.now(),
       });
-    } catch {}
+    } catch { }
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('dristix:catalog-updated', { detail: { examId: created?.id || newExam.id } })
@@ -1482,7 +1519,7 @@ export const useExamStore = create<ExamState>((set, get) => ({
         examId,
         timestamp: Date.now(),
       });
-    } catch {}
+    } catch { }
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('dristix:catalog-updated', { detail: { examId } })
@@ -1516,6 +1553,12 @@ export const useExamStore = create<ExamState>((set, get) => ({
     // delete that also removed attempts stays consistent.
     await get().loadCatalog();
 
+    // Explicitly purge the deleted exam from memory catalog
+    set((state) => ({
+      availableExams: state.availableExams.filter((e) => e.id !== examId && e.code !== examId),
+      availablePracticeDrills: state.availablePracticeDrills.filter((e) => e.id !== examId && e.code !== examId),
+    }));
+
     if (!get().currentExam.id) {
       set({ currentExam: EMPTY_EXAM, questions: [] });
     }
@@ -1531,7 +1574,7 @@ export const useExamStore = create<ExamState>((set, get) => ({
         type: 'SUBMISSION_UPDATED',
         timestamp: Date.now(),
       });
-    } catch {}
+    } catch { }
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('dristix:catalog-updated', { detail: { examId, deleted: true } })
@@ -1545,7 +1588,24 @@ export const useExamStore = create<ExamState>((set, get) => ({
   },
 
   resetExam: () => {
-    const { currentExam, questions } = get();
+    const { currentExam, questions, availableExams, availablePracticeDrills } = get();
+
+    // Verify currentExam is still active in the catalog and has not been deleted by admin
+    const isAvailable = [...availableExams, ...availablePracticeDrills].some(
+      (e) => (e.id === currentExam.id || e.code === currentExam.code) && (e as any).published !== false
+    );
+    if (!isAvailable && currentExam.id) {
+      soundEffects.playTimerAlert();
+      get().setUnavailableModal({
+        isOpen: true,
+        testTitle: currentExam.title,
+        testCode: currentExam.code,
+        testType: currentExam.negativeMarking?.startsWith('No negative') ? 'practice' : 'exam',
+        reason: 'deleted_by_admin',
+      });
+      get().returnToCatalog();
+      return;
+    }
 
     // There is nothing to retake unless a question set is actually loaded.
     //
@@ -1685,9 +1745,8 @@ export const useExamStore = create<ExamState>((set, get) => ({
     if (hasValidAiExplanation(currentQ.diagramAiExplanation)) {
       if (autoSpeak) {
         const expl = currentQ.diagramAiExplanation!;
-        const speech = `AI Diagram Breakdown for Question ${currentQ.questionNumber}. ${
-          expl.audioNarration || expl.educationalContext
-        }. ${expl.visualBreakdown?.length ? `Visual elements: ${expl.visualBreakdown.join('. ')}.` : ''}`;
+        const speech = `AI Diagram Breakdown for Question ${currentQ.questionNumber}. ${expl.audioNarration || expl.educationalContext
+          }. ${expl.visualBreakdown?.length ? `Visual elements: ${expl.visualBreakdown.join('. ')}.` : ''}`;
         useAnnouncerStore.getState().announce(speech, 'assertive', true);
       }
       return;
@@ -1718,9 +1777,8 @@ export const useExamStore = create<ExamState>((set, get) => ({
         set({ questions: updated });
 
         if (autoSpeak && get().currentIndex === currentIndex) {
-          const speech = `AI Diagram Breakdown for Question ${currentQ.questionNumber}. ${
-            res.audioNarration || res.educationalContext
-          }. ${res.visualBreakdown?.length ? `Visual elements: ${res.visualBreakdown.join('. ')}.` : ''}`;
+          const speech = `AI Diagram Breakdown for Question ${currentQ.questionNumber}. ${res.audioNarration || res.educationalContext
+            }. ${res.visualBreakdown?.length ? `Visual elements: ${res.visualBreakdown.join('. ')}.` : ''}`;
           useAnnouncerStore.getState().announce(speech, 'assertive', true);
         }
       }
@@ -1929,12 +1987,10 @@ if (typeof window !== 'undefined') {
     const activeStudent = useAuthStore.getState().currentStudent;
     const subs = useAuthStore.getState().submissions;
     const studentKey = (activeStudent?.rollNumber || activeStudent?.id || '').trim().toLowerCase();
-    const clearedAt = getStudentClearedTimestamp(studentKey);
     const dismissedIds = getStudentDismissedIds(studentKey);
 
     const mySubs = subs.filter((s) => {
       if (!matchesStudent(s, activeStudent)) return false;
-      if (clearedAt && s.submittedAt <= clearedAt) return false;
       if (dismissedIds.has(s.id)) return false;
       return true;
     });

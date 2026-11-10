@@ -173,20 +173,42 @@ async function start(): Promise<void> {
       // Verify developer candidate account in MongoDB (Sujal Sahu / sujalsahu196@gmail.com)
       const devStudentEmail = 'sujalsahu196@gmail.com';
       const devStudentPass = '87654321';
-      const existingStudent = await User.findOne({ email: devStudentEmail, role: 'STUDENT' }).exec();
-      if (!existingStudent) {
-        const studentHash = await hashPassword(devStudentPass);
-        await User.create({
-          name: 'Sujal Sahu',
-          email: devStudentEmail,
-          rollNumber: 'DX-2026-001',
-          passwordHash: studentHash,
-          accessibilityPreference: 'Screen Reader',
-          emailVerified: true,
-          isGoogleAuthenticated: true,
-          role: 'STUDENT',
-        });
-        console.log(`  [dristix-auth] Developer candidate account verified in MongoDB: ${devStudentEmail}`);
+      const studentHash = await hashPassword(devStudentPass);
+      await User.findOneAndUpdate(
+        { email: devStudentEmail.toLowerCase() },
+        {
+          $set: {
+            name: 'Sujal Sahu',
+            email: devStudentEmail.toLowerCase(),
+            rollNumber: 'DX-2026-001',
+            passwordHash: studentHash,
+            accessibilityPreference: 'Screen Reader',
+            emailVerified: true,
+            isGoogleAuthenticated: true,
+            role: 'STUDENT',
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      ).exec();
+      console.log(`  [dristix-auth] Developer candidate account verified in MongoDB: ${devStudentEmail}`);
+
+      // Ensure full exam catalog (both timed mock tests and practice drills) is seeded in MongoDB
+      try {
+        const { Exam } = await import('./models/index.js');
+        const { CATALOG_SEED } = await import('./catalogSeed.js');
+        const examCount = await Exam.countDocuments().exec();
+        if (examCount < CATALOG_SEED.length) {
+          for (const examData of CATALOG_SEED) {
+            await Exam.findOneAndUpdate(
+              { code: examData.code },
+              { $set: { ...examData, published: true } },
+              { upsert: true, new: true, setDefaultsOnInsert: true }
+            ).exec();
+          }
+          console.log(`  [dristix-catalog] Verified and synchronized ${CATALOG_SEED.length} mock tests and practice drills in MongoDB.`);
+        }
+      } catch (seedErr) {
+        console.warn('[dristix-catalog] Auto-seed check warning:', seedErr);
       }
     } catch (syncErr) {
       console.warn('[dristix-auth] Could not check accounts on startup:', syncErr);

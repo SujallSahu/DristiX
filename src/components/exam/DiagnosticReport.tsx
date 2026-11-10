@@ -32,6 +32,8 @@ export const DiagnosticReport: React.FC = () => {
     returnToCatalog,
     feedback,
     openFeedbackModal,
+    availableExams,
+    availablePracticeDrills,
   } = useExamStore();
   const [filterType, setFilterType] = useState<'all' | 'correct' | 'incorrect' | 'marked'>('all');
   const [expandedQuestions, setExpandedQuestions] = useState<Record<string, boolean>>({});
@@ -154,14 +156,50 @@ export const DiagnosticReport: React.FC = () => {
               <span className="hidden sm:inline">Print / Save</span>
             </button>
 
-            <button
-              type="button"
-              onClick={resetExam}
-              className="px-4 py-2 font-bold rounded-lg border-2 border-theme-border bg-theme-primary text-theme-primary-text hover:brightness-110 flex items-center gap-1.5 transition text-sm"
-            >
-              <RotateCcw className="w-4 h-4" aria-hidden="true" />
-              <span>Retake Examination</span>
-            </button>
+            {(() => {
+              const isExamAvailable = [...availableExams, ...availablePracticeDrills].some(
+                (e) => (e.id === currentExam.id || e.code === currentExam.code) && (e as any).published !== false
+              );
+              return (
+                <button
+                  type="button"
+                  disabled={!isExamAvailable}
+                  onClick={() => {
+                    if (!isExamAvailable) {
+                      soundEffects.playTimerAlert();
+                      useAnnouncerStore
+                        .getState()
+                        .announce(
+                          'This examination has been removed by the administrator and cannot be retaken. Returning to examination catalog.',
+                          'assertive',
+                          true
+                        );
+                      returnToCatalog();
+                      return;
+                    }
+                    resetExam();
+                  }}
+                  className={`px-4 py-2 font-bold rounded-lg border-2 flex items-center gap-1.5 transition text-sm ${
+                    isExamAvailable
+                      ? 'border-theme-border bg-theme-primary text-theme-primary-text hover:brightness-110 cursor-pointer'
+                      : 'border-theme-border/60 bg-theme-surface/50 text-theme-text/40 cursor-not-allowed opacity-60'
+                  }`}
+                  title={
+                    isExamAvailable
+                      ? 'Retake Examination'
+                      : 'This examination was removed by the administrator and cannot be retaken'
+                  }
+                  aria-label={
+                    isExamAvailable
+                      ? 'Retake Examination'
+                      : 'This examination was removed by the administrator and cannot be retaken'
+                  }
+                >
+                  <RotateCcw className="w-4 h-4" aria-hidden="true" />
+                  <span>{isExamAvailable ? 'Retake Examination' : 'Test Removed'}</span>
+                </button>
+              );
+            })()}
           </div>
         </div>
 

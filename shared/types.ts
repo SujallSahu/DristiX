@@ -280,6 +280,7 @@ export interface AttemptSummary {
   correctCount: number | null;
   incorrectCount: number | null;
   unattemptedCount: number | null;
+  timeTakenSeconds?: number | null;
   /** Present only on the admin roster endpoint. */
   student?: { id?: string; name: string; rollNumber: string; email: string };
   studentId?: string;

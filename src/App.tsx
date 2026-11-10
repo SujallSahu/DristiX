@@ -19,6 +19,7 @@ import { A11ySettingsModal } from './components/a11y/A11ySettingsModal';
 import { ShortcutsHelpModal } from './components/a11y/ShortcutsHelpModal';
 import { SubmitConfirmModal } from './components/exam/SubmitConfirmModal';
 import { ExamFeedbackModal } from './components/exam/ExamFeedbackModal';
+import { TestUnavailableModal } from './components/common/TestUnavailableModal';
 import { A11yInspector } from './components/a11y/A11yInspector';
 import { StudentAuthScreen } from './components/auth/StudentAuthScreen';
 import { ForgotPasswordModal } from './components/auth/ForgotPasswordModal';
@@ -633,6 +634,7 @@ export const App: React.FC = () => {
       <ShortcutsHelpModal />
       {activeView === 'exam' && <SubmitConfirmModal />}
       <ExamFeedbackModal />
+      <TestUnavailableModal />
 
       {/* Live WCAG 2.1 AA Audit Inspector */}
       <A11yInspector />

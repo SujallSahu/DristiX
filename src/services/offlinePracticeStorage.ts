@@ -212,6 +212,18 @@ export const offlinePracticeStorage = {
   },
 
   /**
+   * Clear all queued offline test submissions
+   */
+  async clearAllOfflineSubmissions(): Promise<void> {
+    try {
+      const db = await openDB();
+      const tx = db.transaction(STORE_SUBMISSIONS, 'readwrite');
+      const store = tx.objectStore(STORE_SUBMISSIONS);
+      store.clear();
+    } catch {}
+  },
+
+  /**
    * Queue offline feedback submission
    */
   async saveOfflineFeedback(feedback: Record<string, unknown>): Promise<void> {

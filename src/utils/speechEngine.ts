@@ -1,4 +1,4 @@
-﻿import { verbalizeForSpeech } from './mathVerbalizer';
+import { verbalizeForSpeech } from './mathVerbalizer';
 
 /**
  * Built-in Web Speech API Controller for visually impaired candidates
@@ -148,15 +148,23 @@ class SpeechEngine {
   }
 
   private notifySpeechEnd() {
-    if (!this.internalSpeaking && !this.activeUtterance) return;
     this.internalSpeaking = false;
     this.activeUtterance = null;
+    if (typeof window !== 'undefined') {
+      (window as any)._dristixActiveUtterance = null;
+    }
     this.lastSpeechEndTime = Date.now();
     if (this.watchdogTimer) {
       clearTimeout(this.watchdogTimer);
       this.watchdogTimer = null;
     }
-    this.speechEndListeners.forEach((cb) => cb());
+    this.speechEndListeners.forEach((cb) => {
+      try {
+        cb();
+      } catch (err) {
+        console.warn('Speech end listener error:', err);
+      }
+    });
   }
 
   private loadVoices() {
@@ -396,9 +404,7 @@ class SpeechEngine {
   }
 
   public stop(notify = true) {
-    // Abandon any speak() still waiting out its start delay. `synth.cancel()`
-    // below cannot reach a timeout that is already scheduled, so without this
-    // the cancelled utterance plays anyway.
+    // Abandon any speak() still waiting out its start delay.
     this.speakGeneration++;
     if (this.pendingSpeakTimer) {
       clearTimeout(this.pendingSpeakTimer);
@@ -409,14 +415,24 @@ class SpeechEngine {
       this.watchdogTimer = null;
     }
     this.activeUtterance = null;
-    if (this.synth) {
+    if (typeof window !== 'undefined') {
+      (window as any)._dristixActiveUtterance = null;
+    }
+
+    // Chrome Web Speech API cancel guard: if paused, resume before cancel to avoid freeze
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
-        this.synth.cancel();
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+        window.speechSynthesis.cancel();
       } catch {}
     }
+
+    this.internalSpeaking = false;
+    this.lastSpeechEndTime = Date.now();
+
     if (notify) {
-      // Recorded before notifying: listeners read it from inside the callback
-      // to tell "finished speaking" apart from "was stopped".
       this.interruptedAt = Date.now();
       this.notifySpeechEnd();
     }
@@ -435,7 +451,7 @@ class SpeechEngine {
   }
 
   public isSpeaking(): boolean {
-    return this.internalSpeaking;
+    return this.internalSpeaking || Boolean(this.activeUtterance);
   }
 
   /**

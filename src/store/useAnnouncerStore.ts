@@ -48,6 +48,7 @@ export const useAnnouncerStore = create<AnnouncerState>((set) => ({
   clear: () => set({ politeMessage: '', assertiveMessage: '' }),
 
   stopSpeech: () => {
+    set({ politeMessage: '', assertiveMessage: '' });
     speechEngine.stop();
   },
 }));

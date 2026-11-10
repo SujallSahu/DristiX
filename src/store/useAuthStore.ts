@@ -184,6 +184,7 @@ function toSubmission(
     correctCount: a.correctCount ?? 0,
     incorrectCount: a.incorrectCount ?? 0,
     unattemptedCount: a.unattemptedCount ?? 0,
+    timeTakenSeconds: a.timeTakenSeconds ?? null,
     submittedAt: submittedTime,
   };
 }
@@ -214,6 +215,7 @@ export interface ExamSubmission {
   correctCount: number;
   incorrectCount: number;
   unattemptedCount: number;
+  timeTakenSeconds?: number | null;
   submittedAt: number;
 }
 
@@ -223,6 +225,7 @@ interface AuthState {
   students: StudentProfile[];
   submissions: ExamSubmission[];
   isAdminAuthenticated: boolean;
+  isSubmissionsLoading: boolean;
 
   /**
    * Applies the session resolved during bootstrap. The server is the only
@@ -326,13 +329,54 @@ interface AuthState {
  * rendering on initial mount and prevent blank dashboards/rosters during network latency.
  */
 const SUBMISSIONS_CACHE = 'dristix_submissions_cache';
+const ADMIN_SUBMISSIONS_CACHE = 'dristix_admin_submissions_cache';
 const STUDENTS_CACHE = 'dristix_students_cache';
 const ADMIN_DELETED_SUBMISSIONS_KEY = 'dristix_admin_deleted_submissions';
+
+export function areSubmissionsEqual(a: ExamSubmission[], b: ExamSubmission[]): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const subA = a[i];
+    const subB = b[i];
+    if (
+      subA.id !== subB.id ||
+      subA.score !== subB.score ||
+      subA.percentage !== subB.percentage ||
+      subA.submittedAt !== subB.submittedAt ||
+      subA.studentRoll !== subB.studentRoll ||
+      subA.studentName !== subB.studentName ||
+      subA.examCode !== subB.examCode
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function areStudentsEqual(a: StudentProfile[], b: StudentProfile[]): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (
+      a[i].id !== b[i].id ||
+      a[i].name !== b[i].name ||
+      a[i].rollNumber !== b[i].rollNumber ||
+      a[i].email !== b[i].email
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+let inFlightSyncSubmissions: Promise<void> | null = null;
+let inFlightFetchStudents: Promise<void> | null = null;
 
 // Cross-tab storage synchronization listener
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (event) => {
-    if (event.key === SUBMISSIONS_CACHE && event.newValue) {
+    if ((event.key === SUBMISSIONS_CACHE || event.key === ADMIN_SUBMISSIONS_CACHE) && event.newValue) {
       try {
         const parsed = JSON.parse(event.newValue);
         if (Array.isArray(parsed)) {
@@ -356,7 +400,11 @@ if (typeof window !== 'undefined') {
 function getInitialSubmissions(): ExamSubmission[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = localStorage.getItem(SUBMISSIONS_CACHE);
+    const isAdmin =
+      sessionStorage.getItem('dristix_admin_auth') === 'true' ||
+      localStorage.getItem('dristix_admin_auth') === 'true';
+    const cacheKey = isAdmin ? ADMIN_SUBMISSIONS_CACHE : SUBMISSIONS_CACHE;
+    const raw = localStorage.getItem(cacheKey) || (isAdmin ? localStorage.getItem(SUBMISSIONS_CACHE) : null);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
@@ -381,11 +429,22 @@ function getInitialStudents(): StudentProfile[] {
   return [];
 }
 
-// Purge legacy tombstone storage keys that could inadvertently mask valid backend submissions
-if (typeof window !== 'undefined') {
+const ADMIN_CLEARED_ALL_KEY = 'dristix_admin_cleared_all';
+
+export function getAdminClearedAllTimestamp(): number | null {
+  if (typeof window === 'undefined') return null;
   try {
-    localStorage.removeItem('dristix_deleted_submissions');
-    localStorage.removeItem('dristix_admin_deleted_submissions');
+    const raw = localStorage.getItem(ADMIN_CLEARED_ALL_KEY);
+    return raw ? Number(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setAdminClearedAllTimestamp(timestamp: number): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(ADMIN_CLEARED_ALL_KEY, String(timestamp));
   } catch { }
 }
 
@@ -497,6 +556,10 @@ export function deduplicateSubmissions(subs: ExamSubmission[]): ExamSubmission[]
 
     // Check if this test attempt was already accounted for
     const isDuplicate = seenAttempts.some((seen) => {
+      // Distinct server attempts with unique database IDs are separate attempts
+      if (isRealServer && seen.isRealServerId && s.id !== seen.id) {
+        return false;
+      }
       const matchStudent = !studentKey || !seen.studentKey || studentKey === seen.studentKey;
       const matchExam = seen.examId === s.examId || (s.examCode && seen.id === s.examCode);
       const matchTime = Math.abs(seen.submittedAt - s.submittedAt) < 180000; // 3 minutes window
@@ -555,11 +618,14 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
       : null;
 
+  const initialSubs = getInitialSubmissions();
+
   return {
     currentStudent: initialStudent,
     students: getInitialStudents(),
-    submissions: getInitialSubmissions(),
+    submissions: initialSubs,
     isAdminAuthenticated: initialAdminAuth,
+    isSubmissionsLoading: initialSubs.length === 0,
 
     /**
      * Applies a session resolved by the bootstrap flow, or clears it on sign
@@ -570,12 +636,18 @@ export const useAuthStore = create<AuthState>((set, get) => {
     loginStudent: async (identifier: string, pass: string) => {
       try {
         const { user } = await getDataSource().auth.login(identifier, pass);
-        set({ currentStudent: user, isAdminAuthenticated: false });
+        // Clear old submission cache to prevent cross-student leakage
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(SUBMISSIONS_CACHE);
+        }
+        set({ currentStudent: user, isAdminAuthenticated: false, submissions: [] });
         sessionStorage.removeItem('dristix_admin_auth');
         if (typeof window !== 'undefined') {
           localStorage.removeItem('dristix_admin_auth');
         }
         authBroadcastChannel?.postMessage('LOGIN');
+        // Synchronize fresh authoritative test attempts for this candidate from the backend
+        void get().syncSubmissions();
         soundEffects.playSuccess();
         useAnnouncerStore
           .getState()
@@ -680,6 +752,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     sessionStorage.removeItem('dristix_admin_auth');
     if (typeof window !== 'undefined') {
       localStorage.removeItem('dristix_admin_auth');
+      localStorage.removeItem(SUBMISSIONS_CACHE);
     }
     set({ currentStudent: null, submissions: [], students: [] });
     authBroadcastChannel?.postMessage('LOGOUT');
@@ -690,11 +763,20 @@ export const useAuthStore = create<AuthState>((set, get) => {
   loginAdmin: async (username: string, pass: string) => {
     try {
       await getDataSource().auth.adminLogin(username, pass);
-      set({ isAdminAuthenticated: true, currentStudent: null });
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('dristix_admin_tab');
+      }
       sessionStorage.setItem('dristix_admin_auth', 'true');
       if (typeof window !== 'undefined') {
         localStorage.setItem('dristix_admin_auth', 'true');
       }
+      const adminSubs = getInitialSubmissions();
+      set({
+        isAdminAuthenticated: true,
+        currentStudent: null,
+        submissions: adminSubs,
+        isSubmissionsLoading: adminSubs.length === 0,
+      });
       // Authoritative sync: immediately fetch full cohort submissions and roster for Admin Studio
       void get().syncSubmissions();
       void get().fetchStudents();
@@ -720,23 +802,35 @@ export const useAuthStore = create<AuthState>((set, get) => {
     sessionStorage.removeItem('dristix_admin_auth');
     if (typeof window !== 'undefined') {
       localStorage.removeItem('dristix_admin_auth');
+      sessionStorage.removeItem('dristix_admin_tab');
     }
     try {
       void getDataSource().auth.logout();
     } catch { }
-    set({ isAdminAuthenticated: false, submissions: [] });
+    set({ isAdminAuthenticated: false, submissions: [], isSubmissionsLoading: false });
     soundEffects.playNavigate();
     useAnnouncerStore.getState().announce('Logged out of Admin Studio.', 'polite', true);
   },
 
   fetchStudents: async () => {
-    try {
-      const students = await getDataSource().auth.listStudents();
-      set({ students });
-      saveStored(STUDENTS_CACHE, students);
-    } catch (err) {
-      console.error('[dristix] fetchStudents error', err);
+    if (inFlightFetchStudents) {
+      return inFlightFetchStudents;
     }
+    inFlightFetchStudents = (async () => {
+      try {
+        const students = await getDataSource().auth.listStudents();
+        saveStored(STUDENTS_CACHE, students);
+        const current = get().students;
+        if (!areStudentsEqual(current, students)) {
+          set({ students });
+        }
+      } catch (err) {
+        console.error('[dristix] fetchStudents error', err);
+      } finally {
+        inFlightFetchStudents = null;
+      }
+    })();
+    return inFlightFetchStudents;
   },
 
   deleteStudent: async (studentId: string) => {
@@ -806,78 +900,133 @@ export const useAuthStore = create<AuthState>((set, get) => {
   },
 
   syncSubmissions: async () => {
-    // Single data source: always refresh from the backend.
-    try {
-      const source = getDataSource();
-      const isAdmin = get().isAdminAuthenticated;
-      // Admins see the whole cohort; a student only their own attempts.
-      const rows = isAdmin
-        ? (await source.exams.listAllSubmissions()).map((a) => toSubmission(a, a.student))
-        : (await source.exams.listAttempts()).map((a) => {
-          const me = get().currentStudent;
-          return toSubmission(a, me ? { id: me.id, name: me.name, rollNumber: me.rollNumber } : undefined);
+    if (inFlightSyncSubmissions) {
+      return inFlightSyncSubmissions;
+    }
+
+    inFlightSyncSubmissions = (async () => {
+      // Single data source: always refresh from the backend.
+      try {
+        const source = getDataSource();
+        const isAdmin = get().isAdminAuthenticated;
+        // Admins see the whole cohort; a student only their own attempts.
+        const rows = isAdmin
+          ? (await source.exams.listAllSubmissions()).map((a) => toSubmission(a, a.student))
+          : (await source.exams.listAttempts()).map((a) => {
+            const me = get().currentStudent;
+            return toSubmission(a, me ? { id: me.id, name: me.name, rollNumber: me.rollNumber } : undefined);
+          });
+
+        // For admin portal: filter out any explicitly deleted IDs or cleared cohort
+        const adminDeletedIds = getAdminDeletedSubmissionIds();
+        const adminClearedAt = getAdminClearedAllTimestamp();
+        const me = get().currentStudent;
+        const studentKey = (me?.rollNumber || me?.id || '').trim().toLowerCase();
+        const studentClearedAt = getStudentClearedTimestamp(studentKey);
+        const studentDismissedIds = getStudentDismissedIds(studentKey);
+
+        const validRows = isAdmin
+          ? rows.filter((r) => {
+              if (adminDeletedIds.has(r.id)) return false;
+              if (adminClearedAt && r.submittedAt <= adminClearedAt) return false;
+              return true;
+            })
+          : rows.filter((r) => {
+              if (r.submittedAt <= 0 || !matchesStudent(r, me)) return false;
+              if (studentClearedAt && r.submittedAt <= studentClearedAt) return false;
+              if (studentDismissedIds.has(r.id)) return false;
+              return true;
+            });
+
+        // Load any offline practice drills so practice arena attempts are never lost
+        let offlineDrills: ExamSubmission[] = [];
+        try {
+          const offlineRecords = await offlinePracticeStorage.getOfflineSubmissions();
+          if (offlineRecords && offlineRecords.length > 0) {
+            offlineDrills = offlineRecords
+              .filter((o: any) => {
+                if (!isAdmin && !matchesStudent(o, me)) return false;
+                const subTime = Number(o.recordedAt || o.submittedAt || 0);
+                if (isAdmin) {
+                  if (adminDeletedIds.has(String(o.id))) return false;
+                  if (adminClearedAt && subTime <= adminClearedAt) return false;
+                } else {
+                  if (studentClearedAt && subTime <= studentClearedAt) return false;
+                  if (studentDismissedIds.has(String(o.id))) return false;
+                }
+                return true;
+              })
+              .map((o: any) => ({
+                id: String(
+                  o.id
+                    ? String(o.id).startsWith('sub-')
+                      ? o.id
+                      : `sub-offline-${o.id}`
+                    : o.attemptId || `sub-offline-${Date.now()}`
+                ),
+                examId: o.examId || '',
+                examTitle: o.examTitle || 'Practice Drill',
+                examCode: o.examCode || 'PRACTICE',
+                examType: 'practice' as const,
+                studentId: o.studentId || (me?.id ?? 'std-guest'),
+                studentName: o.studentName || (me?.name ?? 'Candidate'),
+                studentRoll: o.studentRoll || (me?.rollNumber ?? 'DX-GUEST'),
+                score: typeof o.score === 'number' ? Number(o.score.toFixed(2)) : 0,
+                maxScore: typeof o.maxScore === 'number' ? o.maxScore : 0,
+                percentage: typeof o.percentage === 'number' ? Math.round(o.percentage) : 0,
+                correctCount: o.correctCount ?? 0,
+                incorrectCount: o.incorrectCount ?? 0,
+                unattemptedCount: o.unattemptedCount ?? 0,
+                submittedAt: Number(o.recordedAt || o.submittedAt || Date.now()),
+              }));
+          }
+        } catch { }
+
+        // Preserve any recent local-only / in-progress submissions
+        // only if they have not already been persisted to the server.
+        const currentSubs = get().submissions;
+        const serverIds = new Set(validRows.map((r) => r.id));
+        const localOnly = currentSubs.filter((s) => {
+          if (!isAdmin && !matchesStudent(s, me)) return false;
+          if (serverIds.has(s.id)) return false;
+          if (isAdmin) {
+            if (adminDeletedIds.has(s.id)) return false;
+            if (adminClearedAt && s.submittedAt <= adminClearedAt) return false;
+          } else {
+            if (studentClearedAt && s.submittedAt <= studentClearedAt) return false;
+            if (studentDismissedIds.has(s.id)) return false;
+          }
+          // Discard provisional if a matching server attempt exists
+          const matchedOnServer = validRows.some(
+            (vr) =>
+              (vr.examId === s.examId || (s.examCode && vr.examCode === s.examCode)) &&
+              Math.abs(vr.submittedAt - s.submittedAt) < 300000
+          );
+          return !matchedOnServer;
         });
 
-      // For admin portal: filter out any explicitly deleted IDs
-      const adminDeletedIds = getAdminDeletedSubmissionIds();
-      const validRows = isAdmin
-        ? rows.filter((r) => !adminDeletedIds.has(r.id))
-        : rows.filter((r) => r.submittedAt > 0);
+        const mergedRows = deduplicateSubmissions([...validRows, ...localOnly, ...offlineDrills]);
 
-      // Load any offline practice drills so practice arena attempts are never lost
-      let offlineDrills: ExamSubmission[] = [];
-      try {
-        const offlineRecords = await offlinePracticeStorage.getOfflineSubmissions();
-        if (offlineRecords && offlineRecords.length > 0) {
-          offlineDrills = offlineRecords.map((o: any) => ({
-            id: String(
-              o.id
-                ? String(o.id).startsWith('sub-')
-                  ? o.id
-                  : `sub-offline-${o.id}`
-                : o.attemptId || `sub-offline-${Date.now()}`
-            ),
-            examId: o.examId || '',
-            examTitle: o.examTitle || 'Practice Drill',
-            examCode: o.examCode || 'PRACTICE',
-            examType: 'practice' as const,
-            studentId: o.studentId || (get().currentStudent?.id ?? 'std-guest'),
-            studentName: o.studentName || (get().currentStudent?.name ?? 'Candidate'),
-            studentRoll: o.studentRoll || (get().currentStudent?.rollNumber ?? 'DX-GUEST'),
-            score: typeof o.score === 'number' ? Number(o.score.toFixed(2)) : 0,
-            maxScore: typeof o.maxScore === 'number' ? o.maxScore : 0,
-            percentage: typeof o.percentage === 'number' ? Math.round(o.percentage) : 0,
-            correctCount: o.correctCount ?? 0,
-            incorrectCount: o.incorrectCount ?? 0,
-            unattemptedCount: o.unattemptedCount ?? 0,
-            submittedAt: Number(o.recordedAt || o.submittedAt || Date.now()),
-          }));
+        if (isAdmin) {
+          saveStored(ADMIN_SUBMISSIONS_CACHE, mergedRows);
+        } else {
+          saveStored(SUBMISSIONS_CACHE, mergedRows);
         }
-      } catch { }
 
-      // Preserve any recent local-only / in-progress submissions
-      // only if they have not already been persisted to the server.
-      const currentSubs = get().submissions;
-      const serverIds = new Set(validRows.map((r) => r.id));
-      const localOnly = currentSubs.filter((s) => {
-        if (serverIds.has(s.id)) return false;
-        // Discard provisional if a matching server attempt exists
-        const matchedOnServer = validRows.some(
-          (vr) =>
-            (vr.examId === s.examId || (s.examCode && vr.examCode === s.examCode)) &&
-            Math.abs(vr.submittedAt - s.submittedAt) < 300000
-        );
-        return !matchedOnServer;
-      });
+        const current = get().submissions;
+        if (!areSubmissionsEqual(current, mergedRows) || get().isSubmissionsLoading) {
+          set({ submissions: mergedRows, isSubmissionsLoading: false });
+        }
+      } catch (err) {
+        // Keep whatever we already have; a failed refresh is not worth a disruptive empty state.
+        console.warn('[dristix] syncSubmissions background sync failed:', err);
+        set({ isSubmissionsLoading: false });
+      } finally {
+        inFlightSyncSubmissions = null;
+      }
+    })();
 
-      const mergedRows = deduplicateSubmissions([...validRows, ...localOnly, ...offlineDrills]);
-
-      set({ submissions: mergedRows });
-      saveStored(SUBMISSIONS_CACHE, mergedRows);
-    } catch (err) {
-      // Keep whatever we already have; a failed refresh is not worth a disruptive empty state.
-      console.warn('[dristix] syncSubmissions background sync failed:', err);
-    }
+    return inFlightSyncSubmissions;
   },
 
   addSubmission: (sub) => {
@@ -904,6 +1053,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     const updated = deduplicateSubmissions([newSub, ...existing]);
     set({ submissions: updated });
     saveStored(SUBMISSIONS_CACHE, updated);
+    saveStored(ADMIN_SUBMISSIONS_CACHE, updated);
 
     // Notify cross-tab and active components in real time
     try {
@@ -927,6 +1077,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     const updated = get().submissions.filter((s) => s.id !== submissionId);
     set({ submissions: updated });
     saveStored(SUBMISSIONS_CACHE, updated);
+    saveStored(ADMIN_SUBMISSIONS_CACHE, updated);
 
     // Best effort backend deletion for admin
     try {
@@ -968,6 +1119,14 @@ export const useAuthStore = create<AuthState>((set, get) => {
     const now = Date.now();
     setStudentClearedTimestamp(key, now);
 
+    // Immediately remove this student's submissions from current state and cache
+    const remainingSubs = get().submissions.filter((s) => !matchesStudent(s, student));
+    set({ submissions: remainingSubs });
+    saveStored(SUBMISSIONS_CACHE, remainingSubs);
+
+    // Clear student's offline practice outbox
+    void offlinePracticeStorage.clearAllOfflineSubmissions();
+
     // Inform server to mark student attempts clearedByStudent: true
     void (getDataSource().exams as any).clearStudentAttempts?.();
 
@@ -993,6 +1152,11 @@ export const useAuthStore = create<AuthState>((set, get) => {
     const key = (student.rollNumber || student.id || '').trim().toLowerCase();
     addStudentDismissedId(key, submissionId);
 
+    // Immediately remove this submission from current state and cache
+    const remainingSubs = get().submissions.filter((s) => s.id !== submissionId);
+    set({ submissions: remainingSubs });
+    saveStored(SUBMISSIONS_CACHE, remainingSubs);
+
     // Inform server to mark attempt clearedByStudent: true
     void (getDataSource().exams as any).dismissStudentAttempt?.(submissionId);
 
@@ -1015,6 +1179,16 @@ export const useAuthStore = create<AuthState>((set, get) => {
   clearAllSubmissions: async () => {
     if (!get().isAdminAuthenticated) return false;
 
+    const currentSubs = get().submissions;
+    const now = Date.now();
+    setAdminClearedAllTimestamp(now);
+    if (currentSubs.length > 0) {
+      addAdminDeletedSubmissionIds(currentSubs.map((s) => s.id));
+    }
+
+    // Clear all offline submissions so they cannot revive
+    void offlinePracticeStorage.clearAllOfflineSubmissions();
+
     try {
       await (getDataSource().exams as any).clearAllSubmissions?.();
     } catch (err) {
@@ -1023,17 +1197,13 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
     set({ submissions: [] });
     saveStored(SUBMISSIONS_CACHE, []);
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(ADMIN_DELETED_SUBMISSIONS_KEY);
-      } catch { }
-    }
+    saveStored(ADMIN_SUBMISSIONS_CACHE, []);
 
     // Notify cross-tab and active components in real time
     try {
       authBroadcastChannel?.postMessage({
         type: 'SUBMISSION_CLEARED_ALL',
-        timestamp: Date.now(),
+        timestamp: now,
       });
     } catch {
       // BroadcastChannel unavailable
@@ -1041,7 +1211,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent('dristix:submission-cleared', { detail: { timestamp: Date.now() } })
+        new CustomEvent('dristix:submission-cleared', { detail: { timestamp: now } })
       );
     }
 

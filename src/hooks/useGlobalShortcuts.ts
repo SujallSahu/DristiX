@@ -137,7 +137,7 @@ export function useGlobalShortcuts() {
         return;
       }
 
-      if (e.key.toLowerCase() === 's' && !e.altKey && !e.ctrlKey && !e.metaKey && store.activeView !== 'exam') {
+      if (e.key.toLowerCase() === 's' && !e.altKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         useAnnouncerStore.getState().stopSpeech();
         return;
@@ -183,6 +183,87 @@ export function useGlobalShortcuts() {
           return;
         }
         return;
+      }
+
+      // Alt + S -> Submit Exam Session (only when in active unsubmitted exam)
+      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        if (store.activeView === 'exam' && !store.isSubmitted) {
+          store.setSubmitModalOpen(true);
+        }
+        return;
+      }
+
+      // Active Exam Shortcuts (when in active exam view and not submitted)
+      if (store.activeView === 'exam' && !store.isSubmitted) {
+        switch (e.key.toLowerCase()) {
+          case 'r':
+            // Read question, equation, and options aloud
+            e.preventDefault();
+            store.announceCurrentQuestion(true);
+            break;
+
+          case 'n':
+            e.preventDefault();
+            store.nextQuestion();
+            break;
+
+          case 'p':
+            e.preventDefault();
+            store.previousQuestion();
+            break;
+
+          case 'm':
+            e.preventDefault();
+            store.toggleMarkForReview();
+            break;
+
+          case '1':
+            e.preventDefault();
+            store.selectOption(1);
+            break;
+
+          case '2':
+            e.preventDefault();
+            store.selectOption(2);
+            break;
+
+          case '3':
+            e.preventDefault();
+            store.selectOption(3);
+            break;
+
+          case '4':
+            e.preventDefault();
+            store.selectOption(4);
+            break;
+
+          case 'c':
+            e.preventDefault();
+            store.clearOption();
+            break;
+
+          case 't': {
+            e.preventDefault();
+            const minutes = Math.floor(store.timeRemaining / 60);
+            const seconds = store.timeRemaining % 60;
+            const timeMsg = `Time remaining: ${minutes} minutes and ${seconds} seconds. Timer display: ${store.formattedTime}.`;
+            useAnnouncerStore.getState().announce(timeMsg, 'assertive', true);
+            window.dispatchEvent(new CustomEvent('dristix-announce-time'));
+            break;
+          }
+
+          case 'q':
+            e.preventDefault();
+            if (!store.isPaletteOpen) {
+              window.dispatchEvent(new CustomEvent('dristix-announce-palette'));
+            }
+            store.setPaletteOpen(!store.isPaletteOpen);
+            break;
+
+          default:
+            break;
+        }
       }
     };
 

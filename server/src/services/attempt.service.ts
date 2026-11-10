@@ -44,6 +44,11 @@ export function toAttemptSummary(
     correctCount: attempt.correctCount ?? null,
     incorrectCount: attempt.incorrectCount ?? null,
     unattemptedCount: attempt.unattemptedCount ?? null,
+    timeTakenSeconds:
+      (attempt as any).timeTakenSeconds ??
+      (attempt.submittedAt
+        ? Math.max(0, Math.round((new Date(attempt.submittedAt).getTime() - new Date(attempt.startedAt).getTime()) / 1000))
+        : null),
   };
 }
 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import mongoose from 'mongoose';
-import { Attempt, Exam, type AttemptDoc } from '../models/index.js';
+import { Attempt, Exam, DeletedExam, type AttemptDoc } from '../models/index.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import {
@@ -94,6 +94,22 @@ attemptRouter.post(
       )
     );
 
+    // Reject attempt immediately if the exam has been deleted by an administrator
+    const isDeleted = await DeletedExam.exists({
+      $or: [
+        { examId: { $in: searchKeys } },
+        { code: { $in: searchKeys.map((k) => k.toUpperCase()) } },
+      ],
+    }).exec();
+
+    if (isDeleted) {
+      throw new HttpError(
+        410,
+        'exam_deleted',
+        'This examination has been removed by the administrator and is no longer available to attempt or retake.'
+      );
+    }
+
     // Tier 1: Exact match by ObjectId (highest priority)
     let exam: (typeof Exam extends { new (...args: any[]): infer U } ? U : any) | null = null;
     for (const key of searchKeys) {
@@ -127,11 +143,14 @@ attemptRouter.post(
       }
     }
 
-    // Tier 4: Fallback substring match only if no exact match was found, newest first
-    if (!exam && cleanKey.length >= 3) {
+    // Tier 4: Fallback substring match only if no exact match was found, avoiding generic tokens
+    const genericTokens = new Set(['test', 'exam', 'practice', 'mock', 'set', 'quiz', 'series']);
+    if (!exam && cleanKey.length >= 3 && !genericTokens.has(cleanKey.toLowerCase())) {
       const escaped = cleanKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const modeFilter = body.mode ? { mode: body.mode } : {};
       exam = await Exam.findOne({
         published: true,
+        ...modeFilter,
         $or: [
           { code: new RegExp(escaped, 'i') },
           { title: new RegExp(escaped, 'i') },
@@ -139,6 +158,14 @@ attemptRouter.post(
       })
         .sort({ createdAt: -1 })
         .exec();
+    }
+
+    if (!exam) {
+      throw new HttpError(
+        404,
+        'exam_not_found',
+        'This examination is no longer available in the student portal or has been removed by the administrator.'
+      );
     }
     if (!exam) throw new HttpError(404, 'not_found', 'Exam not found.');
     if (!exam.questions || exam.questions.length === 0) {
@@ -331,6 +358,10 @@ attemptRouter.post(
     attempt.incorrectCount = result.incorrectCount;
     attempt.unattemptedCount = result.unattemptedCount;
     attempt.markedCount = result.markedCount;
+    (attempt as any).timeTakenSeconds = Math.max(
+      0,
+      Math.round((attempt.submittedAt.getTime() - new Date(attempt.startedAt).getTime()) / 1000)
+    );
     await attempt.save();
 
     res.json({ result });
@@ -342,8 +373,12 @@ attemptRouter.get(
   '/',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const attempts = await Attempt.find({ studentId: req.user!.id, clearedByStudent: { $ne: true } })
-      .sort({ createdAt: -1 })
+    const attempts = await Attempt.find({
+      studentId: req.user!.id,
+      clearedByStudent: { $ne: true },
+      status: { $in: ['submitted', 'expired'] },
+    })
+      .sort({ submittedAt: -1, createdAt: -1 })
       .limit(100)
       .lean()
       .exec();

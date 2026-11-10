@@ -39,7 +39,6 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
       if (typeof window !== 'undefined') {
         try {
           localStorage.removeItem('dristix_deleted_submissions');
-          localStorage.removeItem('dristix_admin_deleted_submissions');
         } catch {}
       }
 

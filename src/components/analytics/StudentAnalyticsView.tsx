@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   useAuthStore,
-  getStudentClearedTimestamp,
   getStudentDismissedIds,
+  getStudentClearedTimestamp,
   deduplicateSubmissions,
   matchesStudent,
 } from '../../store/useAuthStore';
@@ -40,9 +40,11 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
   // with cross-tab submissions, focus events, and live background polling.
   useEffect(() => {
     void syncSubmissions();
+    void useExamStore.getState().loadCatalog();
 
     const handleRefresh = () => {
       void syncSubmissions();
+      void useExamStore.getState().loadCatalog();
     };
 
     window.addEventListener('dristix:submission-updated', handleRefresh);
@@ -62,7 +64,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
       clearInterval(pollInterval);
     };
   }, [syncSubmissions]);
-  const { selectExam, availableExams, availablePracticeDrills } = useExamStore();
+  const { availableExams, availablePracticeDrills } = useExamStore();
   const { announce } = useAnnouncerStore();
 
   const [typeFilter, setTypeFilter] = useState<'all' | 'exam' | 'practice'>('all');
@@ -90,14 +92,14 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
     if (!currentStudent) return submissions;
 
     const studentKey = (currentStudent.rollNumber || currentStudent.id || '').trim().toLowerCase();
-    const clearedAt = getStudentClearedTimestamp(studentKey);
     const dismissedIds = getStudentDismissedIds(studentKey);
+    const clearedAt = getStudentClearedTimestamp(studentKey);
 
     const matching = submissions.filter((s) => {
       if (!matchesStudent(s, currentStudent)) return false;
 
-      // When student clears history, hide previous attempts from student view (retaining them in admin portal)
-      if (clearedAt && s.submittedAt <= clearedAt) {
+      // Hide attempts cleared by candidate from their personal history view
+      if (clearedAt && s.submittedAt && s.submittedAt <= clearedAt) {
         return false;
       }
 
@@ -184,14 +186,31 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
   };
 
   // Retake test directly
-  const handleRetakeTest = (sub: typeof studentSubmissions[0]) => {
-    const all = [...availableExams, ...availablePracticeDrills];
-    const target = all.find((e) => e.id === sub.examId || e.code === sub.examCode);
-    if (target) {
-      void selectExam(target.id, sub.examType);
-    } else {
-      announce(`Exam ${sub.examTitle} is currently not active in the catalog.`, 'polite', true);
+  const handleRetakeTest = async (sub: typeof studentSubmissions[0]) => {
+    // 1. Refresh live catalog to guarantee 100% current admin deletion state
+    await useExamStore.getState().loadCatalog();
+    const { availableExams: currentExams, availablePracticeDrills: currentDrills, setUnavailableModal, selectExam: startExam } = useExamStore.getState();
+
+    const all = [...currentExams, ...currentDrills];
+    const target = all.find(
+      (e) =>
+        (e.id === sub.examId || (e.code && sub.examCode && e.code.toUpperCase() === sub.examCode.toUpperCase())) &&
+        (e as any).published !== false
+    );
+
+    if (!target) {
+      soundEffects.playTimerAlert();
+      setUnavailableModal({
+        isOpen: true,
+        testTitle: sub.examTitle,
+        testCode: sub.examCode,
+        testType: sub.examType,
+        reason: 'deleted_by_admin',
+      });
+      return;
     }
+
+    void startExam(target.id, sub.examType);
   };
 
   // Keyboard navigation for the table rows
@@ -638,16 +657,37 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                             <span>Speak</span>
                           </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handleRetakeTest(sub)}
-                            className="px-3 py-1.5 rounded-lg border border-theme-primary bg-theme-primary text-theme-primary-text text-xs font-bold flex items-center gap-1.5 hover:bg-theme-primary/90 focus:outline-none focus:ring-4 focus:ring-yellow-400 transition shadow-xs"
-                            title="Retake this test"
-                            aria-label={`Retake test ${sub.examTitle}`}
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-                            <span>Retake</span>
-                          </button>
+                          {(() => {
+                            const isAvailable = [...availableExams, ...availablePracticeDrills].some(
+                              (e) =>
+                                (e.id === sub.examId || (e.code && sub.examCode && e.code.toUpperCase() === sub.examCode.toUpperCase())) &&
+                                (e as any).published !== false
+                            );
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => void handleRetakeTest(sub)}
+                                className={`px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 focus:outline-none focus:ring-4 transition shadow-xs cursor-pointer ${
+                                  isAvailable
+                                    ? 'border-theme-primary bg-theme-primary text-theme-primary-text hover:bg-theme-primary/90 focus:ring-yellow-400'
+                                    : 'border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 focus:ring-amber-400'
+                                }`}
+                                title={
+                                  isAvailable
+                                    ? 'Retake this test'
+                                    : 'Test unavailable or removed by admin — click to view notice'
+                                }
+                                aria-label={
+                                  isAvailable
+                                    ? `Retake test ${sub.examTitle}`
+                                    : `Test ${sub.examTitle} is unavailable in student portal — click to view notice`
+                                }
+                              >
+                                <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                                <span>{isAvailable ? 'Retake' : 'Unavailable'}</span>
+                              </button>
+                            );
+                          })()}
 
                           <button
                             type="button"

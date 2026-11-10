@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { Attempt, Exam, User, Notification } from '../models/index.js';
+import { Attempt, Exam, User, Notification, DeletedExam } from '../models/index.js';
 import { asyncHandler, HttpError } from '../middleware/errorHandler.js';
 import { requireAdmin, requireAuth } from '../middleware/requireAuth.js';
 import { toAttemptSummary, toExamSummary } from '../services/attempt.service.js';
@@ -328,6 +328,19 @@ adminRouter.delete(
     const exam = await Exam.findByIdAndDelete(id).exec();
     if (!exam) throw new HttpError(404, 'not_found', 'Exam not found.');
 
+    await DeletedExam.findOneAndUpdate(
+      { $or: [{ examId: String(exam._id) }, { code: exam.code }] },
+      {
+        $set: {
+          examId: String(exam._id),
+          code: exam.code,
+          title: exam.title,
+          deletedAt: new Date(),
+        },
+      },
+      { upsert: true }
+    ).exec();
+
     const removed = await Attempt.deleteMany({ examId: exam._id }).exec();
     res.json({ ok: true, attemptsRemoved: removed.deletedCount });
   })
@@ -382,10 +395,14 @@ adminRouter.get(
     const filter: Record<string, any> = {
       clearedByAdmin: { $ne: true },
     };
-    if (status) filter.status = status;
+    if (status) {
+      filter.status = status;
+    } else {
+      filter.status = { $in: ['submitted', 'expired'] };
+    }
 
     const attempts = await Attempt.find(filter)
-      .sort({ updatedAt: -1 })
+      .sort({ submittedAt: -1, createdAt: -1 })
       .limit(500)
       .lean()
       .exec();
