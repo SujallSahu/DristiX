@@ -189,7 +189,6 @@ export const App: React.FC = () => {
     window.addEventListener('dristix:submission-updated', handleSubmissionsRefresh);
     window.addEventListener('dristix:submission-deleted', handleSubmissionsRefresh);
     window.addEventListener('dristix:submission-cleared', handleSubmissionsRefresh);
-    window.addEventListener('focus', handleCatalogRefresh);
 
     return () => {
       window.removeEventListener('dristix:catalog-updated', handleCatalogRefresh);
@@ -197,7 +196,6 @@ export const App: React.FC = () => {
       window.removeEventListener('dristix:submission-updated', handleSubmissionsRefresh);
       window.removeEventListener('dristix:submission-deleted', handleSubmissionsRefresh);
       window.removeEventListener('dristix:submission-cleared', handleSubmissionsRefresh);
-      window.removeEventListener('focus', handleCatalogRefresh);
     };
   }, []);
 
@@ -384,11 +382,19 @@ export const App: React.FC = () => {
   // An admin publishing an exam is a rare, out-of-band event, so polling would
   // be wasteful. Re-reading the catalog when the tab regains focus costs one
   // request and means a student who switches away and back sees new tests.
+  const lastCatalogFocusRefreshRef = useRef<number>(0);
   useEffect(() => {
     if (activeView !== 'catalog' || !currentStudent) return;
 
     const onFocus = () => {
+      // Do not trigger background network re-fetch if user was interacting with accessibility settings
+      const store = useExamStore.getState();
+      if (store.isSettingsOpen || store.isShortcutsOpen) return;
+
+      const now = Date.now();
+      if (now - lastCatalogFocusRefreshRef.current < 20000) return; // Throttle to at most once per 20s
       if (document.visibilityState === 'visible' && useAuthStore.getState().currentStudent) {
+        lastCatalogFocusRefreshRef.current = now;
         void useExamStore.getState().loadCatalog();
       }
     };

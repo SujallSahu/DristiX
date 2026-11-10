@@ -95,8 +95,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
             {/* Live badge */}
             <div className="dx-label-pill mb-4 sm:mb-6 dx-rise w-fit">
               <span className="relative flex h-2 w-2 shrink-0">
-                <span className="dx-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="dx-pulse-ring absolute inline-flex h-full w-full rounded-full bg-theme-primary opacity-80" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-theme-primary" />
               </span>
               100% Accessible · WCAG 2.1 AA
             </div>
@@ -195,8 +195,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
                 }}>
                 <div className="flex items-center gap-2.5">
                   <span className="relative flex h-2.5 w-2.5">
-                    <span className="dx-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                    <span className="dx-pulse-ring absolute inline-flex h-full w-full rounded-full bg-theme-primary opacity-75" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-theme-primary" />
                   </span>
                   <span className="text-xs font-black uppercase tracking-widest text-theme-text-secondary">SSC-CGL · Mock 01</span>
                 </div>

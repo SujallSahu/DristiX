@@ -1255,7 +1255,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#f4f7f6] dark:bg-[#071d22] text-theme-text flex flex-col lg:flex-row transition-colors duration-200">
+    <div className="h-screen overflow-hidden bg-theme-bg text-theme-text flex flex-col lg:flex-row transition-colors duration-200">
       {/* Mobile Top App Bar */}
       <header className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#031d22] text-white border-b border-[#0d3b45] shadow-md">
         <div className="flex items-center gap-3">
@@ -1593,7 +1593,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
       {/* Main Content Area on Right */}
       <main className="flex-1 min-w-0 flex flex-col h-screen overflow-y-auto">
         {/* Top Header Bar */}
-        <header className="sticky top-0 z-20 shrink-0 bg-white/90 dark:bg-[#051c22]/95 backdrop-blur-md border-b border-theme-border px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+        <header className="sticky top-0 z-20 shrink-0 bg-theme-surface/90 backdrop-blur-md border-b border-theme-border px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xs">
           {/* Global Search Bar & Command Palette Launcher */}
           <div className="relative flex-1 min-w-[220px] max-w-lg">
             <Search className="w-4 h-4 text-theme-text/40 absolute left-3.5 top-3" aria-hidden="true" />
@@ -1671,23 +1671,49 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               </button>
             </div>
 
-            {/* Dark / Light Theme Toggle */}
+            {/* Quick Multi-Theme Switcher (All 4 Themes) */}
             <button
               type="button"
               onClick={() => {
-                const next = theme === 'dark' ? 'teal-cream' : theme === 'teal-cream' ? 'liquid-glass' : 'dark';
+                const themes: ThemeMode[] = ['teal-cream', 'liquid-glass', 'dark', 'high-contrast'];
+                const idx = themes.indexOf(theme);
+                const next = themes[(idx + 1) % themes.length];
                 setTheme(next);
                 soundEffects.playSelect();
+                const label =
+                  next === 'teal-cream'
+                    ? 'Teal & Cream'
+                    : next === 'liquid-glass'
+                    ? 'Liquid Glass'
+                    : next === 'dark'
+                    ? 'Charcoal Dark'
+                    : 'High Contrast';
+                useAnnouncerStore
+                  .getState()
+                  .announce(`Theme changed to ${label}.`, 'assertive', true);
               }}
               className="px-3 py-1.5 rounded-xl border border-theme-border bg-theme-surface hover:bg-theme-border/30 text-xs sm:text-sm font-bold flex items-center gap-1.5 text-theme-text transition"
-              title="Toggle theme mode"
+              title={`Current theme: ${theme}. Click to switch theme.`}
+              aria-label={`Current theme: ${theme}. Click to switch theme.`}
             >
               {theme === 'dark' ? (
-                <Moon className="w-4 h-4 text-amber-400" />
+                <Moon className="w-4 h-4 text-emerald-400" />
+              ) : theme === 'high-contrast' ? (
+                <Sun className="w-4 h-4 text-[#FFEE00]" />
+              ) : theme === 'liquid-glass' ? (
+                <Sparkles className="w-4 h-4 text-purple-500" />
               ) : (
                 <Sun className="w-4 h-4 text-amber-500" />
               )}
-              <span className="capitalize">{theme === 'dark' ? 'Dark' : 'Light'}</span>
+              <span className="capitalize">
+                {theme === 'teal-cream'
+                  ? 'Teal'
+                  : theme === 'liquid-glass'
+                  ? 'Glass'
+                  : theme === 'dark'
+                  ? 'Dark'
+                  : 'Contrast'}
+              </span>
             </button>
 
 
@@ -1761,11 +1787,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     </div>
 
                     {/* Right Quote Badge */}
-                    <div className="relative z-10 px-5 py-3.5 rounded-2xl bg-white/85 dark:bg-[#031d22]/90 backdrop-blur-md border border-[#006d5c]/30 shadow-sm text-right shrink-0">
-                      <span className="block text-sm sm:text-base font-black text-[#005a4c] dark:text-teal-300">
+                    <div className="relative z-10 px-5 py-3.5 rounded-2xl bg-theme-surface/90 backdrop-blur-md border border-theme-border shadow-sm text-right shrink-0">
+                      <span className="block text-sm sm:text-base font-black text-theme-primary">
                         “Accessible Education
                       </span>
-                      <span className="block text-sm sm:text-base font-black text-[#005a4c] dark:text-teal-300">
+                      <span className="block text-sm sm:text-base font-black text-theme-primary">
                         Stronger Futures”
                       </span>
                       <span className="block text-[10px] text-theme-text/60 font-semibold mt-1">
@@ -2327,7 +2353,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               </div>
 
               {/* 5. Keyboard Shortcuts Bar */}
-              <div className="py-2.5 px-4 sm:px-5 rounded-2xl bg-white dark:bg-[#031d22] border border-theme-border flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-theme-text/80 shadow-xs">
+              <div className="py-2.5 px-4 sm:px-5 rounded-2xl bg-theme-surface border border-theme-border flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-theme-text/80 shadow-xs">
                 <div className="flex items-center gap-2 font-bold text-theme-text">
                   <Command className="w-4 h-4 text-[#005a4c] dark:text-teal-300" />
                   <span>Keyboard Shortcuts:</span>
@@ -4567,7 +4593,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 </div>
 
                 {/* 5. Sticky Bottom Publish Footer Bar */}
-                <div className="sticky bottom-4 z-20 p-4 sm:p-5 rounded-2xl bg-white/95 dark:bg-[#031d22]/95 backdrop-blur-md border border-theme-border shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="sticky bottom-4 z-20 p-4 sm:p-5 rounded-2xl bg-theme-surface/95 backdrop-blur-md border border-theme-border shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 flex items-center justify-center font-black">
                       <CheckCircle2 className="w-5 h-5" />
@@ -4713,7 +4739,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
             onClick={() => setIsCommandPaletteOpen(false)}
           >
             <div
-              className="w-full max-w-2xl rounded-2xl bg-white dark:bg-[#031d22] border border-theme-border shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-150"
+              className="w-full max-w-2xl rounded-2xl bg-theme-surface border border-theme-border shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-150"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Palette Search Header */}

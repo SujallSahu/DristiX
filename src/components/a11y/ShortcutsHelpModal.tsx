@@ -123,7 +123,7 @@ export const ShortcutsHelpModal: React.FC = () => {
       >
         <div className="p-4 sm:p-5 border-b-2 border-theme-border flex justify-between items-center bg-theme-bg">
           <div className="flex items-center gap-2">
-            <Keyboard className="w-6 h-6 text-yellow-400" aria-hidden="true" />
+            <Keyboard className="w-6 h-6 text-amber-500" aria-hidden="true" />
             <h2 id="shortcuts-title" className="text-xl font-bold tracking-tight">
               Keyboard Navigation Shortcuts
             </h2>
@@ -136,7 +136,7 @@ export const ShortcutsHelpModal: React.FC = () => {
               soundEffects.playSelect();
             }}
             aria-label="Close keyboard shortcuts dialog (Esc)"
-            className="p-2 rounded-xl border-2 border-theme-border hover:bg-theme-surface transition focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400"
+            className="p-2 rounded-xl border-2 border-theme-border hover:bg-theme-surface transition focus:outline-none focus:ring-4 focus:ring-theme-focus-ring focus:border-theme-focus-ring"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -177,7 +177,7 @@ export const ShortcutsHelpModal: React.FC = () => {
               setShortcutsOpen(false);
               soundEffects.playSelect();
             }}
-            className="px-6 py-2.5 font-bold rounded-xl border-2 border-theme-border bg-theme-surface hover:bg-theme-bg text-theme-text focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400"
+            className="px-6 py-2.5 font-bold rounded-xl border-2 border-theme-border bg-theme-surface hover:bg-theme-bg text-theme-text focus:outline-none focus:ring-4 focus:ring-theme-focus-ring focus:border-theme-focus-ring"
           >
             Close (Esc)
           </button>

@@ -483,7 +483,7 @@ export const VoiceShowcase: React.FC = () => {
                   </span>
                   {active === idx && (
                     <span className="sm:hidden flex items-center gap-1 text-[10px] font-black uppercase text-theme-primary tracking-wider">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-theme-primary animate-pulse" />
                       Active
                     </span>
                   )}
@@ -512,8 +512,8 @@ export const VoiceShowcase: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
-                  <span className="dx-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-emerald-500" />
+                  <span className="dx-pulse-ring absolute inline-flex h-full w-full rounded-full bg-theme-primary opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-theme-primary" />
                 </span>
                 <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-theme-text-secondary">
                   Voice Assistant · Live

@@ -298,11 +298,27 @@ const EMPTY_EXAM: Exam = {
   questions: [],
 };
 
+const CACHED_EXAMS_STORAGE_KEY = 'dristix_cached_catalog_exams_v1';
+
+function getInitialCachedExams(): Exam[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(CACHED_EXAMS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
 export const useExamStore = create<ExamState>((set, get) => ({
   currentAnalytics: null,
   setCurrentAnalytics: (analytics) => set({ currentAnalytics: analytics }),
   portalTab: 'exams',
-  availableExams: [],
+  availableExams: getInitialCachedExams(),
   availablePracticeDrills: [],
   currentExam: EMPTY_EXAM,
   activeView: 'catalog', // Default landing on the accessible catalog dashboard
@@ -561,7 +577,16 @@ export const useExamStore = create<ExamState>((set, get) => ({
     set({ isCatalogLoading: true, catalogError: null });
     try {
       const { exams, drills } = await getDataSource().exams.getFullCatalog();
-      set({ availableExams: exams, availablePracticeDrills: drills, catalogError: null });
+      if (exams && exams.length > 0) {
+        try {
+          localStorage.setItem(CACHED_EXAMS_STORAGE_KEY, JSON.stringify(exams));
+        } catch { }
+      }
+      set((state) => ({
+        availableExams: exams.length > 0 ? exams : (state.availableExams.length > 0 ? state.availableExams : getInitialCachedExams()),
+        availablePracticeDrills: drills.length > 0 ? drills : state.availablePracticeDrills,
+        catalogError: null,
+      }));
 
       // Cache practice drills in IndexedDB for 100% offline practice
       void offlinePracticeStorage.cachePracticeDrills(
@@ -591,10 +616,15 @@ export const useExamStore = create<ExamState>((set, get) => ({
       // the truth is usually "the server is unreachable" or "your session
       // expired". Both need very different responses from the user.
       const cachedDrills = await offlinePracticeStorage.getCachedPracticeDrills();
-      if (cachedDrills && cachedDrills.length > 0) {
+      const existingExams = get().availableExams.length > 0 ? get().availableExams : getInitialCachedExams();
+      if (existingExams.length > 0) {
+        // Keep existing catalog in memory; never overwrite portalTab or wipe available mock tests
+        set({ availableExams: existingExams, catalogError: null });
+      } else if (cachedDrills && cachedDrills.length > 0) {
         set({
           availablePracticeDrills: cachedDrills,
-          portalTab: 'practice',
+          // Never force portalTab to 'practice' if user is on 'exams'
+          portalTab: get().portalTab,
           catalogError: null,
         });
         const all = get();

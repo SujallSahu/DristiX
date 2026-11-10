@@ -44,18 +44,45 @@ export const ExamCatalogScreen: React.FC = () => {
 
   // Filter exams based on category and search query
   const filteredExams = useMemo(() => {
-    return activeExamsList.filter((exam) => {
+    if (activeExamsList.length === 0) return [];
+
+    const q = searchQuery.trim().toLowerCase();
+    const selCat = (selectedCategory || 'All').trim().toLowerCase();
+
+    let matches = activeExamsList.filter((exam) => {
+      const examCat = (exam.category || '').trim().toLowerCase();
       const matchesCategory =
-        selectedCategory === 'All' || exam.category === selectedCategory;
+        selCat === 'all' || examCat === selCat || exam.category === selectedCategory;
       const matchesSearch =
-        searchQuery.trim() === '' ||
-        exam.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exam.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exam.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exam.category.toLowerCase().includes(searchQuery.toLowerCase());
+        q === '' ||
+        (exam.title && exam.title.toLowerCase().includes(q)) ||
+        (exam.code && exam.code.toLowerCase().includes(q)) ||
+        (exam.description && exam.description.toLowerCase().includes(q)) ||
+        (exam.category && exam.category.toLowerCase().includes(q));
       return matchesCategory && matchesSearch;
     });
+
+    // Resilient Fallback: If category filter yields 0 matches in this tab, but exams exist and no search query was entered,
+    // automatically fallback to all exams so mock tests never become unavailable after theme or preference changes
+    if (matches.length === 0 && q === '' && selCat !== 'all') {
+      matches = activeExamsList;
+    }
+
+    return matches;
   }, [activeExamsList, selectedCategory, searchQuery]);
+
+  // Auto-heal: If selectedCategory has 0 matches in activeExamsList, fallback to 'All'
+  useEffect(() => {
+    if (selectedCategory !== 'All' && activeExamsList.length > 0) {
+      const selCat = selectedCategory.trim().toLowerCase();
+      const matchCount = activeExamsList.filter(
+        (e) => (e.category || '').trim().toLowerCase() === selCat
+      ).length;
+      if (matchCount === 0) {
+        setSelectedCategory('All');
+      }
+    }
+  }, [activeExamsList, selectedCategory]);
 
   // Spoken arrival orientation and voice suggestions for visually impaired candidates
   const hasAnnouncedCatalogRef = useRef<boolean>(false);
@@ -75,10 +102,16 @@ export const ExamCatalogScreen: React.FC = () => {
     }
   }, [activeExamsList, isCatalogLoading, portalTab, announce]);
 
-  // Reset focus when tab or filter changes
+  // Reset category filter to 'All' when portal tab changes between mock exams and practice
+  useEffect(() => {
+    setSelectedCategory('All');
+    setFocusedIndex(0);
+  }, [portalTab]);
+
+  // Reset focus when category changes
   useEffect(() => {
     setFocusedIndex(0);
-  }, [portalTab, selectedCategory]);
+  }, [selectedCategory]);
 
   // Keep focused index within bounds
   useEffect(() => {
@@ -165,6 +198,11 @@ export const ExamCatalogScreen: React.FC = () => {
         useNotificationStore.getState().isOpen ||
         Boolean(useNotificationStore.getState().activeNotification)
       ) {
+        return;
+      }
+
+      // CRITICAL: Never intercept system or modifier hotkeys (Ctrl+C, Alt+C, Ctrl+T, Ctrl+Shift+C, etc.)
+      if (e.ctrlKey || e.altKey || e.metaKey) {
         return;
       }
 
@@ -314,7 +352,7 @@ export const ExamCatalogScreen: React.FC = () => {
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-1.5">
                     <Trophy
-                      className={`w-3.5 h-3.5 ${portalTab === 'exams' ? 'text-yellow-300' : 'text-amber-500'}`}
+                      className={`w-3.5 h-3.5 ${portalTab === 'exams' ? 'text-theme-primary-text' : 'text-amber-500'}`}
                       aria-hidden="true"
                     />
                     <span className="text-xs sm:text-sm font-black leading-tight">Mock Examinations</span>
@@ -322,7 +360,7 @@ export const ExamCatalogScreen: React.FC = () => {
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-black ${
                       portalTab === 'exams'
-                        ? 'bg-slate-900 text-white shadow-xs'
+                        ? 'bg-black/25 text-theme-primary-text border border-theme-primary-text/30 shadow-xs'
                         : 'bg-theme-border/60 text-theme-text'
                     }`}
                   >
@@ -355,7 +393,7 @@ export const ExamCatalogScreen: React.FC = () => {
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-1.5">
                     <Lightbulb
-                      className={`w-3.5 h-3.5 ${portalTab === 'practice' ? 'text-yellow-200' : 'text-emerald-500'}`}
+                      className={`w-3.5 h-3.5 ${portalTab === 'practice' ? 'text-theme-primary-text' : 'text-emerald-500'}`}
                       aria-hidden="true"
                     />
                     <span className="text-xs sm:text-sm font-black leading-tight">Practice Arena</span>
@@ -363,7 +401,7 @@ export const ExamCatalogScreen: React.FC = () => {
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-black ${
                       portalTab === 'practice'
-                        ? 'bg-slate-900 text-white shadow-xs'
+                        ? 'bg-black/25 text-theme-primary-text border border-theme-primary-text/30 shadow-xs'
                         : 'bg-theme-border/60 text-theme-text'
                     }`}
                   >
@@ -688,7 +726,7 @@ export const ExamCatalogScreen: React.FC = () => {
                       }}
                       className="px-4 py-2 rounded-lg bg-theme-primary text-theme-primary-text font-bold text-sm focus:ring-4 focus:ring-theme-focus"
                     >
-                      Reset Filters
+                      Reset Filters (Show All Mock Tests)
                     </button>
                   </>
                 )}
@@ -785,7 +823,7 @@ export const ExamCatalogScreen: React.FC = () => {
                             <span>🔍</span>
                             <span>Step-by-Step Solutions</span>
                           </span>
-                          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/30">
+                          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/30">
                             Self-Paced
                           </span>
                         </div>

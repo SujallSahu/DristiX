@@ -305,9 +305,11 @@ export const A11ySettingsModal: React.FC = () => {
 
   // Full Keyboard Trap & Navigation Handler (Tab, Shift+Tab, Escape, Magnification Shortcuts)
   const handleModalKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Isolate all keyboard events to the modal so they never leak to background catalog shortcuts or filters
+    e.stopPropagation();
+
     if (e.key === 'Escape') {
       e.preventDefault();
-      e.stopPropagation();
       setSettingsOpen(false);
       soundEffects.playSelect();
       return;
@@ -549,10 +551,19 @@ export const A11ySettingsModal: React.FC = () => {
       aria-modal="true"
       aria-labelledby="a11y-settings-title"
       onKeyDown={handleModalKeyDown}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+          e.stopPropagation();
+          setSettingsOpen(false);
+          soundEffects.playSelect();
+        }
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xs"
     >
       <div
         ref={modalContainerRef}
+        onClick={(e) => e.stopPropagation()}
         className="w-full max-w-2xl max-h-[92vh] bg-theme-surface border-2 border-theme-border rounded-2xl shadow-2xl flex flex-col overflow-hidden text-theme-text transition-colors"
       >
         {/* Modal Header */}
@@ -567,7 +578,12 @@ export const A11ySettingsModal: React.FC = () => {
             ref={closeButtonRef}
             type="button"
             onFocusCapture={() => handleSectionFocus('close')}
-            onClick={() => setSettingsOpen(false)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setSettingsOpen(false);
+              soundEffects.playSelect();
+            }}
             aria-label="Close accessibility settings (Esc)"
             className="p-2 rounded-xl border-2 border-theme-border hover:bg-theme-surface transition focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400"
           >
@@ -636,7 +652,9 @@ export const A11ySettingsModal: React.FC = () => {
                         idx === 0
                       );
                     }}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setTheme(t.id);
                       soundEffects.playSelect();
                       useAnnouncerStore
@@ -644,6 +662,7 @@ export const A11ySettingsModal: React.FC = () => {
                         .announce(`Theme changed to ${t.label}.`, 'assertive', true);
                     }}
                     onKeyDown={(e) => {
+                      e.stopPropagation();
                       if (e.key === ' ' || e.key === 'Enter') {
                         e.preventDefault();
                         setTheme(t.id);
@@ -1457,7 +1476,9 @@ export const A11ySettingsModal: React.FC = () => {
             ref={doneButtonRef}
             type="button"
             onFocusCapture={() => handleSectionFocus('done')}
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setSettingsOpen(false);
               soundEffects.playSelect();
             }}

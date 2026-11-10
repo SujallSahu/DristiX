@@ -17,8 +17,9 @@ import {
   TrendingUp,
   ArrowLeft,
   Mic,
+  Sun,
 } from 'lucide-react';
-import { usePreferencesStore, type TextScale } from '../../store/usePreferencesStore';
+import { usePreferencesStore, type TextScale, type ThemeMode } from '../../store/usePreferencesStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { voiceRecognition } from '../../utils/voiceRecognition';
 import type { VoiceState } from '../../utils/voiceRecognition';
@@ -44,7 +45,7 @@ export const Header: React.FC = () => {
     isSubmitted,
   } = useExamStore();
 
-  const { ttsEnabled, setTtsEnabled, fontSize, setFontSize } = usePreferencesStore();
+  const { ttsEnabled, setTtsEnabled, fontSize, setFontSize, theme, setTheme } = usePreferencesStore();
   const { currentStudent, logoutStudent } = useAuthStore();
 
   const lastTextSizeChangeTime = React.useRef<number>(0);
@@ -501,9 +502,46 @@ export const Header: React.FC = () => {
               }`}
           >
             <Type className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
-            <kbd className="inline-block text-[10px] sm:text-[11px] font-sans font-bold px-1 sm:px-1.5 py-0.5 rounded border border-theme-border bg-white text-black leading-tight shadow-xs">
+            <kbd className="inline-block text-[10px] sm:text-[11px] font-sans font-bold px-1 sm:px-1.5 py-0.5 rounded border border-theme-border bg-theme-surface text-theme-text leading-tight shadow-xs">
               {fontSize}%
             </kbd>
+          </button>
+
+          {/* Quick Theme Switcher */}
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playSelect();
+              const themes: ThemeMode[] = ['teal-cream', 'liquid-glass', 'dark', 'high-contrast'];
+              const idx = themes.indexOf(theme);
+              const next = themes[(idx + 1) % themes.length];
+              setTheme(next);
+              const label =
+                next === 'teal-cream'
+                  ? 'Teal & Cream'
+                  : next === 'liquid-glass'
+                  ? 'Liquid Glass'
+                  : next === 'dark'
+                  ? 'Charcoal Dark'
+                  : 'High Contrast';
+              useAnnouncerStore
+                .getState()
+                .announce(`Theme changed to ${label}.`, 'assertive', true);
+            }}
+            title={`Current theme: ${theme}. Click to switch theme.`}
+            aria-label={`Current theme: ${theme}. Click to switch theme.`}
+            className="p-1.5 sm:p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-theme-focus-ring focus:border-theme-focus-ring shrink-0"
+          >
+            <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" aria-hidden="true" />
+            <span className="hidden xl:inline text-xs font-bold capitalize">
+              {theme === 'teal-cream'
+                ? 'Light'
+                : theme === 'liquid-glass'
+                ? 'Glass'
+                : theme === 'dark'
+                ? 'Dark'
+                : 'Contrast'}
+            </span>
           </button>
 
           {/* Accessibility Settings */}
@@ -513,9 +551,9 @@ export const Header: React.FC = () => {
             onClick={() => setSettingsOpen(true)}
             title="Accessibility Preferences (Shortcut: A)"
             aria-label="Accessibility Preferences (Shortcut: A)"
-            className="p-1.5 sm:p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 shrink-0"
+            className="p-1.5 sm:p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-theme-focus-ring focus:border-theme-focus-ring shrink-0"
           >
-            <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" aria-hidden="true" />
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" aria-hidden="true" />
             <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-theme-surface">
               A
             </kbd>

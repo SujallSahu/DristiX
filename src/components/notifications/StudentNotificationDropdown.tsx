@@ -302,7 +302,7 @@ export const StudentNotificationDropdown: React.FC = () => {
                 top: coords ? `${coords.top}px` : '72px',
                 right: coords ? `${coords.right}px` : '16px',
               }}
-              className="fixed w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm sm:max-w-none rounded-2xl bg-white dark:bg-[#031d22] border-2 border-theme-border shadow-2xl p-4 z-[9999] space-y-3 animate-in fade-in zoom-in-95 duration-150"
+              className="fixed w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm sm:max-w-none rounded-2xl bg-theme-surface border-2 border-theme-border shadow-2xl p-4 z-[9999] space-y-3 animate-in fade-in zoom-in-95 duration-150 text-theme-text"
             >
               {/* Header */}
               <div className="flex items-center justify-between pb-2.5 border-b border-theme-border">

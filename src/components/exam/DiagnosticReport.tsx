@@ -483,7 +483,7 @@ export const DiagnosticReport: React.FC = () => {
                         </span>
                       )}
                       {!isAnswered && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded border border-slate-500 bg-slate-500/20 text-slate-700 dark:text-slate-300">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded border border-theme-border bg-theme-border/40 text-theme-text/80">
                           Unattempted (0)
                         </span>
                       )}

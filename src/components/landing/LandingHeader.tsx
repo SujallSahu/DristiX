@@ -305,7 +305,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               <Type className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span className={`text-[10px] font-sans font-bold leading-none px-1 py-0.5 rounded border shadow-xs ml-1 ${
                 fontSize > 100
-                  ? 'border-white/40 bg-white text-slate-900 font-extrabold'
+                  ? 'border-theme-border bg-theme-surface-elevated text-theme-text font-extrabold'
                   : 'border-theme-border bg-theme-bg text-theme-text'
               }`}>
                 {fontSize}%
