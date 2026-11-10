@@ -169,7 +169,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
         boxShadow: scrolled ? '0 4px 32px rgba(0,0,0,0.12)' : 'none',
       }}
     >
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 lg:gap-3 xl:gap-6">
         {/* Top bar on Mobile / Left on Desktop */}
         <div className="flex items-center justify-between w-full sm:w-auto gap-3">
           {/* Brand */}
@@ -235,13 +235,13 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
         </div>
 
         {/* Nav — desktop */}
-        <nav aria-label="Primary navigation" className="hidden lg:block">
-          <ul className="flex items-center gap-1 list-none m-0 p-0">
+        <nav aria-label="Primary navigation" className="hidden lg:block shrink-0">
+          <ul className="flex items-center gap-0.5 xl:gap-1 list-none m-0 p-0 shrink-0">
             {NAV_ITEMS.map((item) => (
-              <li key={item.href}>
+              <li key={item.href} className="shrink-0">
                 <a
                   href={item.href}
-                  className="px-4 py-2 rounded-xl text-sm font-bold text-theme-text-secondary no-underline hover:bg-theme-surface hover:text-theme-primary transition-all duration-150 block"
+                  className="px-2.5 xl:px-4 py-2 rounded-xl text-xs xl:text-sm font-bold text-theme-text-secondary no-underline hover:bg-theme-surface hover:text-theme-primary transition-all duration-150 block whitespace-nowrap"
                 >
                   {item.label}
                 </a>
@@ -331,7 +331,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
           <button
             type="button"
             onClick={onSignIn}
-            className="h-9 px-4 rounded-xl border border-theme-border bg-theme-surface font-bold text-sm text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-2 shadow-sm shrink-0"
+            className="h-9 px-3.5 xl:px-4 rounded-xl border border-theme-border bg-theme-surface font-bold text-xs xl:text-sm text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-1.5 xl:gap-2 shadow-sm shrink-0 whitespace-nowrap"
           >
             <LogIn className="w-4 h-4" aria-hidden="true" />
             <span>Login</span>
@@ -340,7 +340,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
           <button
             type="button"
             onClick={onRegister}
-            className="h-9 px-5 rounded-xl font-black text-sm text-theme-primary-text transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-2 shadow-md hover:scale-105 shrink-0"
+            className="h-9 px-4 xl:px-5 rounded-xl font-black text-xs xl:text-sm text-theme-primary-text transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-1.5 xl:gap-2 shadow-md hover:scale-105 shrink-0 whitespace-nowrap"
             style={{
               background: 'var(--primary-gradient)',
               boxShadow: '0 4px 16px var(--primary-glow)',
