@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Bell,
   CheckCheck,
@@ -51,6 +52,31 @@ export const StudentNotificationDropdown: React.FC = () => {
   const { currentStudent } = useAuthStore();
   const { selectExam } = useExamStore();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const [coords, setCoords] = React.useState<{ top: number; right: number } | null>(null);
+
+  const updatePosition = useCallback(() => {
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const rightDistance = Math.max(12, window.innerWidth - rect.right);
+      setCoords({
+        top: Math.round(rect.bottom + 8),
+        right: Math.round(rightDistance),
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener('resize', updatePosition);
+      window.addEventListener('scroll', updatePosition, true);
+      return () => {
+        window.removeEventListener('resize', updatePosition);
+        window.removeEventListener('scroll', updatePosition, true);
+      };
+    }
+  }, [isOpen, updatePosition]);
 
   // Guarantee newest-first order across all renders and keyboard lookups
   const sortedNotifications = React.useMemo(() => {
@@ -192,7 +218,13 @@ export const StudentNotificationDropdown: React.FC = () => {
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        panelRef.current &&
+        !panelRef.current.contains(target)
+      ) {
         toggleOpen(false);
       }
     };
@@ -254,18 +286,23 @@ export const StudentNotificationDropdown: React.FC = () => {
         </button>
 
         {/* Dropdown Flyout Panel */}
-        {isOpen && (
+        {isOpen && typeof document !== 'undefined' && createPortal(
           <>
             {/* Backdrop click dismisser */}
             <div
-              className="fixed inset-0 z-40 bg-black/20 dark:bg-black/40 sm:bg-transparent"
+              className="fixed inset-0 z-[9998] bg-black/20 dark:bg-black/40 backdrop-blur-[1px]"
               onClick={() => toggleOpen(false)}
               aria-hidden="true"
             />
             <div
+              ref={panelRef}
               role="dialog"
               aria-label="Student Notifications Panel"
-              className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm sm:max-w-none rounded-2xl bg-white dark:bg-[#031d22] border-2 border-theme-border shadow-2xl p-4 z-50 space-y-3 animate-in fade-in zoom-in-95 duration-150"
+              style={{
+                top: coords ? `${coords.top}px` : '72px',
+                right: coords ? `${coords.right}px` : '16px',
+              }}
+              className="fixed w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm sm:max-w-none rounded-2xl bg-white dark:bg-[#031d22] border-2 border-theme-border shadow-2xl p-4 z-[9999] space-y-3 animate-in fade-in zoom-in-95 duration-150"
             >
               {/* Header */}
               <div className="flex items-center justify-between pb-2.5 border-b border-theme-border">
@@ -411,16 +448,18 @@ export const StudentNotificationDropdown: React.FC = () => {
                 </button>
               </div>
             </div>
-          </>
+          </>,
+          document.body
         )}
       </div>
 
       {/* Full Detail Modal */}
-      {activeNotification && (
+      {activeNotification && typeof document !== 'undefined' && createPortal(
         <StudentNotificationDetailModal
           notification={activeNotification}
           onClose={closeNotificationDetail}
-        />
+        />,
+        document.body
       )}
     </>
   );
