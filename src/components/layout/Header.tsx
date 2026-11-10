@@ -127,35 +127,35 @@ export const Header: React.FC = () => {
     >
       <div className="max-w-[1700px] w-full mx-auto flex flex-col md:flex-row md:items-center justify-between gap-1.5 md:gap-2 overflow-visible">
         {/* Top Row on Mobile: Branding on Left, Candidate Profile + Sign Out or Exam Timer+Submit on Right */}
-        <div className="flex items-center justify-between w-full md:w-auto min-w-0 gap-1.5 sm:gap-3">
-          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+        <div className="flex items-center justify-between md:justify-start w-full md:w-auto shrink-0 gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <span
               className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border-2 border-theme-border bg-theme-primary text-theme-primary-text flex items-center justify-center font-black text-xs sm:text-sm shrink-0 shadow-sm"
               aria-hidden="true"
             >
               DX
             </span>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className="text-sm sm:text-lg font-black text-theme-text leading-tight tracking-tight truncate">
+            <div className="flex flex-col justify-center shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <h1 className="text-sm sm:text-lg font-black text-theme-text leading-tight tracking-tight shrink-0 whitespace-nowrap">
                   DristiX
                 </h1>
                 {activeView === 'exam' && (
-                  <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-extrabold bg-theme-border/50 text-theme-text border border-theme-border">
+                  <span className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-extrabold bg-theme-border/50 text-theme-text border border-theme-border shrink-0 max-w-[220px] lg:max-w-[280px]">
                     <span
-                      className={`font-mono ${examMode === 'practice' ? 'text-emerald-500' : 'text-theme-primary'
+                      className={`font-mono whitespace-nowrap ${examMode === 'practice' ? 'text-emerald-500' : 'text-theme-primary'
                         }`}
                     >
                       {examMode === 'practice' ? '💡 ' : ''}
                       {currentExam.code}:
                     </span>
-                    <span className="max-w-[200px] truncate" title={currentExam.title}>
+                    <span className="truncate inline-block max-w-[130px] lg:max-w-[180px]" title={currentExam.title}>
                       {currentExam.title}
                     </span>
                   </span>
                 )}
               </div>
-              <span className="text-xs text-theme-text/70 font-semibold hidden sm:inline">
+              <span className="text-xs text-theme-text/70 font-semibold hidden sm:inline whitespace-nowrap">
                 {activeView === 'analytics'
                   ? 'Student Performance & Score Analytics'
                   : activeView === 'catalog'
@@ -194,7 +194,7 @@ export const Header: React.FC = () => {
                   ? 'Submit test before exiting'
                   : `Return to catalog`
               }
-              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border-2 border-theme-border bg-theme-bg hover:border-theme-primary text-theme-text text-xs font-extrabold flex items-center gap-1 sm:gap-1.5 transition-all shadow-xs ml-0.5 sm:ml-1 shrink-0"
+              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border-2 border-theme-border bg-theme-bg hover:border-theme-primary text-theme-text text-xs font-extrabold flex items-center gap-1 sm:gap-1.5 transition-all shadow-xs shrink-0 whitespace-nowrap"
             >
               <span>{isSubmitted ? '📚' : '📝'}</span>
               <span className="hidden sm:inline">
