@@ -449,13 +449,13 @@ export const App: React.FC = () => {
       <div
         className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center p-6 font-sans"
       >
-        <div role="status" aria-live="polite" className="text-center space-y-4 max-w-md">
+        <div role="status" aria-live="polite" className="text-center space-y-4 max-w-xl">
           <div
             aria-hidden="true"
             className="w-12 h-12 mx-auto rounded-full border-4 border-theme-border border-t-theme-primary animate-spin"
           />
           <p className="text-lg font-bold">Loading DristiX</p>
-          <p className="text-sm text-theme-text-secondary">
+          <p className="text-xs sm:text-sm text-theme-text-secondary whitespace-nowrap">
             Preparing your accessible examination portal. This will only take a moment.
           </p>
         </div>
