@@ -281,8 +281,8 @@ export const Header: React.FC = () => {
                     type="button"
                     onClick={() => void logoutStudent()}
                     className="btn-signout flex items-center gap-1 text-[11px] font-bold text-white bg-red-600 hover:bg-red-700 active:scale-95 px-2 py-0.5 rounded-md shadow-xs transition-all cursor-pointer ml-1 shrink-0"
-                    title="Sign out of student account"
-                    aria-label={`Sign out candidate ${currentStudent.name}`}
+                    title="Sign out of student account (Ctrl + Enter)"
+                    aria-label={`Sign out candidate ${currentStudent.name} (Shortcut: Ctrl + Enter)`}
                   >
                     <LogOut className="w-3 h-3 text-white" aria-hidden="true" />
                     <span>Sign Out</span>
@@ -341,11 +341,14 @@ export const Header: React.FC = () => {
                 type="button"
                 onClick={() => void logoutStudent()}
                 className="btn-signout flex items-center gap-1.5 ml-2 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 active:scale-95 shadow-xs transition-all cursor-pointer shrink-0"
-                title="Sign out of student account"
-                aria-label={`Sign out candidate ${currentStudent.name}`}
+                title="Sign out of student account (Ctrl + Enter)"
+                aria-label={`Sign out candidate ${currentStudent.name} (Shortcut: Ctrl + Enter)`}
               >
                 <LogOut className="w-3.5 h-3.5 text-white" aria-hidden="true" />
                 <span>Sign Out</span>
+                <kbd className="hidden lg:inline-block ml-1 px-1 py-0.2 rounded text-[9px] font-mono bg-black/25 text-white/90 border border-white/20">
+                  Ctrl+Enter
+                </kbd>
               </button>
             </div>
           )}

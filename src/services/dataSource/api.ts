@@ -333,8 +333,16 @@ const apiAuth: AuthDataSource = {
           },
         };
       } catch {
-        clearSessionTokens();
-        return null;
+        // If /auth/me failed due to network latency or server cold-start,
+        // preserve the stored user session so the user does NOT get kicked out to login
+        return {
+          user: storedUser,
+          tokens: {
+            accessToken: existingToken,
+            refreshToken: getStoredRefreshToken() ?? undefined,
+            expiresIn: 0,
+          },
+        };
       }
     }
 

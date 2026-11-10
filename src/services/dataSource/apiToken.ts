@@ -158,7 +158,16 @@ export async function refreshSession(): Promise<boolean> {
       });
 
       if (!res.ok) {
-        notifySessionExpired();
+        if (res.status === 401) {
+          try {
+            const errData = await res.json();
+            if (errData?.error === 'session_expired' || errData?.error === 'no_session') {
+              notifySessionExpired();
+            }
+          } catch {
+            // Non-JSON response, ignore
+          }
+        }
         return false;
       }
 
@@ -172,7 +181,8 @@ export async function refreshSession(): Promise<boolean> {
       }
       return true;
     } catch {
-      notifySessionExpired();
+      // Network failure, offline mode, or Render backend waking up:
+      // NEVER wipe stored session tokens on network errors!
       return false;
     } finally {
       refreshInFlight = null;

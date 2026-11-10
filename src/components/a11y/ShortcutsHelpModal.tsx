@@ -104,8 +104,8 @@ export const ShortcutsHelpModal: React.FC = () => {
     { key: '+ or -', desc: 'Increase (+) or Decrease (-) UI & Text Magnification Scale globally' },
     { key: '1 to 5', desc: 'In Accessibility modal: jump directly to 100%, 125%, 150%, 175%, 200%' },
     { key: 'Alt + S', desc: 'Submit Examination Session' },
+    { key: 'Ctrl + Enter', desc: 'Sign out of candidate account (Student Portal)' },
     { key: 'F', desc: 'Open Exam Experience & Feedback modal on Diagnostic Report' },
-    { key: 'Ctrl + Enter', desc: 'Submit completed feedback form instantly' },
     { key: 'Escape', desc: 'Close any open dialog or stop voice reading' },
   ];
 

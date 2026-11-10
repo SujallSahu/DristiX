@@ -53,6 +53,13 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
       ]);
 
       const user = result?.user ?? null;
+
+      const wasAdmin =
+        (typeof window !== 'undefined' &&
+          (sessionStorage.getItem('dristix_admin_auth') === 'true' ||
+            localStorage.getItem('dristix_admin_auth') === 'true')) ||
+        (user && (user as any).role === 'ADMIN');
+
       // Differentiate student session vs administrator session accurately
       if (user && (user as any).role === 'ADMIN') {
         useAuthStore.getState().setSession(null);
@@ -71,6 +78,17 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
           localStorage.removeItem('dristix_admin_auth');
         }
         void useAuthStore.getState().syncSubmissions();
+      } else if (wasAdmin) {
+        // PRESERVE ADMIN AUTH: Admin was authenticated before reload/refresh.
+        // Even if server session restore timed out or failed, preserve admin authentication!
+        useAuthStore.getState().setSession(null);
+        useAuthStore.setState({ isAdminAuthenticated: true });
+        sessionStorage.setItem('dristix_admin_auth', 'true');
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('dristix_admin_auth', 'true');
+        }
+        void useAuthStore.getState().syncSubmissions();
+        void useAuthStore.getState().fetchStudents();
       } else {
         useAuthStore.getState().setSession(null);
         useAuthStore.setState({ isAdminAuthenticated: false });

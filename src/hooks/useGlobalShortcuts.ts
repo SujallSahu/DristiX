@@ -63,6 +63,33 @@ export function useGlobalShortcuts() {
         return;
       }
 
+      // Shortcut: Sign out of Student Portal via 'Ctrl + Enter' (strictly student portal only)
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === 'Enter' || e.code === 'Enter' || e.code === 'NumpadEnter')
+      ) {
+        if (store.isFeedbackModalOpen || store.isSubmitModalOpen) {
+          return;
+        }
+
+        const auth = useAuthStore.getState();
+        const isStudent = !!auth.currentStudent;
+        const isAdmin = auth.isAdminAuthenticated;
+        const isAdminPath =
+          typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+
+        // Strictly student portal only
+        if (isStudent && !isAdmin && !isAdminPath) {
+          const tagName = activeEl?.tagName.toUpperCase();
+          if (tagName === 'TEXTAREA') return;
+
+          e.preventDefault();
+          soundEffects.playSelect();
+          void auth.logoutStudent();
+          return;
+        }
+      }
+
       // If user is actively typing in a text field, let native typing happen
       if (isUserTyping(activeEl)) return;
 
