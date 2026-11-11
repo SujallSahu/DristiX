@@ -576,11 +576,13 @@ export const App: React.FC = () => {
   // 1. ADMIN ROUTE: STRICTLY ACCESSIBLE ONLY AT /admin
   if (currentRoute.startsWith('/admin')) {
     return (
-      <div className="min-h-screen bg-theme-bg text-theme-text transition-colors flex flex-col font-sans">
+      <div className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] overflow-hidden bg-theme-bg text-theme-text transition-colors flex flex-col font-sans">
         <SkipLinks />
         <LiveAnnouncer />
         {!isAdminAuthenticated ? (
-          <AdminLogin onReturnToStudent={() => navigateTo('/login')} />
+          <div className="flex-1 overflow-y-auto">
+            <AdminLogin onReturnToStudent={() => navigateTo('/login')} />
+          </div>
         ) : (
           <AdminPanel onReturnToStudent={() => navigateTo('/')} />
         )}

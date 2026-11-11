@@ -1255,7 +1255,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-theme-bg text-theme-text flex flex-col lg:flex-row transition-colors duration-200">
+    <div className="w-full flex-1 min-h-0 h-full max-h-[100dvh] overflow-hidden bg-theme-bg text-theme-text flex flex-col lg:flex-row transition-colors duration-200">
       {/* Mobile Top App Bar */}
       <header className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#031d22] text-white border-b border-[#0d3b45] shadow-md">
         <div className="flex items-center gap-3">
@@ -1328,7 +1328,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
       {/* Left Sidebar (Dark Teal Enterprise Sidebar Matching Design) */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-[100dvh] max-h-[100dvh] w-64 sm:w-72 shrink-0 bg-[#031d22] text-white border-r border-[#0d3b45] flex flex-col justify-between p-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-y-auto ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-full max-h-[100dvh] w-64 sm:w-72 shrink-0 bg-[#031d22] text-white border-r border-[#0d3b45] flex flex-col justify-between p-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-y-auto ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           }`}
       >
         <div className="space-y-6">
@@ -1605,7 +1605,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
       </aside>
 
       {/* Main Content Area on Right */}
-      <main className="flex-1 min-w-0 flex flex-col h-screen overflow-y-auto">
+      <main className="flex-1 min-w-0 flex flex-col h-full max-h-[100dvh] min-h-0 overflow-y-auto">
         {/* Top Header Bar */}
         <header className="sticky top-0 z-20 shrink-0 bg-theme-surface/90 backdrop-blur-md border-b border-theme-border px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xs">
           {/* Global Search Bar & Command Palette Launcher */}
@@ -1616,7 +1616,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               type="text"
               value={globalSearch}
               onChange={(e) => setGlobalSearch(e.target.value)}
-              placeholder="Search or jump anywhere... (Press /)"
+              placeholder="Search or jump anywhere..."
               className="w-full pl-10 pr-20 py-2 rounded-xl bg-theme-bg border border-theme-border text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition font-medium"
             />
             <button
@@ -1764,7 +1764,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
         </header>
 
         {/* Content Body Container */}
-        <div className={`p-4 sm:p-6 lg:p-8 ${activeAdminTab === 'dashboard' ? 'space-y-6' : 'space-y-6'}`}>
+        <div className={`p-4 sm:p-6 lg:p-8 flex-1 flex flex-col min-h-0 ${activeAdminTab === 'dashboard' ? 'space-y-6' : 'space-y-6'}`}>
           {/* TAB: DASHBOARD */}
           {activeAdminTab === 'dashboard' && (
             <div className="space-y-6">
@@ -2557,7 +2557,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       type="text"
                       value={submissionSearch}
                       onChange={(e) => setSubmissionSearch(e.target.value)}
-                      placeholder="Search candidate name, roll number, or examination..."
+                      placeholder="Search candidate, roll no, or exam..."
                       className="w-full pl-10 pr-4 py-2 rounded-xl bg-theme-bg border border-theme-border text-xs sm:text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#006d5c] font-medium"
                     />
                   </div>
@@ -2960,7 +2960,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     <Search className="w-4 h-4 text-theme-text/40 absolute left-3.5 top-3" aria-hidden="true" />
                     <input
                       type="text"
-                      placeholder="Search candidate name, roll number, or email..."
+                      placeholder="Search candidate, roll no, or email..."
                       value={studentSearch}
                       onChange={(e) => setStudentSearch(e.target.value)}
                       className="w-full h-10 pl-10 pr-9 rounded-xl border border-theme-border bg-theme-bg text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition font-medium"
@@ -3473,7 +3473,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       type="text"
                       value={manageSearchQuery}
                       onChange={(e) => setManageSearchQuery(e.target.value)}
-                      placeholder="Search test paper by title, exam code, or syllabus..."
+                      placeholder="Search test paper, code, or syllabus..."
                       className="w-full pl-10 pr-4 py-2 rounded-xl bg-theme-bg border border-theme-border text-xs sm:text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#006d5c] font-medium"
                     />
                   </div>
@@ -3834,7 +3834,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
           {/* TAB: QUESTION BANK & TEST AUTHORING STUDIO */}
           {activeAdminTab === 'create' && (
-            <section aria-labelledby="create-heading" className="space-y-6">
+            <section aria-labelledby="create-heading" className="flex-1 flex flex-col min-h-full space-y-6">
               {/* 1. Authoring Suite Studio App Bar */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-theme-border/60">
                 <div>
@@ -3943,7 +3943,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 </div>
               </div>
 
-              <form onSubmit={handlePublishExam} className="space-y-6">
+              <form onSubmit={handlePublishExam} className="flex-1 flex flex-col justify-between space-y-6">
+                <div className="space-y-6 flex-1">
                 {formError && (
                   <div role="alert" className="p-4 rounded-2xl bg-red-500/10 border border-red-500 text-red-500 text-sm font-bold shadow-xs">
                     ⚠️ {formError}
@@ -4036,9 +4037,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        placeholder="e.g. IBPS Clerk 2026 Quantitative Speed & Accuracy Drill"
+                        placeholder="e.g. SSC CGL Mock Drill"
                         required
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                       />
                     </div>
 
@@ -4055,7 +4056,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         onChange={(e) => setCode(e.target.value.toUpperCase())}
                         placeholder="e.g. IBPS-CLK-05"
                         required
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition uppercase"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition uppercase placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                       />
                     </div>
                   </div>
@@ -4072,9 +4073,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={2}
-                      placeholder="Brief summary of syllabus, topics covered, target examination, and learning objectives..."
+                      placeholder="Summary of syllabus, topics, and objectives..."
                       required
-                      className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition font-medium"
+                      className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition font-medium placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                     />
                   </div>
 
@@ -4093,7 +4094,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         max={180}
                         value={durationMinutes}
                         onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
+                        placeholder="30"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                       />
                     </div>
 
@@ -4110,7 +4112,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         max={300}
                         value={totalMarks}
                         onChange={(e) => setTotalMarks(Number(e.target.value))}
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
+                        placeholder="50"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                       />
                     </div>
 
@@ -4127,7 +4130,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         onChange={(e) => setNegativeMarking(e.target.value)}
                         placeholder="-0.25 marks"
                         disabled={examType === 'practice'}
-                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-semibold disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
+                        className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text text-sm font-semibold disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#006d5c] placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                       />
                     </div>
                   </div>
@@ -4376,7 +4379,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               value={q.section}
                               onChange={(e) => handleUpdateQuestion(qIdx, 'section', e.target.value)}
                               placeholder="e.g. Quantitative Aptitude"
-                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text font-semibold focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
+                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text font-semibold focus:outline-none focus:ring-2 focus:ring-[#006d5c] placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                             />
                           </div>
                           <div className="sm:col-span-3">
@@ -4404,7 +4407,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               rows={2}
                               placeholder="Enter the complete question statement..."
                               required
-                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
+                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text font-medium focus:outline-none focus:ring-2 focus:ring-[#006d5c] placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                             />
                           </div>
                         </div>
@@ -4421,8 +4424,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             type="text"
                             value={q.mathLatex || ''}
                             onChange={(e) => handleUpdateQuestion(qIdx, 'mathLatex', e.target.value)}
-                            placeholder="e.g. v = 72 \times \frac{5}{18} = 20 \text{ m/s}"
-                            className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border font-mono text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-[#006d5c]"
+                            placeholder="e.g. E = mc^2 or v = u + at"
+                            className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border font-mono text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-[#006d5c] placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                           />
 
                           {q.mathLatex && (
@@ -4492,10 +4495,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               </label>
                               <input
                                 type="text"
+                                aria-label="Image URL or Online Link"
+                                title="Image URL or Online Link"
                                 value={q.diagramUrl || ''}
                                 onChange={(e) => handleUpdateQuestion(qIdx, 'diagramUrl', e.target.value)}
-                                placeholder="Paste image link e.g. https://storage.googleapis.com/.../diagram.png"
-                                className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border text-xs font-mono text-theme-text outline-none focus:border-purple-500"
+                                placeholder="Paste image URL (e.g. https://...)"
+                                className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border text-xs font-mono text-theme-text outline-none focus:border-purple-500 placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                               />
                             </div>
 
@@ -4570,10 +4575,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             </label>
                             <input
                               type="text"
+                              aria-label="Optional Diagram Caption"
+                              title="Optional Diagram Caption"
                               value={q.diagramDescription || ''}
                               onChange={(e) => handleUpdateQuestion(qIdx, 'diagramDescription', e.target.value)}
-                              placeholder="Optional manual notes (Leave blank to let AI Vision inspect the image automatically)"
-                              className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border text-xs text-theme-text outline-none focus:border-purple-500"
+                              placeholder="Optional notes (or auto-inspected by AI)"
+                              className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border text-xs text-theme-text outline-none focus:border-purple-500 placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                             />
                           </div>
 
@@ -4627,7 +4634,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                   onChange={(e) => handleUpdateOption(qIdx, opt.number, e.target.value)}
                                   placeholder={`Option ${opt.number} text...`}
                                   required
-                                  className="flex-1 p-1 rounded bg-transparent border-b border-theme-border/60 text-xs sm:text-sm text-theme-text outline-none focus:border-[#006d5c] font-medium"
+                                  className="flex-1 p-1 rounded bg-transparent border-b border-theme-border/60 text-xs sm:text-sm text-theme-text outline-none focus:border-[#006d5c] font-medium placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                                 />
                               </div>
                             ))}
@@ -4644,8 +4651,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               type="text"
                               value={q.hint}
                               onChange={(e) => handleUpdateQuestion(qIdx, 'hint', e.target.value)}
-                              placeholder="Clue, mnemonic, or formula to help solve the question..."
-                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                              placeholder="Clue, mnemonic, or formula to help solve..."
+                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-amber-500/40 placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                             />
                           </div>
 
@@ -4658,7 +4665,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               onChange={(e) => handleUpdateQuestion(qIdx, 'explanation', e.target.value)}
                               rows={1}
                               placeholder="Step-by-step mathematical or logical solution..."
-                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-emerald-500/40 placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
                             />
                           </div>
                         </div>
@@ -4666,38 +4673,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     ))}
                   </div>
                 </div>
+              </div>
 
-                {/* 5. Sticky Bottom Publish Footer Bar */}
-                <div className="sticky bottom-4 z-20 p-4 sm:p-5 rounded-2xl bg-theme-surface/95 backdrop-blur-md border border-theme-border shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 flex items-center justify-center font-black">
+                {/* 5. Sticky Bottom Publish Footer Bar — Settles cleanly at the bottom */}
+                <div className="sticky bottom-0 sm:bottom-4 z-20 mt-auto p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-theme-surface/95 backdrop-blur-md border border-theme-border shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="w-9 h-9 rounded-xl bg-[#006d5c]/15 text-[#005a4c] dark:text-teal-300 flex items-center justify-center font-black shrink-0">
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
-                    <div>
-                      <div className="text-xs sm:text-sm font-extrabold text-theme-text">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs sm:text-sm font-extrabold text-theme-text truncate">
                         Ready to {editingExamId ? 'Update' : 'Publish'} Test
                       </div>
-                      <div className="text-xs text-theme-text/60">
+                      <div className="text-[11px] sm:text-xs text-theme-text/60 truncate">
                         {questions.length} questions · {totalMarks} marks · {durationMinutes} mins · {category}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
                     <button
                       type="button"
                       onClick={handleAddQuestion}
-                      className="flex-1 sm:flex-initial px-4 py-3 rounded-xl border border-theme-border bg-theme-surface hover:bg-theme-border/30 text-theme-text font-bold text-xs sm:text-sm transition"
+                      className="flex-1 sm:flex-initial px-4 py-2.5 sm:py-3 rounded-xl border border-theme-border bg-theme-surface hover:bg-theme-border/30 text-theme-text font-bold text-xs sm:text-sm transition cursor-pointer"
                     >
                       + Add Question
                     </button>
 
                     <button
                       type="submit"
-                      className="flex-1 sm:flex-initial px-7 py-3 rounded-xl bg-gradient-to-r from-[#006d5c] via-[#008573] to-[#005a4c] hover:brightness-110 text-white font-extrabold text-sm sm:text-base shadow-md transition flex items-center justify-center gap-2"
+                      className="flex-1 sm:flex-initial px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#006d5c] via-[#008573] to-[#005a4c] hover:brightness-110 text-white font-extrabold text-xs sm:text-base shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <Sparkles className="w-4 h-4 text-teal-100" />
-                      <span>{editingExamId ? 'Save & Update Paper' : 'Publish to Student Catalog'}</span>
+                      <Sparkles className="w-4 h-4 text-teal-100 shrink-0" />
+                      <span className="truncate">{editingExamId ? 'Save & Update Paper' : 'Publish to Student Catalog'}</span>
                     </button>
                   </div>
                 </div>
@@ -4825,7 +4833,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   autoFocus
                   value={paletteQuery}
                   onChange={(e) => setPaletteQuery(e.target.value)}
-                  placeholder="Type a command, jump to a tab, or search exams & candidates..."
+                  placeholder="Type a command or search..."
                   className="w-full bg-transparent text-sm sm:text-base text-theme-text placeholder:text-theme-text/40 focus:outline-none font-medium"
                 />
                 {paletteQuery && (
