@@ -378,7 +378,7 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
           <h1 className="text-2xl sm:text-3xl font-black text-theme-text tracking-tight">
             DristiX Candidate Portal
           </h1>
-          <p className="text-[11px] sm:text-sm font-medium text-theme-text/80 mt-1 whitespace-nowrap text-center">
+          <p className="text-xs sm:text-sm font-medium text-theme-text/80 mt-1.5 text-center max-w-md mx-auto leading-relaxed px-1">
             Accessible online examination &amp; practice platform designed for everyone.
           </p>
         </div>

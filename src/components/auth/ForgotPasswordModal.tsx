@@ -283,9 +283,9 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         </button>
 
         {/* Header Badge & Title */}
-        <div className="flex items-center gap-3 mb-5">
+        <div className="flex items-center gap-3 mb-5 pr-10 sm:pr-12">
           <div
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-md ${
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-md shrink-0 ${
               isPortalAdmin ? 'bg-indigo-600 text-white' : 'bg-theme-primary text-theme-primary-text'
             }`}
           >
@@ -297,8 +297,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               <KeyRound className="w-7 h-7" aria-hidden="true" />
             )}
           </div>
-          <div>
-            <h2 id="forgot-password-title" className="text-xl sm:text-2xl font-black tracking-tight">
+          <div className="min-w-0">
+            <h2 id="forgot-password-title" className="text-lg sm:text-2xl font-black tracking-tight leading-snug">
               {step === 'SUCCESS'
                 ? 'Password Reset Complete'
                 : step === 'RESET_PASSWORD'
@@ -307,7 +307,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 ? 'Check Your Email'
                 : 'Reset Your Password'}
             </h2>
-            <p className="text-xs sm:text-sm text-theme-text/75 font-medium">
+            <p className="text-xs sm:text-sm text-theme-text/75 font-medium truncate">
               {isPortalAdmin ? 'DristiX Administrator Access' : 'DristiX Candidate Portal'}
             </p>
           </div>

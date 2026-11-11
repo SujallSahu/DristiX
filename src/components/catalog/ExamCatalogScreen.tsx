@@ -342,7 +342,7 @@ export const ExamCatalogScreen: React.FC = () => {
             <div
               role="tablist"
               aria-label="Portal Section Selector. Press T to switch between Mock Exams and Practice Arena."
-              className="grid grid-cols-2 lg:grid-cols-1 gap-2"
+              className="grid grid-cols-2 lg:grid-cols-1 gap-2 overflow-hidden"
             >
               {/* Mock Examinations Tab */}
               <button
@@ -352,22 +352,26 @@ export const ExamCatalogScreen: React.FC = () => {
                 aria-selected={portalTab === 'exams'}
                 aria-controls="panel-exam-catalog"
                 onClick={() => setPortalTab('exams')}
-                className={`w-full p-2.5 rounded-xl font-bold text-left transition-all duration-200 border-2 focus:outline-none focus:ring-4 focus:ring-theme-focus ${
+                className={`w-full p-2.5 rounded-xl font-bold text-left transition-all duration-200 border-2 overflow-hidden focus:outline-none focus:ring-4 focus:ring-theme-focus ${
                   portalTab === 'exams'
-                    ? 'border-theme-primary bg-theme-primary text-theme-primary-text shadow-md scale-[1.01]'
+                    ? 'border-theme-primary bg-theme-primary text-theme-primary-text shadow-md'
                     : 'border-theme-border bg-theme-surface hover:bg-theme-surface-elevated text-theme-text'
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between gap-1.5 mb-1 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     <Trophy
-                      className={`w-3.5 h-3.5 ${portalTab === 'exams' ? 'text-theme-primary-text' : 'text-amber-500'}`}
+                      className={`w-3.5 h-3.5 shrink-0 ${portalTab === 'exams' ? 'text-theme-primary-text' : 'text-amber-500'}`}
                       aria-hidden="true"
                     />
-                    <span className="text-xs sm:text-sm font-black leading-tight">Mock Examinations</span>
+                    <span className="text-xs sm:text-sm font-black leading-tight truncate">
+                      <span className="xs:hidden">Exams</span>
+                      <span className="hidden xs:inline sm:hidden">Mock Exams</span>
+                      <span className="hidden sm:inline">Mock Examinations</span>
+                    </span>
                   </div>
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-black ${
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-black shrink-0 whitespace-nowrap ${
                       portalTab === 'exams'
                         ? 'bg-black/25 text-theme-primary-text border border-theme-primary-text/30 shadow-xs'
                         : 'bg-theme-border/60 text-theme-text'
@@ -377,7 +381,7 @@ export const ExamCatalogScreen: React.FC = () => {
                   </span>
                 </div>
                 <p
-                  className={`text-[11px] leading-snug font-medium ${
+                  className={`text-[11px] leading-snug font-medium truncate ${
                     portalTab === 'exams' ? 'text-theme-primary-text' : 'text-theme-text-secondary'
                   }`}
                 >
@@ -393,22 +397,25 @@ export const ExamCatalogScreen: React.FC = () => {
                 aria-selected={portalTab === 'practice'}
                 aria-controls="panel-exam-catalog"
                 onClick={() => setPortalTab('practice')}
-                className={`w-full p-2.5 rounded-xl font-bold text-left transition-all duration-200 border-2 focus:outline-none focus:ring-4 focus:ring-theme-focus ${
+                className={`w-full p-2.5 rounded-xl font-bold text-left transition-all duration-200 border-2 overflow-hidden focus:outline-none focus:ring-4 focus:ring-theme-focus ${
                   portalTab === 'practice'
-                    ? 'border-theme-primary bg-theme-primary text-theme-primary-text shadow-md scale-[1.01]'
+                    ? 'border-theme-primary bg-theme-primary text-theme-primary-text shadow-md'
                     : 'border-theme-border bg-theme-surface hover:bg-theme-surface-elevated text-theme-text'
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between gap-1.5 mb-1 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     <Lightbulb
-                      className={`w-3.5 h-3.5 ${portalTab === 'practice' ? 'text-theme-primary-text' : 'text-emerald-500'}`}
+                      className={`w-3.5 h-3.5 shrink-0 ${portalTab === 'practice' ? 'text-theme-primary-text' : 'text-emerald-500'}`}
                       aria-hidden="true"
                     />
-                    <span className="text-xs sm:text-sm font-black leading-tight">Practice Arena</span>
+                    <span className="text-xs sm:text-sm font-black leading-tight truncate">
+                      <span className="xs:hidden">Practice</span>
+                      <span className="hidden xs:inline">Practice Arena</span>
+                    </span>
                   </div>
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-black ${
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-black shrink-0 whitespace-nowrap ${
                       portalTab === 'practice'
                         ? 'bg-black/25 text-theme-primary-text border border-theme-primary-text/30 shadow-xs'
                         : 'bg-theme-border/60 text-theme-text'
@@ -418,7 +425,7 @@ export const ExamCatalogScreen: React.FC = () => {
                   </span>
                 </div>
                 <p
-                  className={`text-[11px] leading-snug font-medium ${
+                  className={`text-[11px] leading-snug font-medium truncate ${
                     portalTab === 'practice' ? 'text-theme-primary-text' : 'text-theme-text-secondary'
                   }`}
                 >
