@@ -1616,7 +1616,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               type="text"
               value={globalSearch}
               onChange={(e) => setGlobalSearch(e.target.value)}
-              placeholder="Search or jump anywhere in portal... (Press /)"
+              placeholder="Search or jump anywhere... (Press /)"
               className="w-full pl-10 pr-20 py-2 rounded-xl bg-theme-bg border border-theme-border text-sm text-theme-text placeholder:text-theme-text/40 focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition font-medium"
             />
             <button
@@ -1634,7 +1634,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
           </div>
 
           {/* Right Header Controls */}
-          <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-between sm:justify-end w-full sm:w-auto">
             {/* Voice AI Button */}
             <button
               type="button"
@@ -1801,7 +1801,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           MongoDB Atlas Connected
                         </span>
-                        <span className="px-2.5 py-1 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 flex items-center gap-1.5">
+                        <span className="px-2.5 py-1 rounded-lg bg-teal-500/10 text-teal-700 dark:text-teal-300 font-extrabold border border-teal-500/20 flex items-center gap-1.5">
                           <Volume2 className="w-3 h-3" />
                           Web Audio Sonification Active
                         </span>
@@ -1813,15 +1813,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     </div>
 
                     {/* Right Quote Badge */}
-                    <div className="relative z-10 px-5 py-3.5 rounded-2xl bg-theme-surface/90 backdrop-blur-md border border-theme-border shadow-sm text-right shrink-0">
-                      <span className="block text-sm sm:text-base font-black text-theme-primary">
-                        “Accessible Education
-                      </span>
-                      <span className="block text-sm sm:text-base font-black text-theme-primary">
-                        Stronger Futures”
-                      </span>
-                      <span className="block text-[10px] text-theme-text/60 font-semibold mt-1">
-                        DrishtiX Architecture v2.4
+                    <div className="relative z-10 p-3 sm:px-5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-theme-surface/90 backdrop-blur-md border border-theme-border shadow-xs sm:shadow-sm flex items-center justify-between sm:block sm:text-right w-full sm:w-auto shrink-0 gap-3">
+                      <div className="flex items-center gap-2.5 sm:block">
+                        <div className="sm:hidden w-8 h-8 rounded-lg bg-theme-primary/10 text-theme-primary flex items-center justify-center font-black text-xs shrink-0">
+                          DX
+                        </div>
+                        <div>
+                          <span className="block text-xs sm:text-base font-black text-theme-primary tracking-tight leading-snug">
+                            “Accessible Education, Stronger Futures”
+                          </span>
+                          <span className="block text-[10px] text-theme-text/60 font-semibold mt-0.5">
+                            DrishtiX Architecture v2.4
+                          </span>
+                        </div>
+                      </div>
+                      <span className="sm:hidden px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#006d5c]/10 text-[#005a4c] dark:text-teal-300 shrink-0">
+                        Admin Core
                       </span>
                     </div>
                   </div>
