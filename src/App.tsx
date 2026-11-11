@@ -33,7 +33,66 @@ import { getDataSource } from './services/dataSource';
 import { formatDuration } from './utils/formatDuration';
 import { dispatchAccessibilityEvent } from './accessibility';
 import { useNetworkStatus } from './hooks/useNetworkStatus';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, RotateCcw } from 'lucide-react';
+import type { TextScale } from './store/usePreferencesStore';
+
+const ZoomResetFloatingPill: React.FC = () => {
+  const fontSize = usePreferencesStore((s) => s.fontSize);
+  const setFontSize = usePreferencesStore((s) => s.setFontSize);
+
+  if (fontSize <= 100) return null;
+
+  return (
+    <div
+      role="region"
+      aria-label="Text magnification reset control"
+      className="fixed bottom-4 right-4 z-[9990] flex items-center gap-1.5 shadow-2xl rounded-2xl p-1.5 backdrop-blur-md animate-in slide-in-from-bottom-2"
+      style={{
+        backgroundColor: 'color-mix(in srgb, var(--bg-surface-elevated) 95%, var(--bg-page))',
+        border: '2px solid var(--primary)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.36), 0 0 16px var(--primary-glow, rgba(0,0,0,0.2))',
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => {
+          setFontSize(100);
+          soundEffects.playSelect();
+          useAnnouncerStore.getState().announce('Text size returned to normal: 100 percent.', 'assertive', true);
+        }}
+        className="px-3.5 py-2 rounded-xl font-black text-xs sm:text-sm flex items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95"
+        style={{
+          background: 'var(--primary-gradient, var(--primary))',
+          color: 'var(--primary-text)',
+        }}
+        title="Reset text size to 100% (Shortcut: Press 0 or Ctrl+0)"
+        aria-label={`Reset text size from ${fontSize}% to 100% normal. Shortcut: Press 0.`}
+      >
+        <RotateCcw className="w-4 h-4 shrink-0" aria-hidden="true" />
+        <span>Reset Zoom ({fontSize}%)</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          const fontSizes: TextScale[] = [100, 125, 150, 175, 200];
+          const idx = fontSizes.indexOf(fontSize);
+          if (idx > 0) {
+            const prev = fontSizes[idx - 1];
+            setFontSize(prev);
+            soundEffects.playSelect();
+            useAnnouncerStore.getState().announce(`Text size decreased to ${prev} percent.`, 'polite', true);
+          }
+        }}
+        className="w-8 h-8 rounded-xl grid place-items-center font-black text-base border border-theme-border bg-theme-surface text-theme-text hover:border-theme-primary transition-transform active:scale-95 cursor-pointer"
+        title="Decrease text size (Shortcut: Press -)"
+        aria-label="Decrease text size. Shortcut: Press minus."
+      >
+        −
+      </button>
+    </div>
+  );
+};
 
 export const App: React.FC = () => {
   useNetworkStatus();
@@ -160,11 +219,14 @@ export const App: React.FC = () => {
   // catalog therefore stayed empty after signing in and only a full page
   // reload fixed it. Keying on the session covers both the restored-session
   // path and a fresh login, and re-reads on sign-out/sign-in.
+  // Whenever a student signs in or their session is restored across a page reload/refresh,
+  // guarantee the student portal opens directly on the first page (Mock Examinations catalog dashboard).
   useEffect(() => {
     if (!currentStudent) return;
-    void useExamStore.getState().loadCatalog();
-    // Keyed on the id, not the object: the auth store creates a new profile
-    // object on every update and reloading the catalog on each would be waste.
+    useExamStore.getState().resetToPortalFirstPage();
+    if (window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/register')) {
+      navigateTo('/');
+    }
   }, [currentStudent?.id]);
 
   // Apply saved theme and text scaling to DOM on mount
@@ -524,6 +586,7 @@ export const App: React.FC = () => {
         )}
         <A11ySettingsModal />
         <A11yInspector />
+        <ZoomResetFloatingPill />
         {emailResetModal}
       </div>
     );
@@ -575,12 +638,16 @@ export const App: React.FC = () => {
           <main id="main-content" className="flex-1 pb-16 focus:outline-none">
             <StudentAuthScreen
               initialMode={currentRoute.startsWith('/register') ? 'register' : 'login'}
-              onAuthenticated={() => navigateTo('/')}
+              onAuthenticated={() => {
+                useExamStore.getState().resetToPortalFirstPage();
+                navigateTo('/');
+              }}
               onNavigateToAdmin={() => navigateTo('/admin')}
             />
           </main>
           <A11ySettingsModal />
           <A11yInspector />
+          <ZoomResetFloatingPill />
           {emailResetModal}
         </div>
       );
@@ -596,6 +663,7 @@ export const App: React.FC = () => {
         />
         <A11ySettingsModal />
         <A11yInspector />
+        <ZoomResetFloatingPill />
         {emailResetModal}
       </div>
     );
@@ -644,6 +712,9 @@ export const App: React.FC = () => {
 
       {/* Live WCAG 2.1 AA Audit Inspector */}
       <A11yInspector />
+
+      {/* Text Magnification Reset Safety Floating Pill */}
+      <ZoomResetFloatingPill />
 
       {/* AI Conversational Voice Assistant */}
       <VoiceAssistantOrb />

@@ -169,12 +169,12 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
         boxShadow: scrolled ? '0 4px 32px rgba(0,0,0,0.12)' : 'none',
       }}
     >
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 xl:gap-6">
-        {/* Top bar on Mobile / Left on Desktop */}
-        <div className="flex items-center justify-between w-full sm:w-auto gap-3 shrink-0">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+        {/* Left: Brand + Menu Toggle */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Brand */}
           <a href="#top" className="flex items-center gap-2 sm:gap-3 rounded-xl no-underline group shrink-0">
-            <div className="relative w-8 h-8 sm:w-9 sm:h-9">
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9 shrink-0">
               <div
                 className="absolute inset-0 rounded-xl transition-transform group-hover:scale-110"
                 style={{ background: 'var(--primary-gradient)', boxShadow: '0 4px 16px var(--primary-glow)' }}
@@ -193,75 +193,54 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
             </div>
           </a>
 
-          {/* MOBILE-ONLY Top Right: Login, Sign Up, & Menu Toggle */}
-          <div className="flex sm:hidden items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={onSignIn}
-              className="h-8 px-2 rounded-lg border border-theme-border bg-theme-surface font-bold text-xs text-theme-text flex items-center gap-1 shadow-xs active:scale-95 cursor-pointer"
-              aria-label="Login to candidate portal"
-            >
-              <LogIn className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
-              <span>Login</span>
-            </button>
-            <button
-              type="button"
-              onClick={onRegister}
-              className="h-8 px-2.5 rounded-lg font-black text-xs text-theme-primary-text flex items-center gap-1 shadow-md active:scale-95 cursor-pointer"
-              style={{
-                background: 'var(--primary-gradient)',
-                boxShadow: '0 2px 10px var(--primary-glow)',
-              }}
-              aria-label="Register / Sign Up for new account"
-            >
-              <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Sign Up</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const next = !mobileMenuOpen;
-                setMobileMenuOpen(next);
-                say(next ? 'Navigation menu opened.' : 'Navigation menu closed.');
-              }}
-              aria-expanded={mobileMenuOpen}
-              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-              aria-controls="mobile-nav-menu"
-              className="w-8 h-8 grid place-items-center rounded-lg border border-theme-border bg-theme-surface text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all active:scale-95 shadow-xs cursor-pointer"
-            >
-              {mobileMenuOpen ? <X className="w-4 h-4 text-theme-primary" /> : <Menu className="w-4 h-4" />}
-            </button>
-          </div>
+          {/* Menu Toggle (always visible on small screens OR when font size is enlarged) */}
+          <button
+            type="button"
+            onClick={() => {
+              const next = !mobileMenuOpen;
+              setMobileMenuOpen(next);
+              say(next ? 'Navigation menu opened.' : 'Navigation menu closed.');
+            }}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-controls="mobile-nav-menu"
+            className={`w-8 h-8 grid place-items-center rounded-lg border border-theme-border bg-theme-surface text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all active:scale-95 shadow-xs cursor-pointer ${
+              fontSize > 100 ? 'grid' : 'grid lg:hidden'
+            }`}
+          >
+            {mobileMenuOpen ? <X className="w-4 h-4 text-theme-primary" /> : <Menu className="w-4 h-4" />}
+          </button>
         </div>
 
-        {/* Nav — desktop */}
-        <nav aria-label="Primary navigation" className="hidden lg:block shrink-0">
-          <ul className="flex items-center gap-0.5 xl:gap-1 list-none m-0 p-0">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.href} className="shrink-0">
-                <a
-                  href={item.href}
-                  className="px-2 xl:px-3.5 py-1.5 rounded-xl text-xs xl:text-sm font-bold text-theme-text-secondary no-underline hover:bg-theme-surface hover:text-theme-primary transition-all duration-150 block whitespace-nowrap"
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        {/* Nav — desktop (only shown when font scale is normal 100% to ensure accessibility controls are never squished or pushed out) */}
+        {fontSize <= 100 && (
+          <nav aria-label="Primary navigation" className="hidden lg:block shrink min-w-0">
+            <ul className="flex items-center gap-0.5 xl:gap-1 list-none m-0 p-0 flex-wrap">
+              {NAV_ITEMS.map((item) => (
+                <li key={item.href} className="shrink-0">
+                  <a
+                    href={item.href}
+                    className="px-2 xl:px-3 py-1.5 rounded-xl text-xs font-bold text-theme-text-secondary no-underline hover:bg-theme-surface hover:text-theme-primary transition-all duration-150 block whitespace-nowrap"
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
 
-        {/* Right: Accessibility controls + Desktop Auth buttons */}
-        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto pt-1 sm:pt-0 border-t border-theme-border sm:border-t-0" style={{ borderColor: 'color-mix(in srgb, var(--border-color) 40%, transparent)' }}>
+        {/* Right: Accessibility controls + Desktop Auth buttons (ALWAYS shrink-0, NEVER pushed off!) */}
+        <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 ml-auto">
           {/* Accessibility controls */}
-          <div className="flex items-center justify-between sm:justify-end gap-1.5 w-full sm:w-auto" role="group" aria-label="Accessibility controls">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0" role="group" aria-label="Accessibility controls">
             <button
               type="button"
               onClick={toggleTts}
               aria-pressed={ttsEnabled}
               aria-label={ttsEnabled ? 'Spoken output on — tap to disable' : 'Spoken output off — tap to enable'}
               title={ttsEnabled ? 'Disable spoken output' : 'Enable spoken output'}
-              className={`${getIconBtnClass(ttsEnabled)} w-9`}
-              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
+              className={`${getIconBtnClass(ttsEnabled)} w-8 sm:w-9 h-8 sm:h-9`}
             >
               {ttsEnabled ? <Volume2 className="w-4 h-4" aria-hidden="true" /> : <VolumeX className="w-4 h-4" aria-hidden="true" />}
             </button>
@@ -271,8 +250,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               onClick={cycleTheme}
               title={`Theme: ${THEME_NAMES[theme]} — tap to change`}
               aria-label={`Colour theme: ${THEME_NAMES[theme]}. Tap to change.`}
-              className={`${getIconBtnClass(false)} w-9`}
-              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
+              className={`${getIconBtnClass(false)} w-8 sm:w-9 h-8 sm:h-9`}
             >
               <Contrast className="w-4 h-4" aria-hidden="true" />
             </button>
@@ -291,19 +269,18 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
               aria-pressed={fontSize > 100}
               title={
                 fontSize > 100
-                  ? `Text size: ${fontSize}% — Tab once to increase further, tab twice to reset to normal (100%)`
-                  : 'Text size: 100% (Normal) — Tab once to increase, tab twice to reset'
+                  ? `Text size: ${fontSize}% — Click to step, double-click to reset to 100% (Shortcut: Press 0)`
+                  : 'Text size: 100% (Normal) — Click to increase'
               }
               aria-label={
                 fontSize > 100
-                  ? `Text size ${fontSize}% increased. Tab once to increase, tab twice to reset to normal.`
-                  : 'Text size 100% normal. Tab once to increase, tab twice to reset.'
+                  ? `Text size ${fontSize}% increased. Click to step, double-click to reset to 100%.`
+                  : 'Text size 100% normal. Click to increase.'
               }
-              className={`${getIconBtnClass(fontSize > 100)} w-auto flex items-center justify-center px-2`}
-              style={{ minWidth: '36px', height: '36px', minHeight: '36px' }}
+              className={`${getIconBtnClass(fontSize > 100)} w-auto h-8 sm:h-9 flex items-center justify-center px-1.5 sm:px-2`}
             >
               <Type className="w-4 h-4 shrink-0" aria-hidden="true" />
-              <span className={`text-[10px] font-sans font-bold leading-none px-1 py-0.5 rounded border shadow-xs ml-1 ${
+              <span className={`text-[10px] font-sans font-bold leading-none px-1 py-0.5 rounded border shadow-xs ml-0.5 sm:ml-1 ${
                 fontSize > 100
                   ? 'border-theme-border bg-theme-surface-elevated text-theme-text font-extrabold'
                   : 'border-theme-border bg-theme-bg text-theme-text'
@@ -315,48 +292,46 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
             <button
               type="button"
               onClick={() => useExamStore.getState().setSettingsOpen(true)}
-              title="Full accessibility settings"
+              title="Full accessibility settings (Shortcut: A)"
               aria-label="Open full accessibility settings"
-              className={`${getIconBtnClass(false)} w-9`}
-              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
+              className={`${getIconBtnClass(false)} w-8 sm:w-9 h-8 sm:h-9`}
             >
               <Settings className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 
-          {/* Desktop Divider */}
-          <div className="hidden sm:block w-px h-5 self-center bg-theme-border mx-1 shrink-0" aria-hidden="true" />
+          {/* Auth buttons */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={onSignIn}
+              className="h-8 sm:h-9 px-2 sm:px-3 rounded-xl border border-theme-border bg-theme-surface font-bold text-xs sm:text-sm text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 flex items-center gap-1 sm:gap-1.5 shadow-sm shrink-0 cursor-pointer"
+            >
+              <LogIn className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
+              <span>Login</span>
+            </button>
 
-          {/* Desktop Auth buttons */}
-          <button
-            type="button"
-            onClick={onSignIn}
-            className="h-9 px-4 rounded-xl border border-theme-border bg-theme-surface font-bold text-sm text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-2 shadow-sm shrink-0"
-          >
-            <LogIn className="w-4 h-4" aria-hidden="true" />
-            <span>Login</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onRegister}
-            className="h-9 px-5 rounded-xl font-black text-sm text-theme-primary-text transition-all duration-200 active:scale-95 hidden sm:flex items-center gap-2 shadow-md hover:scale-105 shrink-0"
-            style={{
-              background: 'var(--primary-gradient)',
-              boxShadow: '0 4px 16px var(--primary-glow)',
-            }}
-          >
-            <UserPlus className="w-4 h-4" aria-hidden="true" />
-            <span>Sign Up</span>
-          </button>
+            <button
+              type="button"
+              onClick={onRegister}
+              className="h-8 sm:h-9 px-2.5 sm:px-3.5 rounded-xl font-black text-xs sm:text-sm text-theme-primary-text transition-all duration-200 active:scale-95 flex items-center gap-1 sm:gap-1.5 shadow-md hover:scale-105 shrink-0 cursor-pointer"
+              style={{
+                background: 'var(--primary-gradient)',
+                boxShadow: '0 4px 16px var(--primary-glow)',
+              }}
+            >
+              <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
+              <span className="hidden xs:inline">Sign Up</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Mobile Navigation Dropdown Menu — Full flexibility on mobile view */}
+      {/* Mobile Navigation Dropdown Menu — Full flexibility on mobile view OR when zoomed in */}
       {mobileMenuOpen && (
         <div
           id="mobile-nav-menu"
-          className="lg:hidden border-t px-3.5 py-4 space-y-3.5 transition-all duration-300 animate-in slide-in-from-top-2 max-h-[82vh] overflow-y-auto"
+          className={`${fontSize > 100 ? 'block' : 'lg:hidden'} border-t px-3.5 py-4 space-y-3.5 transition-all duration-300 animate-in slide-in-from-top-2 max-h-[82vh] overflow-y-auto`}
           style={{
             background: 'color-mix(in srgb, var(--bg-surface-elevated) 96%, var(--bg-page))',
             borderColor: 'color-mix(in srgb, var(--border-color) 45%, transparent)',

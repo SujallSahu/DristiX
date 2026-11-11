@@ -648,6 +648,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
         authBroadcastChannel?.postMessage('LOGIN');
         // Synchronize fresh authoritative test attempts for this candidate from the backend
         void get().syncSubmissions();
+        try {
+          const { useExamStore } = await import('./useExamStore');
+          useExamStore.getState().resetToPortalFirstPage();
+        } catch { }
         soundEffects.playSuccess();
         useAnnouncerStore
           .getState()
@@ -717,6 +721,10 @@ export const useAuthStore = create<AuthState>((set, get) => {
         })
         .catch(() => undefined);
 
+      try {
+        const { useExamStore } = await import('./useExamStore');
+        useExamStore.getState().resetToPortalFirstPage();
+      } catch { }
       soundEffects.playSuccess();
       useAnnouncerStore
         .getState()
@@ -816,7 +824,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     if (inFlightFetchStudents) {
       return inFlightFetchStudents;
     }
-    inFlightFetchStudents = (async () => {
+    const executeFetch = async () => {
       try {
         const students = await getDataSource().auth.listStudents();
         saveStored(STUDENTS_CACHE, students);
@@ -829,7 +837,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
       } finally {
         inFlightFetchStudents = null;
       }
-    })();
+    };
+    inFlightFetchStudents = executeFetch();
     return inFlightFetchStudents;
   },
 
@@ -904,7 +913,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       return inFlightSyncSubmissions;
     }
 
-    inFlightSyncSubmissions = (async () => {
+    const executeSync = async () => {
       // Single data source: always refresh from the backend.
       try {
         const source = getDataSource();
@@ -1024,7 +1033,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
       } finally {
         inFlightSyncSubmissions = null;
       }
-    })();
+    };
+    inFlightSyncSubmissions = executeSync();
 
     return inFlightSyncSubmissions;
   },

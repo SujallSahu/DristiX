@@ -102,6 +102,7 @@ export const ShortcutsHelpModal: React.FC = () => {
     { key: 'S', desc: 'Stop / Silence ongoing voice reading immediately' },
     { key: 'Q', desc: 'Toggle Question Palette / Navigation Drawer' },
     { key: '+ or -', desc: 'Increase (+) or Decrease (-) UI & Text Magnification Scale globally' },
+    { key: '0 or Ctrl + 0', desc: 'Reset UI & Text Magnification Scale back to 100% normal' },
     { key: '1 to 5', desc: 'In Accessibility modal: jump directly to 100%, 125%, 150%, 175%, 200%' },
     { key: 'Alt + S', desc: 'Submit Examination Session' },
     { key: 'Ctrl + Enter', desc: 'Sign out of candidate account (Student Portal)' },

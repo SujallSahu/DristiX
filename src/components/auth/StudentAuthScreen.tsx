@@ -266,6 +266,10 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
         setLoginError(message);
         return false;
       } else {
+        try {
+          const { useExamStore } = await import('../../store/useExamStore');
+          useExamStore.getState().resetToPortalFirstPage();
+        } catch { }
         onAuthenticated?.();
         return true;
       }
@@ -336,6 +340,10 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
       if (!ok) {
         setRegError('Registration failed. That Google Mail address or Roll Number may already be registered. Please sign in instead.');
       } else {
+        try {
+          const { useExamStore } = await import('../../store/useExamStore');
+          useExamStore.getState().resetToPortalFirstPage();
+        } catch { }
         onAuthenticated?.();
       }
     } catch (err: any) {

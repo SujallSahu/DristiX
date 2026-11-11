@@ -93,9 +93,22 @@ export function useGlobalShortcuts() {
       // If user is actively typing in a text field, let native typing happen
       if (isUserTyping(activeEl)) return;
 
-      // Global Text & UI Scaling shortcuts (+, =, -, _, Add, Subtract)
-      // Visually impaired users can quickly zoom in/out anywhere in the application
-      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      // Global Text & UI Scaling shortcuts (+, =, -, _, Add, Subtract, and 0 to reset)
+      // Visually impaired users can quickly zoom in/out or reset zoom anywhere in the application
+      // Supports both bare keys (+ / - / 0) and standard browser combos (Ctrl + + / Ctrl + - / Ctrl + 0)
+      if (!e.metaKey) {
+        // Reset Zoom to 100% via '0', 'Ctrl+0', 'Alt+0', 'Digit0', 'Numpad0'
+        if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
+          e.preventDefault();
+          usePreferencesStore.getState().setFontSize(100);
+          soundEffects.playSelect();
+          useAnnouncerStore
+            .getState()
+            .announce('Text size returned to normal: 100 percent.', 'assertive', true);
+          return;
+        }
+
+        // Increase Zoom
         if (e.key === '+' || e.key === '=' || e.key === 'Add') {
           e.preventDefault();
           const fontSizes: TextScale[] = [100, 125, 150, 175, 200];
@@ -107,15 +120,16 @@ export function useGlobalShortcuts() {
             soundEffects.playSelect();
             useAnnouncerStore
               .getState()
-              .announce(`Text scale adjusted to ${nextFont} percent.`, 'assertive', true);
+              .announce(`Text scale adjusted to ${nextFont} percent. Press 0 to reset.`, 'assertive', true);
           } else {
             useAnnouncerStore
               .getState()
-              .announce('Maximum magnification limit of 200 percent reached.', 'polite', true);
+              .announce('Maximum magnification limit of 200 percent reached. Press 0 to reset to 100 percent.', 'polite', true);
           }
           return;
         }
 
+        // Decrease Zoom
         if (e.key === '-' || e.key === '_' || e.key === 'Subtract') {
           e.preventDefault();
           const fontSizes: TextScale[] = [100, 125, 150, 175, 200];

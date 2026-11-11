@@ -945,7 +945,7 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
       <div className="mt-14 flex flex-wrap justify-center items-center gap-x-8 gap-y-3">
         {['WCAG 2.1 AA', 'Screen Reader First', 'Keyboard Complete', 'Server Timers'].map((t) => (
           <span key={t} className="flex items-center gap-2 text-xs font-bold text-theme-primary-text opacity-85">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" aria-hidden="true" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
             {t}
           </span>
         ))}

@@ -193,6 +193,7 @@ interface ExamState {
 
   // View & Exam Actions
   setPortalTab: (tab: 'exams' | 'practice') => void;
+  resetToPortalFirstPage: () => void;
   /** Loads the catalog from the active data source. Call once on boot. */
   loadCatalog: () => Promise<void>;
   /**
@@ -838,6 +839,29 @@ export const useExamStore = create<ExamState>((set, get) => ({
         'assertive',
         true
       );
+  },
+
+  resetToPortalFirstPage: () => {
+    set({
+      activeView: 'catalog',
+      portalTab: 'exams',
+      examMode: 'exam',
+      currentIndex: 0,
+      selectedOptions: {},
+      markedForReview: {},
+      visitedQuestions: {},
+      isSubmitted: false,
+      submissionTime: null,
+      serverReport: null,
+      attemptId: null,
+      isPaletteOpen: false,
+      isSubmitModalOpen: false,
+      isSettingsOpen: false,
+      isShortcutsOpen: false,
+      activeSectionFilter: 'All',
+      catalogError: null,
+    });
+    void get().loadCatalog();
   },
 
   selectExam: async (

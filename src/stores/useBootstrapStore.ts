@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getDataSource } from '../services/dataSource';
 import { useAuthStore } from '../store/useAuthStore';
+import { getStoredSessionUser } from '../services/dataSource/apiToken';
 import type { UserProfile } from '../../shared/types';
 
 type Status = 'idle' | 'loading' | 'ready' | 'error';
@@ -60,6 +61,11 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
             localStorage.getItem('dristix_admin_auth') === 'true')) ||
         (user && (user as any).role === 'ADMIN');
 
+      const storedStudent = !wasAdmin ? getStoredSessionUser() : null;
+      const isServerStudent = user && (user as any).role !== 'ADMIN';
+      const isStoredStudent = storedStudent && storedStudent.role !== 'ADMIN';
+      const activeStudent = isServerStudent ? user : (isStoredStudent ? storedStudent : null);
+
       // Differentiate student session vs administrator session accurately
       if (user && (user as any).role === 'ADMIN') {
         useAuthStore.getState().setSession(null);
@@ -70,14 +76,20 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
         }
         void useAuthStore.getState().syncSubmissions();
         void useAuthStore.getState().fetchStudents();
-      } else if (user) {
-        useAuthStore.getState().setSession(user as any);
+      } else if (activeStudent) {
+        // PRESERVE STUDENT AUTH: Student was authenticated before reload/refresh.
+        // Opens the student portal directly on the first page (Mock Examinations catalog).
+        useAuthStore.getState().setSession(activeStudent as any);
         useAuthStore.setState({ isAdminAuthenticated: false });
         sessionStorage.removeItem('dristix_admin_auth');
         if (typeof window !== 'undefined') {
           localStorage.removeItem('dristix_admin_auth');
         }
         void useAuthStore.getState().syncSubmissions();
+        try {
+          const { useExamStore } = await import('../store/useExamStore');
+          useExamStore.getState().resetToPortalFirstPage();
+        } catch { }
       } else if (wasAdmin) {
         // PRESERVE ADMIN AUTH: Admin was authenticated before reload/refresh.
         // Even if server session restore timed out or failed, preserve admin authentication!
@@ -98,7 +110,7 @@ export const useBootstrapStore = create<BootstrapState>((set) => ({
         }
       }
 
-      set({ status: 'ready', session: user, error: null });
+      set({ status: 'ready', session: (user || activeStudent) as UserProfile | null, error: null });
     } catch (err) {
       set({
         status: 'error',

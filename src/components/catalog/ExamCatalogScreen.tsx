@@ -102,9 +102,18 @@ export const ExamCatalogScreen: React.FC = () => {
     }
   }, [activeExamsList, isCatalogLoading, portalTab, announce]);
 
-  // Reset category filter to 'All' when portal tab changes between mock exams and practice
+  // When ExamCatalogScreen mounts, guarantee the first page starts clean with 'All' categories and fresh catalog
   useEffect(() => {
     setSelectedCategory('All');
+    setSearchQuery('');
+    setFocusedIndex(0);
+    void loadCatalog();
+  }, []);
+
+  // Reset category filter and search query when portal tab changes between mock exams and practice
+  useEffect(() => {
+    setSelectedCategory('All');
+    setSearchQuery('');
     setFocusedIndex(0);
   }, [portalTab]);
 
