@@ -385,7 +385,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
         <div className="p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold text-theme-text/60">Tests Completed</span>
-            <Target className="w-5 h-5 text-indigo-500" aria-hidden="true" />
+            <Target className="w-5 h-5 text-theme-primary" aria-hidden="true" />
           </div>
           <div className="mt-2">
             <span className="text-3xl sm:text-4xl font-black text-theme-text">{stats.totalTests}</span>
@@ -399,11 +399,11 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
         <div className="p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold text-theme-text/60">Best Score</span>
-            <Award className="w-5 h-5 text-amber-500" aria-hidden="true" />
+            <Award className="w-5 h-5 text-theme-primary" aria-hidden="true" />
           </div>
           <div className="mt-2">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl sm:text-4xl font-black text-emerald-500">
+              <span className="text-3xl sm:text-4xl font-black text-theme-primary">
                 {stats.bestScorePercent}%
               </span>
               <span className="text-xs font-bold text-theme-text/60">({stats.bestScoreMarks})</span>
@@ -418,13 +418,13 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
         <div className="p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold text-theme-text/60">Average Accuracy</span>
-            <TrendingUp className="w-5 h-5 text-emerald-500" aria-hidden="true" />
+            <TrendingUp className="w-5 h-5 text-theme-primary" aria-hidden="true" />
           </div>
           <div className="mt-2">
             <span className="text-3xl sm:text-4xl font-black text-theme-text">{stats.avgAccuracy}%</span>
             <div className="w-full bg-theme-border h-2 rounded-full mt-2 overflow-hidden">
               <div
-                className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                className="bg-theme-primary h-full rounded-full transition-all duration-500"
                 style={{ width: `${stats.avgAccuracy}%` }}
               />
             </div>
@@ -435,18 +435,18 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
         <div className="p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold text-theme-text/60">Questions Solved</span>
-            <Sparkles className="w-5 h-5 text-yellow-500" aria-hidden="true" />
+            <Sparkles className="w-5 h-5 text-theme-primary" aria-hidden="true" />
           </div>
           <div className="mt-2">
             <span className="text-3xl sm:text-4xl font-black text-theme-text">
               {stats.totalAttempted}
             </span>
             <div className="flex items-center gap-2 mt-1 text-xs">
-              <span className="text-emerald-500 font-bold flex items-center gap-0.5">
+              <span className="text-theme-success font-bold flex items-center gap-0.5">
                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                 {stats.totalCorrect} Correct
               </span>
-              <span className="text-red-500 font-bold flex items-center gap-0.5">
+              <span className="text-theme-danger font-bold flex items-center gap-0.5">
                 <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
                 {stats.totalIncorrect} Wrong
               </span>
@@ -513,7 +513,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by test name or code..."
-                className="w-full pl-9 pr-3 py-1.5 rounded-xl border-2 border-theme-border bg-theme-bg text-theme-text text-xs focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                className="w-full pl-9 pr-3 py-1.5 rounded-xl border-2 border-theme-border bg-theme-bg text-theme-text text-xs focus:outline-none focus:ring-4 focus:ring-theme-focus-ring focus:border-theme-primary"
               />
             </div>
           </div>
@@ -566,7 +566,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                       onFocus={() => setFocusedRowIndex(idx)}
                       className={`transition-colors focus:outline-none ${
                         isFocused
-                          ? 'bg-yellow-400/10 ring-2 ring-yellow-400 font-semibold'
+                          ? 'bg-theme-primary/10 ring-2 ring-theme-primary font-semibold'
                           : 'hover:bg-theme-bg/60'
                       }`}
                     >
@@ -586,8 +586,8 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                         <span
                           className={`px-2.5 py-1 rounded-full text-xs font-bold inline-flex items-center justify-center border whitespace-nowrap ${
                             sub.examType === 'practice'
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                              : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                              ? 'bg-theme-primary/15 text-theme-primary border-theme-primary/30'
+                              : 'bg-theme-surface-elevated text-theme-text border-theme-border'
                           }`}
                         >
                           {sub.examType === 'practice' ? 'Practice Drill' : 'Timed Exam'}
@@ -618,10 +618,10 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                         <span
                           className={`px-2.5 py-1 rounded-full text-xs font-bold border inline-flex items-center justify-center ${
                             sub.percentage >= 80
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                              ? 'bg-theme-success/15 text-theme-success border-theme-success/30'
                               : sub.percentage >= 60
-                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                              ? 'bg-theme-primary/15 text-theme-primary border-theme-primary/30'
+                              : 'bg-theme-danger/15 text-theme-danger border-theme-danger/30'
                           }`}
                         >
                           {Math.round(sub.percentage)}%
@@ -631,10 +631,10 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                       {/* Breakdown */}
                       <td className="py-3.5 px-4 align-middle text-xs whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">
+                          <span className="px-2 py-0.5 rounded bg-theme-success/15 text-theme-success font-bold">
                             {sub.correctCount} Correct
                           </span>
-                          <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold">
+                          <span className="px-2 py-0.5 rounded bg-theme-danger/15 text-theme-danger font-bold">
                             {sub.incorrectCount} Incorrect
                           </span>
                           <span className="px-2 py-0.5 rounded bg-theme-border/40 text-theme-text/70 font-medium">
@@ -669,8 +669,8 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                                 onClick={() => void handleRetakeTest(sub)}
                                 className={`px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 focus:outline-none focus:ring-4 transition shadow-xs cursor-pointer ${
                                   isAvailable
-                                    ? 'border-theme-primary bg-theme-primary text-theme-primary-text hover:bg-theme-primary/90 focus:ring-yellow-400'
-                                    : 'border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 focus:ring-amber-400'
+                                    ? 'border-theme-primary bg-theme-primary text-theme-primary-text hover:bg-theme-primary/90 focus:ring-theme-focus-ring'
+                                    : 'border-theme-warning/50 bg-theme-warning/10 text-theme-warning hover:bg-theme-warning/20 focus:ring-theme-focus-ring'
                                 }`}
                                 title={
                                   isAvailable
@@ -697,7 +697,7 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
                                 setHistoryVersion((v) => v + 1);
                               }
                             }}
-                            className="p-1.5 rounded-lg border border-theme-border bg-theme-bg hover:border-red-500/50 hover:bg-red-500/10 text-theme-text/60 hover:text-red-500 transition focus:outline-none focus:ring-4 focus:ring-red-400"
+                            className="p-1.5 rounded-lg border border-theme-border bg-theme-bg hover:border-theme-danger/50 hover:bg-theme-danger/10 text-theme-text/60 hover:text-theme-danger transition focus:outline-none focus:ring-4 focus:ring-theme-focus-ring"
                             title="Remove this test attempt from your view"
                             aria-label={`Remove attempt record for ${sub.examTitle} from view`}
                           >

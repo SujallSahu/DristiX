@@ -82,15 +82,15 @@ export const A11yInspector: React.FC = () => {
           type="button"
           onClick={handleOpen}
           aria-label="Open WCAG 2.1 AA Accessibility Inspector (Powered by axe-core)"
-          className="px-2 sm:px-3 py-1 sm:py-2 rounded-full border-2 border-theme-border bg-theme-surface text-theme-text hover:bg-theme-bg shadow-xl flex items-center gap-1 sm:gap-1.5 font-bold text-[10px] sm:text-xs transition ring-2 ring-theme-focus-ring"
+          className="px-2 sm:px-3 py-1 sm:py-2 rounded-full border-2 border-theme-border bg-theme-surface text-theme-text hover:bg-theme-bg shadow-xl flex items-center gap-1 sm:gap-1.5 font-bold text-[10px] sm:text-xs transition focus:outline-none focus:ring-2 focus:ring-theme-focus-ring"
         >
-          <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500 shrink-0" aria-hidden="true" />
+          <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-theme-primary shrink-0" aria-hidden="true" />
           <span>a11y Audit</span>
           {auditResults && (
             <span
               className={`px-1.5 py-0.2 rounded-full text-[9px] sm:text-[10px] font-black ${
                 auditResults.violations.length === 0
-                  ? 'bg-emerald-700 text-white shadow-xs'
+                  ? 'bg-theme-primary text-theme-primary-text shadow-xs'
                   : 'bg-theme-danger text-white'
               }`}
             >
@@ -111,7 +111,7 @@ export const A11yInspector: React.FC = () => {
           <div className="w-full max-w-2xl max-h-[85vh] bg-theme-surface border-2 border-theme-border rounded-xl shadow-2xl flex flex-col overflow-hidden text-theme-text">
             <div className="p-4 border-b-2 border-theme-border flex justify-between items-center bg-theme-bg">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-6 h-6 text-emerald-500" aria-hidden="true" />
+                <ShieldCheck className="w-6 h-6 text-theme-primary" aria-hidden="true" />
                 <div>
                   <h2 id="inspector-title" className="text-lg font-bold">
                     WCAG 2.1 AA Live Inspector (axe-core)
@@ -274,7 +274,7 @@ export const A11yInspector: React.FC = () => {
                     <div className="max-h-48 overflow-y-auto space-y-1 text-xs">
                       {auditResults.passes.slice(0, 15).map((p) => (
                         <div key={p.id} className="p-2 rounded bg-theme-bg border border-theme-border flex items-center gap-2">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" aria-hidden="true" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-theme-success flex-shrink-0" aria-hidden="true" />
                           <span className="truncate">{p.help}</span>
                         </div>
                       ))}

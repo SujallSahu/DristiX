@@ -897,9 +897,21 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
         backgroundSize: '48px 48px',
       }}
     />
-    {/* Glow orbs */}
-    <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] rounded-full bg-white/10 blur-3xl pointer-events-none" aria-hidden="true" />
-    <div className="absolute -bottom-32 right-1/4 w-[400px] h-[400px] rounded-full bg-white/10 blur-3xl pointer-events-none" aria-hidden="true" />
+    {/* Subtle decorative ambient radial glow (pure CSS gradient, no Tailwind bg-white classes that can turn black in dark themes) */}
+    <div
+      className="dx-cta-glow absolute -top-40 left-1/4 w-[500px] h-[500px] rounded-full pointer-events-none"
+      aria-hidden="true"
+      style={{
+        background: 'radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 70%)',
+      }}
+    />
+    <div
+      className="dx-cta-glow absolute -bottom-32 right-1/4 w-[400px] h-[400px] rounded-full pointer-events-none"
+      aria-hidden="true"
+      style={{
+        background: 'radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%)',
+      }}
+    />
 
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
       <span
@@ -934,19 +946,30 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
         </button>
         <a
           href="#exams"
-          className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-9 rounded-2xl border-2 font-extrabold text-sm sm:text-lg text-theme-primary-text hover:bg-white/10 hover:scale-105 active:scale-97 transition-all inline-flex items-center justify-center no-underline cursor-pointer"
-          style={{ borderColor: 'color-mix(in srgb, var(--primary-text) 35%, transparent)' }}
+          className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-9 rounded-2xl border-2 font-extrabold text-sm sm:text-lg text-theme-primary-text hover:scale-105 active:scale-97 transition-all inline-flex items-center justify-center no-underline cursor-pointer"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--primary-text) 35%, transparent)',
+            background: 'color-mix(in srgb, var(--primary-text) 8%, transparent)',
+          }}
         >
           Browse exams first
         </a>
       </div>
 
       {/* Trust badges */}
-      <div className="mt-14 flex flex-wrap justify-center items-center gap-x-8 gap-y-3">
+      <div className="mt-12 sm:mt-14 flex flex-wrap justify-center items-center gap-2.5 sm:gap-4">
         {['WCAG 2.1 AA', 'Screen Reader First', 'Keyboard Complete', 'Server Timers'].map((t) => (
-          <span key={t} className="flex items-center gap-2 text-xs font-bold text-theme-primary-text opacity-85">
-            <CheckCircle2 className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
-            {t}
+          <span
+            key={t}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-colors shadow-xs"
+            style={{
+              color: 'var(--primary-text)',
+              background: 'color-mix(in srgb, var(--primary-text) 12%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--primary-text) 26%, transparent)',
+            }}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-current shrink-0" aria-hidden="true" />
+            <span>{t}</span>
           </span>
         ))}
       </div>

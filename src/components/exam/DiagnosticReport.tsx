@@ -227,7 +227,7 @@ export const DiagnosticReport: React.FC = () => {
             <span className="text-xs uppercase font-bold text-theme-text-secondary block">
               Correct / Attempted
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-emerald-500 mt-1">
+            <div className="text-2xl sm:text-3xl font-black text-theme-primary mt-1">
               {report.correctCount} <span className="text-sm font-normal text-theme-text-secondary">/ {report.attemptedCount}</span>
             </div>
           </div>
@@ -236,7 +236,7 @@ export const DiagnosticReport: React.FC = () => {
             <span className="text-xs uppercase font-bold text-theme-text-secondary block">
               Unattempted
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-amber-500 mt-1">
+            <div className="text-2xl sm:text-3xl font-black text-theme-text mt-1">
               {report.unattemptedCount}
             </div>
           </div>
@@ -260,9 +260,9 @@ export const DiagnosticReport: React.FC = () => {
         {/* Candidate Exam Feedback Card / Callout */}
         <section aria-label="Examination Feedback" className="mt-6">
           {feedback.isSubmitted ? (
-            <div className="p-4 sm:p-5 rounded-xl border-2 border-emerald-500/40 bg-emerald-500/10 flex flex-wrap items-center justify-between gap-4">
+            <div className="p-4 sm:p-5 rounded-xl border-2 border-theme-primary/40 bg-theme-primary/10 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-500 border border-emerald-500/30">
+                <div className="p-2.5 rounded-xl bg-theme-primary/20 text-theme-primary border border-theme-primary/30">
                   <CheckCircle2 className="w-6 h-6" aria-hidden="true" />
                 </div>
                 <div>
@@ -362,7 +362,7 @@ export const DiagnosticReport: React.FC = () => {
                   <td className="p-3.5 text-center border-r border-theme-border">
                     {sec.attempted}
                   </td>
-                  <td className="p-3.5 text-center border-r border-theme-border font-bold text-emerald-500">
+                  <td className="p-3.5 text-center border-r border-theme-border font-bold text-theme-success">
                     {sec.correct}
                   </td>
                   <td className="p-3.5 text-right font-mono font-bold text-theme-primary">

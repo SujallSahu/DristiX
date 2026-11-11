@@ -646,7 +646,7 @@ a.bg-theme-primary {
 
 /* Transform all surfaces & cards into pitch black with yellow border */
 [data-theme="high-contrast"] .bg-white,
-[data-theme="high-contrast"] [class*="bg-white/"],
+[data-theme="high-contrast"] [class*="bg-white/"]:not(.pointer-events-none):not([class*="blur-"]):not(.dx-cta-glow),
 [data-theme="high-contrast"] [class*="bg-slate-"],
 [data-theme="high-contrast"] [class*="bg-gray-"],
 [data-theme="high-contrast"] [class*="bg-zinc-"],
@@ -756,13 +756,65 @@ a.bg-theme-primary {
   border: 1px solid #A89900 !important;
 }
 
+/* High-Contrast: Ensure all status indicators, metric numbers, and icons follow pure electric yellow */
+[data-theme="high-contrast"] [class*="text-emerald-"],
+[data-theme="high-contrast"] [class*="text-green-"],
+[data-theme="high-contrast"] [class*="text-cyan-"],
+[data-theme="high-contrast"] [class*="text-teal-"],
+[data-theme="high-contrast"] [class*="text-indigo-"],
+[data-theme="high-contrast"] [class*="text-blue-"],
+[data-theme="high-contrast"] [class*="text-amber-"],
+[data-theme="high-contrast"] [class*="text-yellow-"],
+[data-theme="high-contrast"] .text-theme-success,
+[data-theme="high-contrast"] [class*="text-theme-success"] {
+  color: #FFEE00 !important;
+  stroke: #FFEE00 !important;
+}
+
+[data-theme="high-contrast"] [class*="bg-emerald-"]:not(.btn-signout):not([class*="btn-signout"]),
+[data-theme="high-contrast"] [class*="bg-green-"]:not(.btn-signout):not([class*="btn-signout"]),
+[data-theme="high-contrast"] [class*="bg-cyan-"],
+[data-theme="high-contrast"] [class*="bg-teal-"],
+[data-theme="high-contrast"] [class*="bg-indigo-"],
+[data-theme="high-contrast"] [class*="bg-blue-"],
+[data-theme="high-contrast"] [class*="bg-amber-"],
+[data-theme="high-contrast"] [class*="bg-yellow-"] {
+  background-color: #FFEE00 !important;
+  color: #000000 !important;
+  border-color: #FFEE00 !important;
+}
+
+[data-theme="high-contrast"] [class*="bg-emerald-"]:not(.btn-signout):not([class*="btn-signout"]) *,
+[data-theme="high-contrast"] [class*="bg-green-"]:not(.btn-signout):not([class*="btn-signout"]) *,
+[data-theme="high-contrast"] [class*="bg-amber-"] *,
+[data-theme="high-contrast"] [class*="bg-yellow-"] * {
+  color: #000000 !important;
+}
+
+/* High-Contrast progress bar fills & meters */
+[data-theme="high-contrast"] progress::-webkit-progress-value,
+[data-theme="high-contrast"] [role="progressbar"] > div,
+[data-theme="high-contrast"] .bg-theme-primary[style*="width"] {
+  background-color: #FFEE00 !important;
+}
+
+/* Decorative ambient glow orbs */
+[data-theme="high-contrast"] .dx-cta-glow {
+  display: none !important;
+}
+
+[data-theme="dark"] .dx-cta-glow,
+.dark .dx-cta-glow {
+  opacity: 0.15 !important;
+}
+
 /* --------------------------------------------------------
    2. CHARCOAL DARK (DEEP CHARCOAL & VIVID EMERALD 14:1)
    -------------------------------------------------------- */
 [data-theme="dark"] .bg-white,
-[data-theme="dark"] [class*="bg-white/"],
+[data-theme="dark"] [class*="bg-white/"]:not(.pointer-events-none):not([class*="blur-"]):not(.dx-cta-glow),
 .dark .bg-white,
-.dark [class*="bg-white/"] {
+.dark [class*="bg-white/"]:not(.pointer-events-none):not([class*="blur-"]):not(.dx-cta-glow) {
   background-color: var(--bg-surface) !important;
   color: var(--text-primary) !important;
 }
@@ -822,7 +874,7 @@ a.bg-theme-primary {
 
 /* Frosted surfaces in Liquid Glass */
 [data-theme="liquid-glass"] .bg-white,
-[data-theme="liquid-glass"] [class*="bg-white/"] {
+[data-theme="liquid-glass"] [class*="bg-white/"]:not(.pointer-events-none):not([class*="blur-"]):not(.dx-cta-glow) {
   background: rgba(255, 255, 255, 0.75) !important;
   backdrop-filter: blur(28px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
