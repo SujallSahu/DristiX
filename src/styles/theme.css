@@ -707,6 +707,9 @@ a.bg-theme-primary {
 [data-theme="high-contrast"] .bg-theme-primary,
 [data-theme="high-contrast"] button.bg-theme-primary,
 [data-theme="high-contrast"] a.bg-theme-primary,
+[data-theme="high-contrast"] .dx-btn-primary,
+[data-theme="high-contrast"] button.dx-btn-primary,
+[data-theme="high-contrast"] a.dx-btn-primary,
 [data-theme="high-contrast"] .bg-\[\#006d5c\],
 [data-theme="high-contrast"] [class*="bg-[#006d5c]"],
 [data-theme="high-contrast"] .bg-\[\#005a4c\],
@@ -717,11 +720,15 @@ a.bg-theme-primary {
   background-color: #FFEE00 !important;
   color: #000000 !important;
   border-color: #FFEE00 !important;
-  font-weight: 800 !important;
+  font-weight: 900 !important;
 }
 
 [data-theme="high-contrast"] .bg-theme-primary *,
 [data-theme="high-contrast"] button.bg-theme-primary *,
+[data-theme="high-contrast"] a.bg-theme-primary *,
+[data-theme="high-contrast"] .dx-btn-primary *,
+[data-theme="high-contrast"] button.dx-btn-primary *,
+[data-theme="high-contrast"] a.dx-btn-primary *,
 [data-theme="high-contrast"] [class*="bg-[#006d5c]"] *,
 [data-theme="high-contrast"] [class*="bg-[#008f7a]"] * {
   color: #000000 !important;
@@ -729,7 +736,7 @@ a.bg-theme-primary {
 }
 
 /* Secondary & ghost buttons in High Contrast */
-[data-theme="high-contrast"] button:not(.bg-theme-primary):not([class*="bg-theme-primary"]):not([class*="bg-[#006d5c]"]):not(.btn-signout):not([class*="btn-signout"]) {
+[data-theme="high-contrast"] button:not(.bg-theme-primary):not([class*="bg-theme-primary"]):not(.dx-btn-primary):not([class*="dx-btn-primary"]):not([class*="bg-[#006d5c]"]):not(.btn-signout):not([class*="btn-signout"]) {
   border-color: #FFEE00;
   color: #FFEE00;
 }
@@ -842,6 +849,20 @@ a.bg-theme-primary {
 [data-theme="dark"] [class*="bg-[#006d5c]"] *,
 .dark .bg-\[\#006d5c\] *,
 .dark [class*="bg-[#006d5c]"] * {
+  color: #071511 !important;
+  stroke: #071511 !important;
+}
+
+/* Primary CTA buttons in Dark mode: Vivid Emerald #10B981 with dark text #071511 */
+[data-theme="dark"] .dx-btn-primary,
+.dark .dx-btn-primary {
+  background: linear-gradient(135deg, #10B981 0%, #34D399 100%) !important;
+  color: #071511 !important;
+  font-weight: 900 !important;
+}
+
+[data-theme="dark"] .dx-btn-primary *,
+.dark .dx-btn-primary * {
   color: #071511 !important;
   stroke: #071511 !important;
 }

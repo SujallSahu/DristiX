@@ -342,7 +342,7 @@ export const ExamCatalogScreen: React.FC = () => {
             <div
               role="tablist"
               aria-label="Portal Section Selector. Press T to switch between Mock Exams and Practice Arena."
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2"
+              className="grid grid-cols-2 lg:grid-cols-1 gap-2"
             >
               {/* Mock Examinations Tab */}
               <button
@@ -763,7 +763,7 @@ export const ExamCatalogScreen: React.FC = () => {
                     }}
                     aria-labelledby={`exam-title-${exam.id}`}
                     aria-describedby={`exam-stats-${exam.id}`}
-                    className={`flex flex-col justify-between p-5 sm:p-6 rounded-2xl bg-theme-surface border-2 overflow-hidden transition-all shadow-sm outline-none focus:ring-4 focus:ring-theme-focus cursor-pointer ${
+                    className={`flex flex-col justify-between p-4 sm:p-6 rounded-2xl bg-theme-surface border-2 overflow-hidden transition-all shadow-sm outline-none focus:ring-4 focus:ring-theme-focus cursor-pointer ${
                       isFocused
                         ? isPractice
                           ? 'border-emerald-600 ring-2 ring-emerald-600/30 shadow-md'

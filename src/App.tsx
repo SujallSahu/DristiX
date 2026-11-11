@@ -46,7 +46,7 @@ const ZoomResetFloatingPill: React.FC = () => {
     <div
       role="region"
       aria-label="Text magnification reset control"
-      className="fixed bottom-4 right-4 z-[9990] flex items-center gap-1.5 shadow-2xl rounded-2xl p-1.5 backdrop-blur-md animate-in slide-in-from-bottom-2"
+      className="fixed bottom-16 right-3 sm:bottom-4 sm:right-4 z-[9990] flex items-center gap-1.5 shadow-2xl rounded-2xl p-1.5 backdrop-blur-md animate-in slide-in-from-bottom-2"
       style={{
         backgroundColor: 'color-mix(in srgb, var(--bg-surface-elevated) 95%, var(--bg-page))',
         border: '2px solid var(--primary)',

@@ -120,11 +120,16 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSignIn }) => {
               <button
                 type="button"
                 onClick={onSignIn}
-                className="dx-btn-primary h-12 sm:h-14 px-6 sm:px-9 text-sm sm:text-base flex items-center justify-center gap-2.5 sm:gap-3 group shadow-lg"
+                className="dx-btn-primary h-12 sm:h-14 px-6 sm:px-9 text-sm sm:text-base flex items-center justify-center gap-2.5 sm:gap-3 group shadow-lg cursor-pointer"
+                style={{
+                  background: 'var(--primary-gradient)',
+                  color: 'var(--primary-text)',
+                }}
               >
-                <span className="relative z-10 font-black">Start Practicing Free</span>
+                <span className="relative z-10 font-black" style={{ color: 'inherit' }}>Start Practicing Free</span>
                 <ArrowRight
                   className="relative z-10 w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1"
+                  style={{ color: 'inherit' }}
                   aria-hidden="true"
                 />
               </button>

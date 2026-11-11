@@ -378,17 +378,17 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
       </div>
 
       {/* 4 Interactive KPI Cards */}
-      <section aria-labelledby="kpi-heading" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <section aria-labelledby="kpi-heading" className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <h3 id="kpi-heading" className="sr-only">Key Performance Metrics</h3>
 
         {/* Card 1: Total Tests Taken */}
-        <div className="p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold text-theme-text/60">Tests Completed</span>
             <Target className="w-5 h-5 text-theme-primary" aria-hidden="true" />
           </div>
           <div className="mt-2">
-            <span className="text-3xl sm:text-4xl font-black text-theme-text">{stats.totalTests}</span>
+            <span className="text-2xl sm:text-4xl font-black text-theme-text">{stats.totalTests}</span>
             <span className="text-xs text-theme-text/60 block mt-1">
               {stats.examCount} Timed Exams • {stats.practiceCount} Drills
             </span>
@@ -396,14 +396,14 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
         </div>
 
         {/* Card 2: Best Score Achieved */}
-        <div className="p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold text-theme-text/60">Best Score</span>
             <Award className="w-5 h-5 text-theme-primary" aria-hidden="true" />
           </div>
           <div className="mt-2">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl sm:text-4xl font-black text-theme-primary">
+              <span className="text-2xl sm:text-4xl font-black text-theme-primary">
                 {stats.bestScorePercent}%
               </span>
               <span className="text-xs font-bold text-theme-text/60">({stats.bestScoreMarks})</span>
@@ -415,13 +415,13 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
         </div>
 
         {/* Card 3: Average Accuracy */}
-        <div className="p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold text-theme-text/60">Average Accuracy</span>
             <TrendingUp className="w-5 h-5 text-theme-primary" aria-hidden="true" />
           </div>
           <div className="mt-2">
-            <span className="text-3xl sm:text-4xl font-black text-theme-text">{stats.avgAccuracy}%</span>
+            <span className="text-2xl sm:text-4xl font-black text-theme-text">{stats.avgAccuracy}%</span>
             <div className="w-full bg-theme-border h-2 rounded-full mt-2 overflow-hidden">
               <div
                 className="bg-theme-primary h-full rounded-full transition-all duration-500"
@@ -432,13 +432,13 @@ export const StudentAnalyticsView: React.FC<StudentAnalyticsViewProps> = ({ onRe
         </div>
 
         {/* Card 4: Questions Solved */}
-        <div className="p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-theme-surface border-2 border-theme-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-bold text-theme-text/60">Questions Solved</span>
             <Sparkles className="w-5 h-5 text-theme-primary" aria-hidden="true" />
           </div>
           <div className="mt-2">
-            <span className="text-3xl sm:text-4xl font-black text-theme-text">
+            <span className="text-2xl sm:text-4xl font-black text-theme-text">
               {stats.totalAttempted}
             </span>
             <div className="flex items-center gap-2 mt-1 text-xs">

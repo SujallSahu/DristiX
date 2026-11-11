@@ -284,11 +284,16 @@ export const ExamCategories: React.FC<SectionProps> = ({ onSignIn }) => (
         <button
           type="button"
           onClick={onSignIn}
-          className="dx-btn-primary h-12 px-8 text-sm flex items-center justify-center gap-2.5 group shrink-0 mb-6 sm:mb-16 w-full sm:w-auto"
+          className="dx-btn-primary h-12 px-8 text-sm flex items-center justify-center gap-2.5 group shrink-0 mb-6 sm:mb-16 w-full sm:w-auto cursor-pointer"
+          style={{
+            background: 'var(--primary-gradient)',
+            color: 'var(--primary-text)',
+          }}
         >
-          <span className="relative z-10">Browse All Exams</span>
+          <span className="relative z-10" style={{ color: 'inherit' }}>Browse All Exams</span>
           <ArrowRight
             className="relative z-10 w-4 h-4 transition-transform group-hover:translate-x-1"
+            style={{ color: 'inherit' }}
             aria-hidden="true"
           />
         </button>
