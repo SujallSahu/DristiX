@@ -627,6 +627,7 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigateTo('/')}
+                  aria-label="Back to home"
                   className="h-9 sm:h-10 px-2.5 sm:px-4 rounded-xl border-2 border-theme-border bg-theme-bg font-bold text-xs sm:text-sm text-theme-text hover:bg-theme-surface-elevated transition shrink-0"
                 >
                   ← Back <span className="hidden sm:inline">to home</span>

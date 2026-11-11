@@ -305,6 +305,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
             <button
               type="button"
               onClick={onSignIn}
+              aria-label="Login"
               className="h-8 sm:h-9 px-2 sm:px-3 rounded-xl border border-theme-border bg-theme-surface font-bold text-xs sm:text-sm text-theme-text hover:border-theme-primary hover:text-theme-primary transition-all duration-200 active:scale-95 flex items-center gap-1 sm:gap-1.5 shadow-sm shrink-0 cursor-pointer"
             >
               <LogIn className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
@@ -314,6 +315,8 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
             <button
               type="button"
               onClick={onRegister}
+              aria-label="Sign Up"
+              title="Sign Up"
               className="h-8 sm:h-9 px-2.5 sm:px-3.5 rounded-xl font-black text-xs sm:text-sm text-theme-primary-text transition-all duration-200 active:scale-95 flex items-center gap-1 sm:gap-1.5 shadow-md hover:scale-105 shrink-0 cursor-pointer"
               style={{
                 background: 'var(--primary-gradient)',
