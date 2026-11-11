@@ -265,8 +265,11 @@ export const AdminGraphBuilder: React.FC<AdminGraphBuilderProps> = ({ graph, onC
 
         {/* Graph Type Selector */}
         <div className="flex items-center gap-2">
-          <label className="text-xs font-bold text-theme-text/80 uppercase">Graph Type:</label>
+          <label htmlFor="admin-graph-type" className="text-xs font-bold text-theme-text/80 uppercase">Graph Type:</label>
           <select
+            id="admin-graph-type"
+            aria-label="Graph Type"
+            title="Select Graph Type"
             value={graph.type}
             onChange={(e) => updateGraph('type', e.target.value as GraphType)}
             className="p-2 rounded-xl bg-theme-surface border-2 border-theme-border font-bold text-xs text-theme-text outline-none focus:border-indigo-500"
@@ -579,10 +582,13 @@ export const AdminGraphBuilder: React.FC<AdminGraphBuilderProps> = ({ graph, onC
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-theme-text/70 mb-1">
+                <label htmlFor="admin-sonification-voice-detail" className="block text-[11px] font-semibold text-theme-text/70 mb-1">
                   Voice Speech Detail Level
                 </label>
                 <select
+                  id="admin-sonification-voice-detail"
+                  aria-label="Voice Speech Detail Level"
+                  title="Voice Speech Detail Level"
                   value={sonification.voiceDetail || 'standard'}
                   onChange={(e) => updateSonification('voiceDetail', e.target.value as any)}
                   className="w-full p-2 rounded-lg bg-theme-bg border border-theme-border text-xs text-theme-text font-bold"

@@ -388,7 +388,7 @@ export const Header: React.FC = () => {
           )}
 
           {/* Student Notifications (Rule 2) */}
-          {currentStudent && <StudentNotificationDropdown />}
+          <StudentNotificationDropdown />
 
           {/* AI Conversational Voice Assistant Button */}
           <button

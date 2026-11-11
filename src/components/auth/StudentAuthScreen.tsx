@@ -826,6 +826,9 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                 </label>
                 <select
                   id="reg-pref"
+                  name="reg-pref"
+                  aria-label="Assistive Preference"
+                  title="Assistive Preference"
                   value={regPref}
                   onChange={(e) =>
                     setRegPref(e.target.value as AccessibilityPreference)

@@ -54,8 +54,13 @@ export const StudentNotificationDropdown: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [coords, setCoords] = React.useState<{ top: number; right: number } | null>(null);
+  const [isMobile, setIsMobile] = React.useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 640 : false
+  );
 
   const updatePosition = useCallback(() => {
+    const mobile = typeof window !== 'undefined' ? window.innerWidth < 640 : false;
+    setIsMobile(mobile);
     if (dropdownRef.current) {
       const rect = dropdownRef.current.getBoundingClientRect();
       const rightDistance = Math.max(12, window.innerWidth - rect.right);
@@ -87,8 +92,6 @@ export const StudentNotificationDropdown: React.FC = () => {
 
   // Fetch notifications on mount, when student changes, when tab regains focus, or on cross-tab broadcast
   useEffect(() => {
-    if (!currentStudent) return;
-
     void fetchNotifications();
 
     const handleRefresh = () => {
@@ -254,7 +257,7 @@ export const StudentNotificationDropdown: React.FC = () => {
 
   return (
     <>
-      <div ref={dropdownRef} className="relative inline-block">
+      <div ref={dropdownRef} className="relative inline-block shrink-0">
         {/* Notification Bell Button */}
         <button
           type="button"
@@ -263,12 +266,12 @@ export const StudentNotificationDropdown: React.FC = () => {
           aria-label={`Notifications. ${unreadCount} unread. Press N to view.`}
           aria-expanded={isOpen}
           aria-haspopup="dialog"
-          className={`relative p-2 rounded-lg border-2 transition flex items-center gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 cursor-pointer ${unreadCount > 0
+          className={`relative p-1.5 sm:p-2 rounded-lg border-2 transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 cursor-pointer shrink-0 ${unreadCount > 0
             ? 'border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 shadow-sm'
             : 'border-theme-border bg-theme-bg text-theme-text hover:border-theme-primary'
             }`}
         >
-          <Bell className="w-5 h-5" aria-hidden="true" />
+          <Bell className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" aria-hidden="true" />
 
           {/* Unread Counter Badge */}
           {unreadCount > 0 && (
@@ -290,7 +293,7 @@ export const StudentNotificationDropdown: React.FC = () => {
           <>
             {/* Backdrop click dismisser */}
             <div
-              className="fixed inset-0 z-[9998] bg-black/20 dark:bg-black/40 backdrop-blur-[1px]"
+              className="fixed inset-0 z-[9998] bg-black/25 dark:bg-black/50 backdrop-blur-[2px]"
               onClick={() => toggleOpen(false)}
               aria-hidden="true"
             />
@@ -298,11 +301,24 @@ export const StudentNotificationDropdown: React.FC = () => {
               ref={panelRef}
               role="dialog"
               aria-label="Student Notifications Panel"
-              style={{
-                top: coords ? `${coords.top}px` : '72px',
-                right: coords ? `${coords.right}px` : '16px',
-              }}
-              className="fixed w-[calc(100vw-1.5rem)] sm:w-96 max-w-sm sm:max-w-none rounded-2xl bg-theme-surface border-2 border-theme-border shadow-2xl p-4 z-[9999] space-y-3 animate-in fade-in zoom-in-95 duration-150 text-theme-text"
+              style={
+                isMobile
+                  ? {
+                      top: coords ? `${Math.max(56, Math.min(coords.top, window.innerHeight - 220))}px` : '64px',
+                      left: '12px',
+                      right: '12px',
+                      width: 'calc(100vw - 24px)',
+                      maxWidth: 'calc(100vw - 24px)',
+                      maxHeight: 'calc(100dvh - 76px)',
+                    }
+                  : {
+                      top: coords ? `${coords.top}px` : '72px',
+                      right: coords ? `${coords.right}px` : '16px',
+                      left: 'auto',
+                      maxHeight: 'calc(100dvh - 84px)',
+                    }
+              }
+              className="fixed inset-x-3 sm:inset-x-auto sm:right-[16px] sm:w-96 max-w-[calc(100vw-1.5rem)] sm:max-w-none rounded-2xl bg-theme-surface border-2 border-theme-border shadow-2xl p-3.5 sm:p-4 z-[9999] space-y-3 animate-in fade-in zoom-in-95 duration-150 text-theme-text flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between pb-2.5 border-b border-theme-border">
@@ -326,7 +342,7 @@ export const StudentNotificationDropdown: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => void markAllAsRead()}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:underline cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[11px] font-extrabold text-teal-700 dark:text-teal-300 hover:underline cursor-pointer"
                     title="Mark all notifications as read"
                   >
                     <CheckCheck className="w-3.5 h-3.5" aria-hidden="true" />
@@ -337,7 +353,7 @@ export const StudentNotificationDropdown: React.FC = () => {
 
               {/* Notification List */}
               <div
-                className="space-y-2 max-h-80 overflow-y-auto pr-1"
+                className="space-y-2 overflow-y-auto pr-1 flex-1 min-h-0 max-h-[55dvh] sm:max-h-80"
                 role="feed"
                 aria-label="Notification List"
               >
@@ -422,7 +438,7 @@ export const StudentNotificationDropdown: React.FC = () => {
                                   : 'Start Mock Exam'}
                               </span>
                             </button>
-                            <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 flex items-center gap-0.5">
+                            <span className="text-[10px] font-extrabold text-teal-700 dark:text-teal-300 flex items-center gap-0.5">
                               <span>Details</span>
                               <ChevronRight className="w-3 h-3" aria-hidden="true" />
                             </span>
@@ -442,7 +458,7 @@ export const StudentNotificationDropdown: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => toggleOpen(false)}
-                  className="text-theme-text hover:text-teal-600 font-bold cursor-pointer"
+                  className="text-theme-text hover:text-teal-700 dark:hover:text-teal-300 font-bold cursor-pointer"
                 >
                   Close
                 </button>

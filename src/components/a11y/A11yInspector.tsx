@@ -30,6 +30,24 @@ export const A11yInspector: React.FC = () => {
           el.setAttribute('aria-label', labelText);
         }
       });
+
+      // Ensure all select elements have an accessible name (WCAG 2.1 AA select-name)
+      const selectElements = document.querySelectorAll<HTMLSelectElement>('select');
+      selectElements.forEach((sel, index) => {
+        if (!sel.getAttribute('aria-label') && !sel.getAttribute('aria-labelledby') && !sel.getAttribute('title')) {
+          const parentLabel = sel.closest('label');
+          const idLabel = sel.id ? document.querySelector(`label[for="${sel.id}"]`) : null;
+          const prevLabel = sel.previousElementSibling?.tagName === 'LABEL' ? sel.previousElementSibling : null;
+          const labelText =
+            parentLabel?.textContent?.trim() ||
+            idLabel?.textContent?.trim() ||
+            prevLabel?.textContent?.trim() ||
+            sel.name ||
+            `Select option ${index + 1}`;
+          sel.setAttribute('aria-label', labelText);
+          sel.setAttribute('title', labelText);
+        }
+      });
     }
 
     try {

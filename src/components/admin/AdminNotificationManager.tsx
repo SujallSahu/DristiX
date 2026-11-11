@@ -126,7 +126,7 @@ export const AdminNotificationManager: React.FC = () => {
         <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-theme-surface/80 border border-theme-border text-xs font-bold text-theme-text shadow-sm">
           <Users className="w-4 h-4 text-teal-500" aria-hidden="true" />
           <span>Audience: </span>
-          <span className="px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-300 font-extrabold font-mono">
+          <span className="px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300 font-extrabold font-mono">
             {students.length} Students
           </span>
         </div>
@@ -142,7 +142,7 @@ export const AdminNotificationManager: React.FC = () => {
                 <Send className="w-4 h-4 text-[#006d5c] dark:text-teal-400" aria-hidden="true" />
                 <h3 className="text-base font-extrabold text-theme-text">Compose Notification</h3>
               </div>
-              <span className="text-[11px] font-bold text-teal-600 dark:text-teal-400">
+              <span className="text-[11px] font-bold text-teal-700 dark:text-teal-300">
                 Delivers to All Candidates
               </span>
             </div>
@@ -207,6 +207,8 @@ export const AdminNotificationManager: React.FC = () => {
                 </label>
                 <select
                   id="admin-attach-exam"
+                  aria-label="Attach Mock Test or Practice Drill"
+                  title="Attach Mock Test or Practice Drill"
                   value={selectedExamId}
                   onChange={(e) => {
                     const newId = e.target.value;

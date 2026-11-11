@@ -107,7 +107,7 @@ export const StudentNotificationDetailModal: React.FC<StudentNotificationDetailM
       <div
         ref={modalRef}
         tabIndex={-1}
-        className="w-full max-w-lg rounded-2xl bg-theme-surface border-2 border-theme-border shadow-2xl p-5 sm:p-6 space-y-4 focus:outline-none"
+        className="w-full max-w-lg rounded-2xl bg-theme-surface border-2 border-theme-border shadow-2xl p-4 sm:p-6 space-y-3 sm:space-y-4 focus:outline-none max-h-[90dvh] overflow-y-auto"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-3 pb-3 border-b border-theme-border">

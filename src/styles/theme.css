@@ -1104,3 +1104,18 @@ header .btn-signout span {
   border: 2px solid #ffffff !important;
   font-weight: 800 !important;
 }
+
+/* ========================================================
+   WCAG 2.1 AA COLOR CONTRAST SAFEGUARD
+   Guarantees all teal utility text meets 4.5:1 minimum
+   contrast ratio against white and light surfaces.
+   ======================================================== */
+.text-teal-600 {
+  color: #0f766e !important; /* 5.52:1 contrast ratio against #ffffff */
+}
+
+.dark .text-teal-600,
+[data-theme="dark"] .text-teal-600,
+[data-theme="high-contrast"] .text-teal-600 {
+  color: #5eead4 !important; /* High contrast mint for dark backgrounds */
+}

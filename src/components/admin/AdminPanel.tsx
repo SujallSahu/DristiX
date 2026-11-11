@@ -2945,10 +2945,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
                   {/* Sort By Dropdown */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs font-bold text-theme-text/70 flex items-center gap-1">
+                    <label htmlFor="admin-student-sort" className="text-xs font-bold text-theme-text/70 flex items-center gap-1 cursor-pointer">
                       <SlidersHorizontal className="w-3.5 h-3.5" /> Sort:
-                    </span>
+                    </label>
                     <select
+                      id="admin-student-sort"
+                      aria-label="Sort Candidates"
+                      title="Sort Candidates"
                       value={studentSortBy}
                       onChange={(e) => setStudentSortBy(e.target.value as any)}
                       className="h-10 px-3 rounded-xl border border-theme-border bg-theme-bg text-xs sm:text-sm font-semibold text-theme-text focus:outline-none focus:ring-2 focus:ring-[#006d5c] cursor-pointer"
@@ -3933,10 +3936,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   {/* Format, Category, Difficulty */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
+                      <label htmlFor="admin-exam-type" className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
                         Module Format <span className="text-red-500">*</span>
                       </label>
                       <select
+                        id="admin-exam-type"
+                        aria-label="Module Format"
+                        title="Module Format"
                         value={examType}
                         onChange={(e) => setExamType(e.target.value as 'exam' | 'practice')}
                         className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition"
@@ -3947,10 +3953,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
+                      <label htmlFor="admin-exam-category" className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
                         Category / Stream <span className="text-red-500">*</span>
                       </label>
                       <select
+                        id="admin-exam-category"
+                        aria-label="Category / Stream"
+                        title="Category / Stream"
                         value={category}
                         onChange={(e) => setCategory(e.target.value as ExamCategory)}
                         className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition"
@@ -3963,10 +3972,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
+                      <label htmlFor="admin-exam-difficulty" className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
                         Difficulty Level
                       </label>
                       <select
+                        id="admin-exam-difficulty"
+                        aria-label="Difficulty Level"
+                        title="Difficulty Level"
                         value={difficulty}
                         onChange={(e) => setDifficulty(e.target.value as any)}
                         className="w-full p-3 rounded-xl bg-theme-bg border border-theme-border text-theme-text font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#006d5c] transition"
@@ -4398,8 +4410,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           {/* Image Source Inputs */}
                           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                             <div>
-                              <label className="block text-[11px] font-bold text-theme-text/70 mb-1">Diagram Type</label>
+                              <label htmlFor={`admin-diagram-type-${qIdx}`} className="block text-[11px] font-bold text-theme-text/70 mb-1">Diagram Type</label>
                               <select
+                                id={`admin-diagram-type-${qIdx}`}
+                                aria-label="Diagram Type"
+                                title="Diagram Type"
                                 value={q.diagramType || 'image'}
                                 onChange={(e) => handleUpdateQuestion(qIdx, 'diagramType', e.target.value)}
                                 className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border text-xs text-theme-text font-bold outline-none"

@@ -980,6 +980,8 @@ export const A11ySettingsModal: React.FC = () => {
                     </label>
                     <select
                       id="tts-voice-select"
+                      aria-label="Select Speech Voice Engine"
+                      title="Select Speech Voice Engine"
                       value={ttsVoice}
                       onFocus={() => {
                         handleSubcategoryFocus(
