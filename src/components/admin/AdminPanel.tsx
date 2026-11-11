@@ -12,7 +12,7 @@ import { MathEquation } from '../common/MathEquation';
 import { AdminGraphBuilder } from './AdminGraphBuilder';
 import { AdminNotificationManager } from './AdminNotificationManager';
 import { InteractiveSonificationGraph } from '../sonification/InteractiveSonificationGraph';
-import { usePreferencesStore, type TextScale } from '../../store/usePreferencesStore';
+import { usePreferencesStore, type TextScale, type ThemeMode } from '../../store/usePreferencesStore';
 import type { Exam, QuestionItem } from '../../../shared/types';
 import type { ExamCategory } from '../../data/examCategories';
 import {

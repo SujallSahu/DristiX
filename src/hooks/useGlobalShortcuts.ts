@@ -68,7 +68,7 @@ export function useGlobalShortcuts() {
         (e.ctrlKey || e.metaKey) &&
         (e.key === 'Enter' || e.code === 'Enter' || e.code === 'NumpadEnter')
       ) {
-        if (store.isFeedbackModalOpen || store.isSubmitModalOpen) {
+        if (store.feedback?.isOpen || store.isSubmitModalOpen) {
           return;
         }
 
