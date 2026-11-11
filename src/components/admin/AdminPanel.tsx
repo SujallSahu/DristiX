@@ -3993,10 +3993,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   {/* Title & Code */}
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <div className="sm:col-span-3">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
+                      <label htmlFor="admin-exam-title" className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
                         Test Title <span className="text-red-500">*</span>
                       </label>
                       <input
+                        id="admin-exam-title"
+                        aria-label="Test Title"
+                        title="Test Title"
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -4007,10 +4010,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
+                      <label htmlFor="admin-exam-code" className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
                         Exam Code <span className="text-red-500">*</span>
                       </label>
                       <input
+                        id="admin-exam-code"
+                        aria-label="Exam Code"
+                        title="Exam Code"
                         type="text"
                         value={code}
                         onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -4023,10 +4029,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
                   {/* Description */}
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
+                    <label htmlFor="admin-exam-description" className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
                       Overview & Description <span className="text-red-500">*</span>
                     </label>
                     <textarea
+                      id="admin-exam-description"
+                      aria-label="Overview & Description"
+                      title="Overview & Description"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={2}
@@ -4039,10 +4048,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                   {/* Duration, Marks, Negative Marking */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
+                      <label htmlFor="admin-exam-duration" className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
                         Duration (Minutes)
                       </label>
                       <input
+                        id="admin-exam-duration"
+                        aria-label="Duration (Minutes)"
+                        title="Duration (Minutes)"
                         type="number"
                         min={5}
                         max={180}
@@ -4053,10 +4065,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
+                      <label htmlFor="admin-exam-total-marks" className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
                         Total Marks
                       </label>
                       <input
+                        id="admin-exam-total-marks"
+                        aria-label="Total Marks"
+                        title="Total Marks"
                         type="number"
                         min={5}
                         max={300}
@@ -4067,10 +4082,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
+                      <label htmlFor="admin-exam-negative-marking" className="block text-xs font-bold uppercase tracking-wider text-theme-text/70 mb-1.5">
                         Negative Marking
                       </label>
                       <input
+                        id="admin-exam-negative-marking"
+                        aria-label="Negative Marking"
+                        title="Negative Marking"
                         type="text"
                         value={negativeMarking}
                         onChange={(e) => setNegativeMarking(e.target.value)}
@@ -4316,8 +4334,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         {/* Section name & Question Text */}
                         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                           <div>
-                            <label className="block text-xs font-bold text-theme-text/70 mb-1">Section</label>
+                            <label htmlFor={`admin-q-section-${qIdx}`} className="block text-xs font-bold text-theme-text/70 mb-1">Section</label>
                             <input
+                              id={`admin-q-section-${qIdx}`}
+                              aria-label={`Question ${qIdx + 1} Section`}
+                              title="Section"
                               type="text"
                               value={q.section}
                               onChange={(e) => handleUpdateQuestion(qIdx, 'section', e.target.value)}
@@ -4326,10 +4347,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             />
                           </div>
                           <div className="sm:col-span-3">
-                            <label className="block text-xs font-bold text-theme-text/70 mb-1">
+                            <label htmlFor={`admin-q-text-${qIdx}`} className="block text-xs font-bold text-theme-text/70 mb-1">
                               Question Statement <span className="text-red-500">*</span>
                             </label>
                             <textarea
+                              id={`admin-q-text-${qIdx}`}
+                              aria-label={`Question ${qIdx + 1} Statement`}
+                              title="Question Statement"
                               value={q.questionText}
                               onChange={(e) => handleUpdateQuestion(qIdx, 'questionText', e.target.value)}
                               onBlur={(e) => {
@@ -4354,10 +4378,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
                         {/* Math Formula Input + Live Preview */}
                         <div className="p-4 rounded-xl border border-[#006d5c]/30 bg-[#006d5c]/5 space-y-2">
-                          <label className="block text-xs font-bold text-[#005a4c] dark:text-teal-300">
+                          <label htmlFor={`admin-q-math-${qIdx}`} className="block text-xs font-bold text-[#005a4c] dark:text-teal-300">
                             Optional Mathematical Equation (LaTeX)
                           </label>
                           <input
+                            id={`admin-q-math-${qIdx}`}
+                            aria-label={`Question ${qIdx + 1} Mathematical Equation LaTeX`}
+                            title="Mathematical Equation (LaTeX)"
                             type="text"
                             value={q.mathLatex || ''}
                             onChange={(e) => handleUpdateQuestion(qIdx, 'mathLatex', e.target.value)}

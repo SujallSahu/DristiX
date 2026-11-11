@@ -48,6 +48,27 @@ export const A11yInspector: React.FC = () => {
           sel.setAttribute('title', labelText);
         }
       });
+
+      // Ensure all form input and textarea elements have an accessible label (WCAG 2.1 AA label)
+      const formInputElements = document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+        'input:not([type="hidden"]), textarea'
+      );
+      formInputElements.forEach((inp, index) => {
+        if (!inp.getAttribute('aria-label') && !inp.getAttribute('aria-labelledby') && !inp.getAttribute('title')) {
+          const parentLabel = inp.closest('label');
+          const idLabel = inp.id ? document.querySelector(`label[for="${inp.id}"]`) : null;
+          const prevLabel = inp.previousElementSibling?.tagName === 'LABEL' ? inp.previousElementSibling : null;
+          const labelText =
+            parentLabel?.textContent?.trim() ||
+            idLabel?.textContent?.trim() ||
+            prevLabel?.textContent?.trim() ||
+            inp.placeholder ||
+            inp.name ||
+            `Input field ${index + 1}`;
+          inp.setAttribute('aria-label', labelText);
+          inp.setAttribute('title', labelText);
+        }
+      });
     }
 
     try {
