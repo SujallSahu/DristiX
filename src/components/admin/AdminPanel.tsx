@@ -1753,7 +1753,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
             <button
               type="button"
               onClick={logoutAdmin}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white font-bold text-xs transition cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-600 text-red-700 dark:text-red-300 hover:text-white font-bold text-xs transition cursor-pointer"
               title="Sign out of Administrator account"
               aria-label="Logout of Admin account"
             >
@@ -4508,7 +4508,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               <label className="block text-[11px] font-bold text-theme-text/70 mb-1">
                                 Upload Image File
                               </label>
-                              <label className="w-full p-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-bold text-xs border border-purple-500/30 flex items-center justify-center gap-1.5 cursor-pointer transition">
+                              <label className="w-full p-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold text-xs border border-purple-500/30 flex items-center justify-center gap-1.5 cursor-pointer transition">
                                 <span>📁 Pick Image</span>
                                 <input
                                   type="file"
@@ -4536,7 +4536,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                   key={preset}
                                   type="button"
                                   onClick={() => handleApplyGeometryPreset(qIdx, preset)}
-                                  className="px-3 py-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-300 hover:bg-purple-500 hover:text-white font-bold text-[11px] transition"
+                                  className="px-3 py-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500 hover:text-white font-bold text-[11px] transition"
                                 >
                                   {label}
                                 </button>
@@ -4624,7 +4624,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                   aria-label={`Mark Option ${opt.number} as correct`}
                                 />
                                 <span className={`text-xs font-black font-mono px-2 py-0.5 rounded ${
-                                  q.correctOption === opt.number ? 'bg-emerald-500 text-white' : 'bg-theme-bg text-theme-text/70 border border-theme-border'
+                                  q.correctOption === opt.number ? 'bg-emerald-700 text-white' : 'bg-theme-bg text-theme-text/70 border border-theme-border'
                                 }`}>
                                   Opt {opt.number}
                                 </span>
@@ -4732,7 +4732,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
             <div className="bg-theme-surface border-2 border-theme-border rounded-3xl max-w-3xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
               <div className="flex items-center justify-between border-b border-theme-border pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-emerald-600 text-white">
+                  <span className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-emerald-700 text-white">
                     Student-Side Experience Preview
                   </span>
                   <span className="text-xs text-theme-text/70">

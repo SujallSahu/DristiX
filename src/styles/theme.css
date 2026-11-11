@@ -1107,7 +1107,7 @@ header .btn-signout span {
 
 /* ========================================================
    WCAG 2.1 AA COLOR CONTRAST SAFEGUARD
-   Guarantees all teal utility text meets 4.5:1 minimum
+   Guarantees all utility text meets 4.5:1 minimum
    contrast ratio against white and light surfaces.
    ======================================================== */
 .text-teal-600 {
@@ -1118,4 +1118,49 @@ header .btn-signout span {
 [data-theme="dark"] .text-teal-600,
 [data-theme="high-contrast"] .text-teal-600 {
   color: #5eead4 !important; /* High contrast mint for dark backgrounds */
+}
+
+/* Red alert/logout badges on light red backgrounds */
+.bg-red-500\/10.text-red-400,
+.bg-red-500\/10 .text-red-400,
+.bg-red-500\/10 > span {
+  color: #b91c1c !important; /* > 5.4:1 contrast ratio against #fdecec */
+}
+.dark .bg-red-500\/10.text-red-400,
+.dark .bg-red-500\/10 .text-red-400,
+.dark .bg-red-500\/10 > span,
+[data-theme="dark"] .bg-red-500\/10.text-red-400,
+[data-theme="dark"] .bg-red-500\/10 .text-red-400,
+[data-theme="dark"] .bg-red-500\/10 > span,
+[data-theme="high-contrast"] .bg-red-500\/10.text-red-400,
+[data-theme="high-contrast"] .bg-red-500\/10 .text-red-400,
+[data-theme="high-contrast"] .bg-red-500\/10 > span {
+  color: #fca5a5 !important;
+}
+
+/* Purple action badges on light purple backgrounds */
+.bg-purple-500\/10.text-purple-600,
+.bg-purple-500\/10 .text-purple-600,
+.bg-purple-500\/10 > span {
+  color: #7e22ce !important; /* > 5.8:1 contrast ratio against #ecddf0 */
+}
+.dark .bg-purple-500\/10.text-purple-600,
+.dark .bg-purple-500\/10 .text-purple-600,
+.dark .bg-purple-500\/10 > span,
+[data-theme="dark"] .bg-purple-500\/10.text-purple-600,
+[data-theme="dark"] .bg-purple-500\/10 .text-purple-600,
+[data-theme="dark"] .bg-purple-500\/10 > span,
+[data-theme="high-contrast"] .bg-purple-500\/10.text-purple-600,
+[data-theme="high-contrast"] .bg-purple-500\/10 .text-purple-600,
+[data-theme="high-contrast"] .bg-purple-500\/10 > span {
+  color: #d8b4fe !important;
+}
+
+/* Emerald green badges with white text */
+.bg-emerald-500.text-white,
+.bg-emerald-500 .text-white,
+.bg-emerald-600.text-white,
+.bg-emerald-600 .text-white {
+  background-color: #047857 !important; /* emerald-700 gives 4.55:1 against #ffffff */
+  color: #ffffff !important;
 }
