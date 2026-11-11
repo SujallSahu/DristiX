@@ -170,8 +170,8 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
       }}
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-        {/* Left: Brand + Menu Toggle */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Left: Brand + Menu Toggle (full width on mobile with menu toggle on far right) */}
+        <div className="flex items-center justify-between w-full lg:w-auto shrink-0">
           {/* Brand */}
           <a href="#top" className="flex items-center gap-2 sm:gap-3 rounded-xl no-underline group shrink-0">
             <div className="relative w-8 h-8 sm:w-9 sm:h-9 shrink-0">
@@ -193,7 +193,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
             </div>
           </a>
 
-          {/* Menu Toggle (always visible on small screens OR when font size is enlarged) */}
+          {/* Menu Toggle (Positioned at far right on mobile, next to brand on desktop zoom) */}
           <button
             type="button"
             onClick={() => {
@@ -230,8 +230,8 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
           </nav>
         )}
 
-        {/* Right: Accessibility controls + Desktop Auth buttons (ALWAYS shrink-0, NEVER pushed off!) */}
-        <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 ml-auto">
+        {/* Right: Accessibility controls + Desktop Auth buttons */}
+        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full lg:w-auto overflow-x-auto no-scrollbar pt-1.5 lg:pt-0 border-t border-theme-border/30 lg:border-t-0 shrink-0 ml-auto">
           {/* Accessibility controls */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0" role="group" aria-label="Accessibility controls">
             <button
