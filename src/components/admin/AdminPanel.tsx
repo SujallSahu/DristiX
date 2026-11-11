@@ -1278,13 +1278,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={handleManualSync}
             disabled={isSyncing}
             aria-label="Refresh Database Sync"
-            className="p-2 rounded-xl bg-[#06333c] text-teal-200 border border-[#0d4a57] hover:text-white text-xs transition"
+            className="p-1.5 sm:p-2 rounded-xl bg-[#06333c] text-teal-200 border border-[#0d4a57] hover:text-white text-xs transition"
             title="Sync Database"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-teal-300' : ''}`} />
@@ -1292,10 +1292,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
           <button
             type="button"
             onClick={onReturnToStudent}
-            className="px-3 py-1.5 rounded-xl bg-[#006d5c] text-white font-bold text-xs flex items-center gap-1.5 shadow"
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#06333c] hover:bg-[#006d5c] text-teal-100 hover:text-white font-bold text-xs flex items-center gap-1 shadow-xs transition"
+            title="Switch to Student Portal"
+            aria-label="Switch to Student Portal"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Portal</span>
+            <span className="hidden xs:inline">Portal</span>
+          </button>
+          <button
+            type="button"
+            onClick={logoutAdmin}
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl border border-red-500/40 bg-red-600/90 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition cursor-pointer"
+            title="Sign out of Administrator account"
+            aria-label="Logout of Admin account"
+          >
+            <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>Logout</span>
           </button>
         </div>
       </header>
@@ -1316,7 +1328,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
       {/* Left Sidebar (Dark Teal Enterprise Sidebar Matching Design) */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-screen w-64 sm:w-72 shrink-0 bg-[#031d22] text-white border-r border-[#0d3b45] flex flex-col justify-between p-4 transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-y-auto ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-[100dvh] max-h-[100dvh] w-64 sm:w-72 shrink-0 bg-[#031d22] text-white border-r border-[#0d3b45] flex flex-col justify-between p-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-y-auto ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           }`}
       >
         <div className="space-y-6">
@@ -1555,9 +1567,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
         </div>
 
         {/* Bottom Section: Decorative Card & Actions */}
-        <div className="space-y-3 pt-4">
+        <div className="space-y-3 pt-4 shrink-0">
           {/* Aesthetic Decorative Card (Matching Design) */}
-          <div className="relative p-4 rounded-2xl bg-gradient-to-br from-[#063b44] via-[#02242b] to-[#011417] border border-[#006d5c]/30 overflow-hidden shadow-lg">
+          <div className="hidden xs:block relative p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-[#063b44] via-[#02242b] to-[#011417] border border-[#006d5c]/30 overflow-hidden shadow-lg">
             <div className="absolute right-0 bottom-0 w-24 h-24 bg-[#006d5c]/10 rounded-full blur-xl pointer-events-none" />
             <div className="relative z-10 space-y-1">
               <div className="text-xs font-black tracking-wide text-teal-300">DrishtiX</div>
@@ -1581,9 +1593,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
             <button
               type="button"
               onClick={logoutAdmin}
-              className="w-full px-3 py-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition"
+              className="w-full px-3 py-2.5 rounded-xl border border-red-500/40 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white font-black text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
+              title="Sign out of Administrator account"
+              aria-label="Logout of Admin account"
             >
-              <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
+              <LogOut className="w-4 h-4" aria-hidden="true" />
               <span>Logout</span>
             </button>
           </div>
@@ -1734,6 +1748,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                 </div>
               </div>
             </div>
+
+            {/* Logout Button */}
+            <button
+              type="button"
+              onClick={logoutAdmin}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white font-bold text-xs transition cursor-pointer"
+              title="Sign out of Administrator account"
+              aria-label="Logout of Admin account"
+            >
+              <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Logout</span>
+            </button>
           </div>
         </header>
 
