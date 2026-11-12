@@ -934,9 +934,9 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
         The test starts the moment you're ready.
       </h2>
 
-      <p className="mt-4 sm:mt-7 text-sm sm:text-lg lg:text-xl leading-relaxed text-theme-primary-text opacity-90 font-medium max-w-none md:whitespace-nowrap mx-auto">
-        Sign in with the roll number and password your institution issued.
-        Registration is by institution invitation only.
+      <p className="mt-4 sm:mt-7 text-sm sm:text-lg lg:text-xl leading-relaxed text-theme-primary-text opacity-90 font-medium max-w-none md:whitespace-nowrap mx-auto text-balance">
+        <span className="block sm:inline">Sign in with the roll number and password your institution issued.</span>{' '}
+        <span className="block sm:inline mt-0.5 sm:mt-0">Registration is by institution invitation&nbsp;only.</span>
       </p>
 
       <div className="mt-8 sm:mt-14 flex flex-col sm:flex-row justify-center gap-3 sm:gap-5">

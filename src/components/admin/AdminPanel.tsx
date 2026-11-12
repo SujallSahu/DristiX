@@ -123,6 +123,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
   const [globalSearch, setGlobalSearch] = useState('');
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Admin Portal strictly enforces only 'Teal' (teal-cream) or 'Charcoal Dark' (dark)
+  useEffect(() => {
+    if (theme !== 'teal-cream' && theme !== 'dark') {
+      setTheme('teal-cream');
+    }
+  }, [theme, setTheme]);
+
   // Global Keyboard Shortcuts matching dashboard footer & Command Palette
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1685,48 +1692,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               </button>
             </div>
 
-            {/* Quick Multi-Theme Switcher (All 4 Themes) */}
+            {/* Quick Multi-Theme Switcher (Teal & Charcoal Dark Only) */}
             <button
               type="button"
               onClick={() => {
-                const themes: ThemeMode[] = ['teal-cream', 'liquid-glass', 'dark', 'high-contrast'];
-                const idx = themes.indexOf(theme);
-                const next = themes[(idx + 1) % themes.length];
+                const next: ThemeMode = theme === 'dark' ? 'teal-cream' : 'dark';
                 setTheme(next);
                 soundEffects.playSelect();
-                const label =
-                  next === 'teal-cream'
-                    ? 'Teal & Cream'
-                    : next === 'liquid-glass'
-                    ? 'Liquid Glass'
-                    : next === 'dark'
-                    ? 'Charcoal Dark'
-                    : 'High Contrast';
+                const label = next === 'dark' ? 'Charcoal Dark' : 'Teal';
                 useAnnouncerStore
                   .getState()
                   .announce(`Theme changed to ${label}.`, 'assertive', true);
               }}
-              className="px-3 py-1.5 rounded-xl border border-theme-border bg-theme-surface hover:bg-theme-border/30 text-xs sm:text-sm font-bold flex items-center gap-1.5 text-theme-text transition"
-              title={`Current theme: ${theme}. Click to switch theme.`}
-              aria-label={`Current theme: ${theme}. Click to switch theme.`}
+              className="px-3 py-1.5 rounded-xl border border-theme-border bg-theme-surface hover:bg-theme-border/30 text-xs sm:text-sm font-bold flex items-center gap-1.5 text-theme-text transition cursor-pointer"
+              title={`Current theme: ${theme === 'dark' ? 'Charcoal Dark' : 'Teal'}. Click to toggle theme.`}
+              aria-label={`Current theme: ${theme === 'dark' ? 'Charcoal Dark' : 'Teal'}. Click to toggle theme.`}
             >
               {theme === 'dark' ? (
-                <Moon className="w-4 h-4 text-emerald-400" />
-              ) : theme === 'high-contrast' ? (
-                <Sun className="w-4 h-4 text-[#FFEE00]" />
-              ) : theme === 'liquid-glass' ? (
-                <Sparkles className="w-4 h-4 text-purple-500" />
+                <Moon className="w-4 h-4 text-emerald-400" aria-hidden="true" />
               ) : (
-                <Sun className="w-4 h-4 text-amber-500" />
+                <Sun className="w-4 h-4 text-amber-500" aria-hidden="true" />
               )}
-              <span className="capitalize">
-                {theme === 'teal-cream'
-                  ? 'Teal'
-                  : theme === 'liquid-glass'
-                  ? 'Glass'
-                  : theme === 'dark'
-                  ? 'Dark'
-                  : 'Contrast'}
+              <span>
+                {theme === 'dark' ? 'Charcoal Dark' : 'Teal'}
               </span>
             </button>
 
@@ -4931,10 +4919,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         },
                       },
                       {
-                        label: 'Toggle Visual Theme Mode',
-                        icon: Sun,
+                        label: `Toggle Theme: ${theme === 'dark' ? 'Teal' : 'Charcoal Dark'}`,
+                        icon: theme === 'dark' ? Sun : Moon,
                         action: () => {
-                          const next = theme === 'dark' ? 'teal-cream' : theme === 'teal-cream' ? 'liquid-glass' : 'dark';
+                          const next: ThemeMode = theme === 'dark' ? 'teal-cream' : 'dark';
                           setTheme(next);
                           soundEffects.playSelect();
                         },
