@@ -145,7 +145,12 @@ body[data-theme="liquid-glass"] {
     0 4px 14px 0 rgba(0, 0, 0, 0.03),
     inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
     inset 0 -1px 2px 0 rgba(124, 58, 237, 0.06) !important;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease !important;
+  isolation: isolate;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 [data-theme="liquid-glass"] .bg-theme-surface:hover,
@@ -901,6 +906,11 @@ a.bg-theme-primary {
   -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
   border-color: rgba(255, 255, 255, 0.85) !important;
   color: #1B1428 !important;
+  isolation: isolate;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 [data-theme="liquid-glass"] aside {
@@ -909,6 +919,11 @@ a.bg-theme-primary {
   -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
   border-color: rgba(124, 58, 237, 0.25) !important;
   color: #1B1428 !important;
+  isolation: isolate;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 [data-theme="liquid-glass"] aside button[aria-selected="true"] {
@@ -1164,3 +1179,35 @@ header .btn-signout span {
   background-color: #047857 !important; /* emerald-700 gives 4.55:1 against #ffffff */
   color: #ffffff !important;
 }
+
+/* ========================================================
+   LIQUID GLASS MOBILE OS OPTIMIZATION
+   Eliminates backdrop-filter GPU tile buffer ghosting / smearing
+   on mobile devices (Android Adreno/Mali & iOS WebKit)
+   ======================================================== */
+@media (max-width: 768px) {
+  body[data-theme="liquid-glass"] {
+    background-attachment: scroll !important;
+  }
+
+  [data-theme="liquid-glass"] .bg-theme-surface:not(.bg-theme-primary):not([class*="bg-theme-primary"]),
+  [data-theme="liquid-glass"] .dx-glass-card,
+  [data-theme="liquid-glass"] .dx-feature-card,
+  [data-theme="liquid-glass"] .dx-step-card,
+  [data-theme="liquid-glass"] .dx-hero-card,
+  [data-theme="liquid-glass"] .dx-chip-card,
+  [data-theme="liquid-glass"] .dx-stat-card,
+  [data-theme="liquid-glass"] section.bg-theme-surface,
+  [data-theme="liquid-glass"] aside.bg-theme-surface,
+  [data-theme="liquid-glass"] .bg-white,
+  [data-theme="liquid-glass"] [class*="bg-white/"]:not(.pointer-events-none):not([class*="blur-"]):not(.dx-cta-glow) {
+    backdrop-filter: blur(14px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    isolation: isolate !important;
+  }
+}
+
