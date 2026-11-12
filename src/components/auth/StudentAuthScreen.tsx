@@ -378,9 +378,9 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
           <h1 className="text-2xl sm:text-3xl font-black text-theme-text tracking-tight">
             DristiX Candidate Portal
           </h1>
-          <p className="text-xs sm:text-sm font-medium text-theme-text/80 mt-1.5 text-center max-w-md mx-auto leading-relaxed px-1">
-            Accessible online examination &amp; practice platform designed for everyone.
-          </p>
+            <p className="text-xs sm:text-sm font-medium text-theme-text/80 mt-1.5 text-center leading-relaxed px-1 sm:whitespace-nowrap sm:max-w-none">
+              Accessible online examination &amp; practice platform designed for everyone.
+            </p>
         </div>
 
         {/* Tab Switcher: Login vs Register */}
@@ -403,11 +403,10 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
               setAuthMode('login');
               soundEffects.playSelect();
             }}
-            className={`flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 sm:gap-2 transition-all focus:ring-4 focus:ring-theme-focus cursor-pointer ${
-              authMode === 'login'
+            className={`flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 sm:gap-2 transition-all focus:ring-4 focus:ring-theme-focus cursor-pointer ${authMode === 'login'
                 ? 'bg-theme-primary text-theme-primary-text shadow-md'
                 : 'text-theme-text hover:bg-theme-surface/70'
-            }`}
+              }`}
           >
             <LogIn className="w-4.5 h-4.5" aria-hidden="true" />
             <span>Sign In</span>
@@ -427,11 +426,10 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
               setAuthMode('register');
               soundEffects.playSelect();
             }}
-            className={`flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 sm:gap-2 transition-all focus:ring-4 focus:ring-theme-focus cursor-pointer ${
-              authMode === 'register'
+            className={`flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 sm:gap-2 transition-all focus:ring-4 focus:ring-theme-focus cursor-pointer ${authMode === 'register'
                 ? 'bg-theme-primary text-theme-primary-text shadow-md'
                 : 'text-theme-text hover:bg-theme-surface/70'
-            }`}
+              }`}
           >
             <UserPlus className="w-4.5 h-4.5" aria-hidden="true" />
             <span>Register <span className="hidden xs:inline">New Student</span></span>
@@ -478,11 +476,10 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                 onFocus={() => speakInput('Enter your registered Google Mail address ending in at gmail dot com')}
                 placeholder="e.g. rahul@gmail.com"
                 required
-                className={`w-full px-4 py-3 rounded-xl bg-theme-surface border-2 text-theme-text placeholder:text-theme-text/50 focus:ring-4 focus:ring-theme-focus outline-none font-medium text-sm transition-all shadow-xs ${
-                  loginEmail.trim() && !isGmailDomain(loginEmail)
+                className={`w-full px-4 py-3 rounded-xl bg-theme-surface border-2 text-theme-text placeholder:text-theme-text/50 focus:ring-4 focus:ring-theme-focus outline-none font-medium text-sm transition-all shadow-xs ${loginEmail.trim() && !isGmailDomain(loginEmail)
                     ? 'border-amber-500 focus:border-amber-500'
                     : 'border-theme-border focus:border-theme-primary'
-                }`}
+                  }`}
               />
               {loginEmail.trim() && !isGmailDomain(loginEmail) && (
                 <p className="mt-1 text-xs text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
@@ -646,13 +643,12 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                   placeholder="e.g. rahul@gmail.com"
                   required
                   disabled={isEmailVerified}
-                  className={`w-full px-3.5 py-2.5 sm:py-3 pr-28 rounded-xl bg-theme-surface border-2 text-theme-text placeholder:text-theme-text/50 focus:ring-4 focus:ring-theme-focus outline-none font-medium text-sm transition ${
-                    isEmailVerified
+                  className={`w-full px-3.5 py-2.5 sm:py-3 pr-28 rounded-xl bg-theme-surface border-2 text-theme-text placeholder:text-theme-text/50 focus:ring-4 focus:ring-theme-focus outline-none font-medium text-sm transition ${isEmailVerified
                       ? 'border-emerald-500 bg-emerald-500/5'
                       : regEmail && !isGmailDomain(regEmail)
-                      ? 'border-amber-500 focus:border-amber-500'
-                      : 'border-theme-border focus:border-theme-primary'
-                  }`}
+                        ? 'border-amber-500 focus:border-amber-500'
+                        : 'border-theme-border focus:border-theme-primary'
+                    }`}
                 />
 
                 {!isEmailVerified && (
@@ -666,8 +662,8 @@ export const StudentAuthScreen: React.FC<StudentAuthScreenProps> = ({
                           resendCooldown > 0
                             ? `Resend available in ${resendCooldown} seconds`
                             : otpSent
-                            ? 'Resend verification code button'
-                            : 'Send verification code to your Google Mail button'
+                              ? 'Resend verification code button'
+                              : 'Send verification code to your Google Mail button'
                         )
                       }
                       title={resendCooldown > 0 ? `Resend available in ${resendCooldown}s` : undefined}
