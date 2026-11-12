@@ -1724,14 +1724,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
             <div className="flex items-center gap-2.5 pl-2.5 border-l border-theme-border">
               <div className="relative">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#006d5c] to-teal-400 text-white flex items-center justify-center font-black text-sm shadow-xs">
-                  SK
+                  Dx
                 </div>
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#051c22]" />
               </div>
               <div className="hidden sm:block text-left">
                 <div className="text-xs sm:text-sm font-extrabold text-theme-text leading-none">DrishtiX Administrator</div>
                 <div className="text-[11px] text-theme-text/60 font-mono mt-0.5 flex items-center gap-1">
-                  <span>ROOT-001</span>
                   <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">Super Admin</span>
                 </div>
               </div>
