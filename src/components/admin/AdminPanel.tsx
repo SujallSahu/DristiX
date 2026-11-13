@@ -4674,12 +4674,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             <label className="block text-xs font-bold text-amber-600 dark:text-amber-400 mb-1">
                               💡 Helpful Hint (For students in Practice Mode)
                             </label>
-                            <input
-                              type="text"
+                            <textarea
                               value={q.hint}
                               onChange={(e) => handleUpdateQuestion(qIdx, 'hint', e.target.value)}
+                              rows={2}
                               placeholder="Clue, mnemonic, or formula to help solve..."
-                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-amber-500/40 placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
+                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-amber-500/40 placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal leading-relaxed resize-y min-h-[3.5rem]"
                             />
                           </div>
 
@@ -4690,9 +4690,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             <textarea
                               value={q.explanation}
                               onChange={(e) => handleUpdateQuestion(qIdx, 'explanation', e.target.value)}
-                              rows={1}
+                              rows={3}
                               placeholder="Step-by-step mathematical or logical solution..."
-                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-emerald-500/40 placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
+                              className="w-full p-2.5 rounded-xl bg-theme-surface border border-theme-border text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-emerald-500/40 placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal leading-relaxed resize-y min-h-[4.5rem]"
                             />
                           </div>
                         </div>
