@@ -701,16 +701,40 @@ a.bg-theme-primary {
 }
 
 [data-theme="high-contrast"] .text-theme-text,
-[data-theme="high-contrast"] h1,
-[data-theme="high-contrast"] h2,
-[data-theme="high-contrast"] h3,
-[data-theme="high-contrast"] h4,
-[data-theme="high-contrast"] h5,
-[data-theme="high-contrast"] h6,
+[data-theme="high-contrast"] h1:not(.text-theme-primary-text):not([class*="text-theme-primary-text"]):not(.dx-closing-cta *),
+[data-theme="high-contrast"] h2:not(.text-theme-primary-text):not([class*="text-theme-primary-text"]):not(.dx-closing-cta *),
+[data-theme="high-contrast"] h3:not(.text-theme-primary-text):not([class*="text-theme-primary-text"]):not(.dx-closing-cta *),
+[data-theme="high-contrast"] h4:not(.text-theme-primary-text):not([class*="text-theme-primary-text"]):not(.dx-closing-cta *),
+[data-theme="high-contrast"] h5:not(.text-theme-primary-text):not([class*="text-theme-primary-text"]):not(.dx-closing-cta *),
+[data-theme="high-contrast"] h6:not(.text-theme-primary-text):not([class*="text-theme-primary-text"]):not(.dx-closing-cta *),
 [data-theme="high-contrast"] strong,
 [data-theme="high-contrast"] b {
   color: #FFEE00 !important;
   opacity: 1 !important;
+}
+
+/* Primary text & headings on yellow primary backgrounds in High Contrast: Solid Black (21:1 contrast) */
+[data-theme="high-contrast"] .text-theme-primary-text,
+[data-theme="high-contrast"] [class~="text-theme-primary-text"],
+[data-theme="high-contrast"] h1.text-theme-primary-text,
+[data-theme="high-contrast"] h2.text-theme-primary-text,
+[data-theme="high-contrast"] h3.text-theme-primary-text,
+[data-theme="high-contrast"] h1[class*="text-theme-primary-text"],
+[data-theme="high-contrast"] h2[class*="text-theme-primary-text"],
+[data-theme="high-contrast"] h3[class*="text-theme-primary-text"],
+[data-theme="high-contrast"] .dx-closing-cta h1,
+[data-theme="high-contrast"] .dx-closing-cta h2,
+[data-theme="high-contrast"] .dx-closing-cta h3,
+[data-theme="high-contrast"] .dx-closing-cta p,
+[data-theme="high-contrast"] .dx-closing-cta p span {
+  color: #000000 !important;
+}
+
+/* Ensure button inside Closing CTA in High Contrast keeps vivid yellow text and icon on its black background */
+[data-theme="high-contrast"] .dx-closing-cta button,
+[data-theme="high-contrast"] .dx-closing-cta button * {
+  color: #FFEE00 !important;
+  stroke: #FFEE00 !important;
 }
 
 /* All action & primary buttons in High Contrast: Electric Yellow with Solid Black text (21:1 contrast) */

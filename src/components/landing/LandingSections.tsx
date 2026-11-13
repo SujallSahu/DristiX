@@ -891,7 +891,7 @@ export const FaqSection: React.FC = () => {
 ═══════════════════════════════════════════════════════════════════ */
 
 export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
-  <section className="relative py-28 sm:py-40 overflow-hidden" style={{ background: 'var(--primary-gradient)' }}>
+  <section className="dx-closing-cta relative py-14 sm:py-28 lg:py-40 overflow-hidden" style={{ background: 'var(--primary-gradient)' }}>
     {/* Subtle grid */}
     <div
       className="absolute inset-0 pointer-events-none"
@@ -920,7 +920,7 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
 
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
       <span
-        className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest border text-theme-primary-text mb-8"
+        className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest border text-theme-primary-text mb-3.5 sm:mb-6 lg:mb-8"
         style={{
           background: 'color-mix(in srgb, var(--primary-text) 14%, transparent)',
           borderColor: 'color-mix(in srgb, var(--primary-text) 24%, transparent)',
@@ -939,7 +939,7 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
         <span className="block sm:inline mt-0.5 sm:mt-0">Registration is by institution invitation&nbsp;only.</span>
       </p>
 
-      <div className="mt-8 sm:mt-14 flex flex-col sm:flex-row justify-center gap-3 sm:gap-5">
+      <div className="mt-6 sm:mt-10 lg:mt-14 flex flex-col sm:flex-row justify-center gap-3 sm:gap-5">
         <button
           type="button"
           onClick={onSignIn}
@@ -962,7 +962,7 @@ export const ClosingCta: React.FC<SectionProps> = ({ onSignIn }) => (
       </div>
 
       {/* Trust badges */}
-      <div className="mt-12 sm:mt-14 flex flex-wrap justify-center items-center gap-2.5 sm:gap-4">
+      <div className="mt-8 sm:mt-10 lg:mt-14 flex flex-wrap justify-center items-center gap-2.5 sm:gap-4">
         {['WCAG 2.1 AA', 'Screen Reader First', 'Keyboard Complete', 'Server Timers'].map((t) => (
           <span
             key={t}

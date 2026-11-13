@@ -1364,7 +1364,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
 
       {/* Left Sidebar (Dark Teal Enterprise Sidebar Matching Design) */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-full max-h-[100dvh] w-64 sm:w-72 shrink-0 bg-[#031d22] text-white border-r border-[#0d3b45] flex flex-col justify-between p-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-y-auto ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`fixed lg:sticky top-0 left-0 z-50 lg:z-30 h-full max-h-[100dvh] w-64 sm:w-72 lg:w-[18.5rem] shrink-0 bg-[#031d22] text-white border-r border-[#0d3b45] flex flex-col justify-between p-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-y-auto ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           }`}
       >
         <div className="space-y-6">
@@ -1411,11 +1411,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               {activeAdminTab === 'dashboard' && (
                 <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-teal-300 rounded-r-full shadow-[0_0_8px_#5eead4]" />
               )}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <LayoutDashboard className="w-4 h-4 shrink-0 text-teal-200 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                <span>Dashboard</span>
+                <span className="whitespace-nowrap">Dashboard</span>
               </div>
-              <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-black/25 text-teal-200/80 border border-teal-500/20">
+              <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-black/25 text-teal-200/80 border border-teal-500/20 shrink-0">
                 1
               </kbd>
             </button>
@@ -1439,11 +1439,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               {activeAdminTab === 'manage' && (
                 <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-teal-300 rounded-r-full shadow-[0_0_8px_#5eead4]" />
               )}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <BookOpen className="w-4 h-4 shrink-0 text-teal-200 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                <span>Manage Exams</span>
+                <span className="whitespace-nowrap">Manage Exams</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="min-w-[1.5rem] text-center px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#021417] text-teal-200 border border-[#0d4a57]/40 tabular-nums">
                   {availableExams.length + availablePracticeDrills.length}
                 </span>
@@ -1472,11 +1472,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               {activeAdminTab === 'create' && (
                 <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-teal-300 rounded-r-full shadow-[0_0_8px_#5eead4]" />
               )}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <HelpCircle className="w-4 h-4 shrink-0 text-teal-200 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                <span>Question Bank</span>
+                <span className="whitespace-nowrap">Question Bank</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-400/20 text-teal-200 border border-teal-400/30">
                   {editingExamId ? 'Edit' : 'Studio'}
                 </span>
@@ -1505,11 +1505,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               {activeAdminTab === 'students' && (
                 <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-teal-300 rounded-r-full shadow-[0_0_8px_#5eead4]" />
               )}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <Users className="w-4 h-4 shrink-0 text-teal-200 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                <span>Student Roster</span>
+                <span className="whitespace-nowrap">Student Roster</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="min-w-[1.5rem] text-center px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#021417] text-teal-200 border border-[#0d4a57]/40 tabular-nums">
                   {students.length}
                 </span>
@@ -1538,11 +1538,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               {activeAdminTab === 'submissions' && (
                 <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-teal-300 rounded-r-full shadow-[0_0_8px_#5eead4]" />
               )}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                 <Award className="w-4 h-4 shrink-0 text-teal-200 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                <span>Submissions & Reports</span>
+                <span className="whitespace-nowrap">Submissions & Reports</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <span className="min-w-[1.5rem] text-center px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#021417] text-teal-200 border border-[#0d4a57]/40 tabular-nums">
                   {submissions.length}
                 </span>
@@ -1571,11 +1571,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
               {activeAdminTab === 'notifications' && (
                 <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-teal-300 rounded-r-full shadow-[0_0_8px_#5eead4]" />
               )}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <Megaphone className="w-4 h-4 shrink-0 text-teal-200 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                <span>Send Notifications</span>
+                <span className="whitespace-nowrap">Send Notifications</span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <kbd className="hidden sm:inline-block px-1 py-0.5 rounded text-[9px] font-mono font-bold bg-black/25 text-teal-200/60">
                   6
                 </kbd>
