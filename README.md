@@ -24,11 +24,10 @@ Traditional online examination systems can create barriers for candidates who re
 
 ## Technology
 
-- **Frontend:** React, TypeScript, Vite
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS
 - **Backend:** Node.js, Express, TypeScript
 - **Database:** MongoDB with Mongoose
-- **UI and styling:** Tailwind CSS
-- **Accessibility and content:** ARIA-oriented components, KaTeX, PDF.js
-- **Security and validation:** Helmet, CORS, rate limiting, Zod
-- **AI integrations:** Backend-mediated AI provider integrations where configured
+- **Accessibility and content:** ARIA-oriented components, KaTeX, PDF.js, Web Audio API
+- **Security and validation:** Helmet, CORS, Express rate limiting, Zod
+- **AI integrations:** Google Gemini API (Multimodal Vision) & Groq (Whisper Audio Transcription & LLaMA) via secure backend proxy
 
