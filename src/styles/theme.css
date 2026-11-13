@@ -603,9 +603,9 @@ a.bg-theme-primary {
   color: #FFFFFF !important;
 }
 
-.bg-theme-primary kbd,
-[data-theme="dark"] .bg-theme-primary kbd,
-.dark .bg-theme-primary kbd {
+.bg-theme-primary:not([aria-label*="Text size"]):not([title*="Text size"]) kbd,
+[data-theme="dark"] .bg-theme-primary:not([aria-label*="Text size"]):not([title*="Text size"]) kbd,
+.dark .bg-theme-primary:not([aria-label*="Text size"]):not([title*="Text size"]) kbd {
   color: var(--primary-text) !important;
 }
 
@@ -788,6 +788,53 @@ a.bg-theme-primary {
 [data-theme="high-contrast"] [class*="bg-[#008f7a]"] *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd) {
   color: #000000 !important;
   stroke: #000000 !important;
+}
+
+/* ========================================================
+   Text size badge / indicator in headers & buttons
+   ======================================================== */
+button[aria-label*="Text size"] kbd,
+button[aria-label*="Text size"] span[class*="text-"],
+button[title*="Text size"] kbd,
+button[title*="Text size"] span[class*="text-"] {
+  background-color: #FFFFFF !important;
+  color: #0D6E6E !important;
+  border: 1px solid rgba(13, 110, 110, 0.35) !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="teal-cream"] button[aria-label*="Text size"] kbd,
+[data-theme="teal-cream"] button[aria-label*="Text size"] span[class*="text-"],
+[data-theme="teal-cream"] button[title*="Text size"] kbd,
+[data-theme="teal-cream"] button[title*="Text size"] span[class*="text-"] {
+  background-color: #FFFFFF !important;
+  color: #0D6E6E !important;
+  border: 1px solid rgba(13, 110, 110, 0.35) !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="liquid-glass"] button[aria-label*="Text size"] kbd,
+[data-theme="liquid-glass"] button[aria-label*="Text size"] span[class*="text-"],
+[data-theme="liquid-glass"] button[title*="Text size"] kbd,
+[data-theme="liquid-glass"] button[title*="Text size"] span[class*="text-"] {
+  background-color: #FFFFFF !important;
+  color: #6D28D9 !important;
+  border: 1px solid rgba(109, 40, 217, 0.35) !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="dark"] button[aria-label*="Text size"] kbd,
+[data-theme="dark"] button[aria-label*="Text size"] span[class*="text-"],
+[data-theme="dark"] button[title*="Text size"] kbd,
+[data-theme="dark"] button[title*="Text size"] span[class*="text-"],
+.dark button[aria-label*="Text size"] kbd,
+.dark button[aria-label*="Text size"] span[class*="text-"],
+.dark button[title*="Text size"] kbd,
+.dark button[title*="Text size"] span[class*="text-"] {
+  background-color: #071511 !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  font-weight: 800 !important;
 }
 
 /* High Contrast: Text size badge / indicator in headers & buttons */

@@ -317,9 +317,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
       id: `custom-q-1`,
       section: 'Quantitative Aptitude',
       questionNumber: 1,
-      questionType: 'DI',
+      questionType: 'MCQ',
       graph: {
-        enabled: true,
+        enabled: false,
         type: 'bar',
         title: 'Data Interpretation Graph',
         xAxisLabel: 'Category',
@@ -974,6 +974,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
       id: `custom-q-${Date.now()}-${nextNum}`,
       section: questions[0]?.section || 'General',
       questionNumber: nextNum,
+      questionType: 'MCQ',
       questionText: '',
       mathLatex: '',
       options: [
