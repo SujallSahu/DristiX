@@ -757,16 +757,29 @@ a.bg-theme-primary {
   font-weight: 900 !important;
 }
 
-[data-theme="high-contrast"] .bg-theme-primary *:not(input):not(textarea):not(select),
-[data-theme="high-contrast"] button.bg-theme-primary *:not(input):not(textarea):not(select),
-[data-theme="high-contrast"] a.bg-theme-primary *:not(input):not(textarea):not(select),
-[data-theme="high-contrast"] .dx-btn-primary *:not(input):not(textarea):not(select),
-[data-theme="high-contrast"] button.dx-btn-primary *:not(input):not(textarea):not(select),
-[data-theme="high-contrast"] a.dx-btn-primary *:not(input):not(textarea):not(select),
-[data-theme="high-contrast"] [class*="bg-[#006d5c]"] *:not(input):not(textarea):not(select),
-[data-theme="high-contrast"] [class*="bg-[#008f7a]"] *:not(input):not(textarea):not(select) {
+[data-theme="high-contrast"] .bg-theme-primary *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] button.bg-theme-primary *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] a.bg-theme-primary *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] .dx-btn-primary *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] button.dx-btn-primary *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] a.dx-btn-primary *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] [class*="bg-[#006d5c]"] *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] [class*="bg-[#008f7a]"] *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd) {
   color: #000000 !important;
   stroke: #000000 !important;
+}
+
+/* High Contrast: Text size badge / indicator in headers & buttons */
+[data-theme="high-contrast"] button[aria-label*="Text size"] span,
+[data-theme="high-contrast"] button[aria-label*="Text size"] kbd,
+[data-theme="high-contrast"] button[title*="Text size"] span,
+[data-theme="high-contrast"] button[title*="Text size"] kbd,
+[data-theme="high-contrast"] header button span[class*="bg-"],
+[data-theme="high-contrast"] header button kbd {
+  background-color: #000000 !important;
+  color: #FFEE00 !important;
+  border-color: #FFEE00 !important;
+  font-weight: 900 !important;
 }
 
 [data-theme="high-contrast"] input[id^="admin-q-math"] {
