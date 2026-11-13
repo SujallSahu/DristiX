@@ -94,10 +94,10 @@ export const DiagnosticReport: React.FC = () => {
       role="main"
       tabIndex={-1}
       aria-label="Examination Diagnostic and Performance Report"
-      className="max-w-5xl mx-auto p-3 sm:p-6 lg:p-8 outline-none text-theme-text"
+      className="w-full max-w-5xl mx-auto p-2.5 sm:p-6 lg:p-8 outline-none text-theme-text min-w-0 overflow-x-hidden"
     >
       {/* Header Banner */}
-      <section aria-labelledby="report-main-title" className="bg-theme-surface border-2 border-theme-border rounded-xl p-4 sm:p-8 mb-6 shadow-sm">
+      <section aria-labelledby="report-main-title" className="bg-theme-surface border-2 border-theme-border rounded-xl p-3.5 sm:p-8 mb-6 shadow-sm min-w-0 max-w-full overflow-hidden">
         <div className="flex flex-wrap justify-between items-start gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -316,7 +316,7 @@ export const DiagnosticReport: React.FC = () => {
       </section>
 
       {/* Screen-Reader Friendly Data Table (Prompt Requirement 1) */}
-      <section aria-labelledby="section-table-heading" className="bg-theme-surface border-2 border-theme-border rounded-xl p-6 sm:p-8 mb-6 shadow-sm">
+      <section aria-labelledby="section-table-heading" className="bg-theme-surface border-2 border-theme-border rounded-xl p-3.5 sm:p-8 mb-6 shadow-sm min-w-0 max-w-full overflow-hidden">
         <h3 id="section-table-heading" className="text-xl font-bold mb-4">
           Section-Wise Performance Breakdown
         </h3>
@@ -376,14 +376,14 @@ export const DiagnosticReport: React.FC = () => {
       </section>
 
       {/* Question-by-Question Detailed Review */}
-      <section aria-labelledby="review-heading" className="bg-theme-surface border-2 border-theme-border rounded-xl p-6 sm:p-8 shadow-sm">
-        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
-          <h3 id="review-heading" className="text-xl font-bold">
+      <section aria-labelledby="review-heading" className="bg-theme-surface border-2 border-theme-border rounded-xl p-3 sm:p-6 lg:p-8 shadow-sm min-w-0 max-w-full overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 min-w-0 max-w-full">
+          <h3 id="review-heading" className="text-lg sm:text-xl font-bold">
             Question-by-Question Solution Review
           </h3>
 
           {/* Filter Tabs */}
-          <div role="tablist" aria-label="Review filter tabs" className="flex flex-wrap gap-1.5 p-1 rounded-lg border-2 border-theme-border bg-theme-bg">
+          <div role="tablist" aria-label="Review filter tabs" className="flex flex-wrap gap-1.5 p-1 rounded-lg border-2 border-theme-border bg-theme-bg max-w-full">
             <button
               role="tab"
               type="button"
@@ -440,7 +440,7 @@ export const DiagnosticReport: React.FC = () => {
         </div>
 
         {/* Questions List */}
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0 max-w-full">
           {filteredQuestions.map((q) => {
             const gradedQ = q as unknown as { isCorrect?: boolean; selectedOption?: number | null };
             const userAnsNum = selectedOptions[q.id] ?? (gradedQ.selectedOption !== null ? gradedQ.selectedOption : undefined);
@@ -456,7 +456,7 @@ export const DiagnosticReport: React.FC = () => {
               <article
                 key={q.id}
                 aria-labelledby={`q-rev-title-${q.id}`}
-                className={`p-4 sm:p-5 rounded-lg border-2 transition ${
+                className={`p-3 sm:p-5 rounded-xl border-2 transition min-w-0 max-w-full overflow-hidden ${
                   !isAnswered
                     ? 'border-theme-border bg-theme-bg/60'
                     : isCorrect
@@ -464,8 +464,8 @@ export const DiagnosticReport: React.FC = () => {
                     : 'border-red-600 bg-red-500/5'
                 }`}
               >
-                <div className="flex flex-wrap justify-between items-start gap-2">
-                  <div className="flex-1">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-3 min-w-0 max-w-full">
+                  <div className="flex-1 min-w-0 w-full max-w-full">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span className="text-xs uppercase font-bold px-2 py-0.5 rounded bg-theme-bg border border-theme-border">
                         {q.section}
@@ -495,12 +495,12 @@ export const DiagnosticReport: React.FC = () => {
                       )}
                     </div>
 
-                    <h4 id={`q-rev-title-${q.id}`} className="text-base sm:text-lg font-bold">
+                    <h4 id={`q-rev-title-${q.id}`} className="text-base sm:text-lg font-bold break-words">
                       Q{q.questionNumber}. {q.questionText}
                     </h4>
 
                     {q.mathLatex && (
-                      <div className="my-2 p-2 rounded bg-theme-bg border border-theme-border inline-block max-w-full overflow-x-auto">
+                      <div className="my-2 p-2 rounded bg-theme-bg border border-theme-border block w-fit max-w-full overflow-x-auto">
                         <MathEquation latex={q.mathLatex} displayMode={true} />
                       </div>
                     )}
@@ -518,7 +518,7 @@ export const DiagnosticReport: React.FC = () => {
                     type="button"
                     onClick={() => toggleExpand(q.id)}
                     aria-expanded={isExpanded}
-                    className="p-2 rounded border border-theme-border bg-theme-bg hover:bg-theme-surface transition flex items-center gap-1 text-xs font-bold"
+                    className="p-2 rounded border border-theme-border bg-theme-bg hover:bg-theme-surface transition flex items-center gap-1 text-xs font-bold shrink-0 self-start sm:self-auto"
                   >
                     <span>{isExpanded ? 'Hide Solution' : 'View Solution'}</span>
                     {isExpanded ? (
@@ -530,15 +530,15 @@ export const DiagnosticReport: React.FC = () => {
                 </div>
 
                 {/* Answer Summary Block */}
-                <div className="mt-3 pt-3 border-t border-theme-border flex flex-wrap gap-4 text-sm">
-                  <div>
+                <div className="mt-3 pt-3 border-t border-theme-border flex flex-wrap gap-4 text-xs sm:text-sm min-w-0 max-w-full break-words">
+                  <div className="min-w-0 max-w-full break-words">
                     <span className="text-theme-text-secondary">Your Answer: </span>
                     <strong className={isCorrect ? 'text-emerald-500' : 'text-red-500'}>
                       {userOptObj ? `Option ${userAnsNum} (${userOptObj.text})` : 'None (Unattempted)'}
                     </strong>
                   </div>
 
-                  <div>
+                  <div className="min-w-0 max-w-full break-words">
                     <span className="text-theme-text-secondary">Correct Answer: </span>
                     <strong className="text-emerald-500">
                       Option {q.correctOption} ({correctOptObj?.text})
@@ -548,7 +548,7 @@ export const DiagnosticReport: React.FC = () => {
 
                 {/* Expandable Explanation */}
                 {isExpanded && (
-                  <div className="mt-3 p-4 rounded-lg bg-theme-bg border-2 border-theme-border space-y-2 text-sm sm:text-base">
+                  <div className="mt-3 p-3.5 sm:p-4 rounded-lg bg-theme-bg border-2 border-theme-border space-y-2 text-xs sm:text-base min-w-0 max-w-full break-words">
                     <strong className="block text-theme-focus-ring font-bold">
                       Step-by-Step Explanation:
                     </strong>

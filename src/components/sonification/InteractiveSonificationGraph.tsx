@@ -293,21 +293,21 @@ export const InteractiveSonificationGraph: React.FC<InteractiveSonificationGraph
       </div>
 
       {/* Header bar with Badges & Action Buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-theme-border pb-3 mb-3">
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-indigo-600 text-white flex items-center gap-1.5 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-theme-border pb-3 mb-3 min-w-0 max-w-full">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-indigo-600 text-white flex items-center gap-1.5 shadow-sm shrink-0">
             <Headphones className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Audio Graph ({graph.type.toUpperCase()})</span>
           </span>
           {isExploring && (
-            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 border border-amber-500/40 text-amber-600 dark:text-amber-400 animate-pulse">
+            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 border border-amber-500/40 text-amber-600 dark:text-amber-400 animate-pulse shrink-0">
               ● Active Audio Exploration
             </span>
           )}
         </div>
 
         {/* Sonification Controls */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
           {/* Guided Audio Tour */}
           <button
             type="button"
@@ -376,7 +376,7 @@ export const InteractiveSonificationGraph: React.FC<InteractiveSonificationGraph
 
       {/* Graph Title & Axis Info */}
       <div className="mb-2">
-        <h3 className="text-base font-extrabold text-theme-text flex items-center gap-2">
+        <h3 className="text-base font-extrabold text-theme-text flex flex-wrap items-center gap-2">
           <span>{graph.title || 'Data Graph'}</span>
           {graph.unit && (
             <span className="text-xs font-semibold px-2 py-0.5 rounded bg-theme-border/50 text-theme-text/80">
@@ -384,7 +384,7 @@ export const InteractiveSonificationGraph: React.FC<InteractiveSonificationGraph
             </span>
           )}
         </h3>
-        <p className="text-xs text-theme-text-secondary mt-0.5 font-medium">
+        <p className="text-xs text-theme-text-secondary mt-0.5 font-medium break-words">
           {graph.xAxisLabel ? `X-Axis: ${graph.xAxisLabel} • ` : ''}
           {graph.yAxisLabel ? `Y-Axis: ${graph.yAxisLabel} • ` : ''}
           {total} data points (Min: {stats.min}, Max: {stats.max})
@@ -399,7 +399,7 @@ export const InteractiveSonificationGraph: React.FC<InteractiveSonificationGraph
         tabIndex={0}
         onKeyDown={handleKeyDown}
         aria-label={`${graph.title || 'Chart'}. Press Space or Enter to explore using Left/Right arrows.`}
-        className={`relative w-full rounded-xl p-3 border-2 transition-all outline-none cursor-pointer select-none bg-theme-bg/60 ${
+        className={`relative w-full rounded-xl p-2 sm:p-3 border-2 transition-all outline-none cursor-pointer select-none bg-theme-bg/60 min-w-0 max-w-full overflow-hidden ${
           isExploring
             ? 'border-indigo-500 ring-2 ring-indigo-500/30'
             : 'border-theme-border hover:border-indigo-400 focus:border-indigo-500'
@@ -683,9 +683,9 @@ export const InteractiveSonificationGraph: React.FC<InteractiveSonificationGraph
 
         {/* Exploration Prompt Overlay if not currently exploring */}
         {!isExploring && (
-          <div className="mt-2 p-2.5 rounded-lg bg-theme-surface border border-theme-border text-center text-xs text-theme-text/80 font-medium flex items-center justify-center gap-2">
-            <Compass className="w-4 h-4 text-indigo-500 animate-spin" aria-hidden="true" />
-            <span>
+          <div className="mt-2 p-2 sm:p-2.5 rounded-lg bg-theme-surface border border-theme-border text-center text-xs text-theme-text/80 font-medium flex items-center justify-center gap-2 max-w-full">
+            <Compass className="w-4 h-4 text-indigo-500 animate-spin shrink-0" aria-hidden="true" />
+            <span className="text-balance">
               Click or press <strong>Enter / Space</strong> to enter interactive audio exploration.
             </span>
           </div>
