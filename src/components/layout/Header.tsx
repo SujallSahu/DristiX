@@ -126,7 +126,7 @@ export const Header: React.FC = () => {
       role="banner"
       className="p-2 sm:p-3 md:p-4 border-b-2 border-theme-border/80 dx-glass transition-colors sticky top-0 z-30 shadow-md backdrop-blur-md overflow-visible"
     >
-      <div className="max-w-[1700px] w-full mx-auto flex flex-col md:flex-row md:items-center justify-between gap-1.5 md:gap-2 overflow-visible">
+      <div className="max-w-[1700px] w-full mx-auto flex flex-col md:flex-row md:flex-wrap md:items-center justify-between gap-1.5 md:gap-2 overflow-visible">
         {/* Top Row on Mobile: Branding on Left, Candidate Profile + Sign Out or Exam Timer+Submit on Right */}
         <div className="flex items-center justify-between md:justify-start w-full md:w-auto shrink-0 gap-1.5 sm:gap-3">
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
@@ -156,13 +156,15 @@ export const Header: React.FC = () => {
                   </span>
                 )}
               </div>
-              <span className="text-xs text-theme-text/70 font-semibold hidden sm:inline whitespace-nowrap">
-                {activeView === 'analytics'
-                  ? 'Student Performance & Score Analytics'
-                  : activeView === 'catalog'
-                    ? 'Accessible Examination & Practice Portal'
-                    : `${currentExam.questions.length} Questions • ${currentExam.durationMinutes} min`}
-              </span>
+              {fontSize <= 100 && (
+                <span className="text-xs text-theme-text/70 font-semibold hidden sm:inline whitespace-nowrap">
+                  {activeView === 'analytics'
+                    ? 'Student Performance & Score Analytics'
+                    : activeView === 'catalog'
+                      ? 'Accessible Examination & Practice Portal'
+                      : `${currentExam.questions.length} Questions • ${currentExam.durationMinutes} min`}
+                </span>
+              )}
             </div>
           </div>
 
@@ -328,7 +330,9 @@ export const Header: React.FC = () => {
           tabIndex={0}
           role="region"
           aria-label="Accessibility quick controls toolbar"
-          className="flex items-center justify-between md:justify-end gap-1 sm:gap-1.5 w-full md:w-auto overflow-x-auto md:overflow-visible no-scrollbar pt-1 md:pt-0 border-t border-theme-border/40 md:border-t-0 focus:outline-none"
+          className={`flex items-center gap-1 sm:gap-1.5 w-full md:w-auto overflow-x-auto md:overflow-visible no-scrollbar pt-1 md:pt-0 border-t border-theme-border/40 md:border-t-0 focus:outline-none flex-wrap ${
+            fontSize > 100 ? 'justify-start' : 'justify-between md:justify-end'
+          }`}
         >
           {/* Current Student Profile Chip (Desktop) */}
           {currentStudent && activeView !== 'exam' && (
@@ -336,7 +340,9 @@ export const Header: React.FC = () => {
               <span className="font-bold text-theme-text flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-theme-primary" aria-hidden="true" />
                 <span>{currentStudent.name}</span>
-                <span className="text-theme-text/60 font-mono text-[11px]">({currentStudent.rollNumber})</span>
+                {fontSize <= 100 && (
+                  <span className="text-theme-text/60 font-mono text-[11px]">({currentStudent.rollNumber})</span>
+                )}
               </span>
               <button
                 type="button"
@@ -347,9 +353,11 @@ export const Header: React.FC = () => {
               >
                 <LogOut className="w-3.5 h-3.5 text-white" aria-hidden="true" />
                 <span>Sign Out</span>
-                <kbd className="hidden lg:inline-block ml-1 px-1 py-0.2 rounded text-[9px] font-mono bg-black/25 text-white/90 border border-white/20">
-                  Ctrl+Enter
-                </kbd>
+                {fontSize <= 100 && (
+                  <kbd className="hidden lg:inline-block ml-1 px-1 py-0.2 rounded text-[9px] font-mono bg-black/25 text-white/90 border border-white/20">
+                    Ctrl+Enter
+                  </kbd>
+                )}
               </button>
             </div>
           )}
@@ -362,13 +370,15 @@ export const Header: React.FC = () => {
                 onClick={returnToCatalog}
                 title="Return to Test Catalog (Shortcut: B or Esc)"
                 aria-label="Return to Test Catalog (Shortcut: B or Esc)"
-                className="px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-bg hover:border-theme-primary text-theme-text text-xs font-bold flex items-center gap-1.5 transition focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                className="px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-bg hover:border-theme-primary text-theme-text text-xs font-bold flex items-center gap-1.5 transition focus:outline-none focus:ring-4 focus:ring-yellow-400 shrink-0"
               >
                 <ArrowLeft className="w-4 h-4 text-theme-primary" aria-hidden="true" />
                 <span>Back to Tests</span>
-                <kbd className="hidden sm:inline-block text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border border-theme-border bg-theme-surface">
-                  B
-                </kbd>
+                {fontSize <= 100 && (
+                  <kbd className="hidden sm:inline-block text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border border-theme-border bg-theme-surface">
+                    B
+                  </kbd>
+                )}
               </button>
             ) : (
               <button
@@ -376,13 +386,15 @@ export const Header: React.FC = () => {
                 onClick={openAnalytics}
                 title="My Performance & Score Analytics (Shortcut: D)"
                 aria-label="My Performance and Score Analytics (Shortcut: D)"
-                className="px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-bg hover:border-emerald-500 text-theme-text text-xs font-bold flex items-center gap-1.5 transition focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                className="px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-bg hover:border-emerald-500 text-theme-text text-xs font-bold flex items-center gap-1.5 transition focus:outline-none focus:ring-4 focus:ring-yellow-400 shrink-0"
               >
                 <TrendingUp className="w-4 h-4 text-emerald-500" aria-hidden="true" />
                 <span className="hidden sm:inline">Analytics</span>
-                <kbd className="hidden sm:inline-block text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border border-theme-border bg-theme-surface">
-                  D
-                </kbd>
+                {fontSize <= 100 && (
+                  <kbd className="hidden sm:inline-block text-[10px] font-sans font-bold px-1.5 py-0.2 rounded border border-theme-border bg-theme-surface">
+                    D
+                  </kbd>
+                )}
               </button>
             )
           )}
@@ -417,17 +429,19 @@ export const Header: React.FC = () => {
             ) : (
               <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-teal-400" aria-hidden="true" />
             )}
-            <span className="hidden xl:inline text-xs font-bold">
+            <span className={`hidden ${fontSize <= 100 ? 'xl:inline' : 'hidden'} text-xs font-bold`}>
               {voiceState === 'listening' ? 'Listening...' : 'Voice AI'}
             </span>
-            <kbd
-              className={`hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border ${voiceState === 'listening'
-                ? 'border-white/50 bg-slate-900 text-white'
-                : 'border-theme-border bg-theme-surface text-theme-text'
-                }`}
-            >
-              V
-            </kbd>
+            {fontSize <= 100 && (
+              <kbd
+                className={`hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border ${voiceState === 'listening'
+                  ? 'border-white/50 bg-slate-900 text-white'
+                  : 'border-theme-border bg-theme-surface text-theme-text'
+                  }`}
+              >
+                V
+              </kbd>
+            )}
           </button>
 
           {/* TTS Read Toggle */}
@@ -466,10 +480,12 @@ export const Header: React.FC = () => {
               className="p-1.5 sm:p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 font-semibold text-xs sm:text-sm shrink-0"
             >
               <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5 text-theme-focus-ring" aria-hidden="true" />
-              <span className="hidden lg:inline">Questions</span>
-              <kbd className="hidden lg:inline text-[10px] px-1 border border-theme-border rounded">
-                Q
-              </kbd>
+              {fontSize <= 100 && <span className="hidden lg:inline">Questions</span>}
+              {fontSize <= 100 && (
+                <kbd className="hidden lg:inline text-[10px] px-1 border border-theme-border rounded">
+                  Q
+                </kbd>
+              )}
             </button>
           )}
 
@@ -488,13 +504,13 @@ export const Header: React.FC = () => {
             aria-pressed={fontSize > 100}
             title={
               fontSize > 100
-                ? `Text size: ${fontSize}% — Tab once to increase further, tab twice to reset to normal (100%)`
-                : 'Text size: 100% (Normal) — Tab once to increase, tab twice to reset'
+                ? `Text size: ${fontSize}% — Click to step, double-click to reset to 100% (Shortcut: Press 0)`
+                : 'Text size: 100% (Normal) — Click to increase'
             }
             aria-label={
               fontSize > 100
-                ? `Text size ${fontSize}% increased. Tab once to increase, tab twice to reset to normal.`
-                : 'Text size 100% normal. Tab once to increase, tab twice to reset.'
+                ? `Text size ${fontSize}% increased. Click to step, double-click to reset to 100%.`
+                : 'Text size 100% normal. Click to increase.'
             }
             className={`p-1.5 sm:p-2 rounded-lg border-2 border-theme-border transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 shrink-0 ${fontSize > 100
               ? 'bg-theme-primary text-theme-primary-text border-theme-primary'
@@ -533,15 +549,17 @@ export const Header: React.FC = () => {
             className="p-1.5 sm:p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-theme-focus-ring focus:border-theme-focus-ring shrink-0"
           >
             <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" aria-hidden="true" />
-            <span className="hidden xl:inline text-xs font-bold capitalize">
-              {theme === 'teal-cream'
-                ? 'Light'
-                : theme === 'liquid-glass'
-                ? 'Glass'
-                : theme === 'dark'
-                ? 'Dark'
-                : 'Contrast'}
-            </span>
+            {fontSize <= 100 && (
+              <span className="hidden xl:inline text-xs font-bold capitalize">
+                {theme === 'teal-cream'
+                  ? 'Light'
+                  : theme === 'liquid-glass'
+                  ? 'Glass'
+                  : theme === 'dark'
+                  ? 'Dark'
+                  : 'Contrast'}
+              </span>
+            )}
           </button>
 
           {/* Accessibility Settings */}
@@ -554,9 +572,11 @@ export const Header: React.FC = () => {
             className="p-1.5 sm:p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-theme-focus-ring focus:border-theme-focus-ring shrink-0"
           >
             <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" aria-hidden="true" />
-            <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-theme-surface">
-              A
-            </kbd>
+            {fontSize <= 100 && (
+              <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-theme-surface">
+                A
+              </kbd>
+            )}
           </button>
 
           {/* Keyboard Shortcuts Help */}
@@ -568,9 +588,11 @@ export const Header: React.FC = () => {
             className="p-1.5 sm:p-2 rounded-lg border-2 border-theme-border bg-theme-bg text-theme-text hover:bg-theme-surface transition flex items-center gap-1 sm:gap-1.5 focus:outline-none focus:ring-4 focus:ring-yellow-400 focus:border-yellow-400 shrink-0"
           >
             <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" aria-hidden="true" />
-            <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-theme-surface">
-              H
-            </kbd>
+            {fontSize <= 100 && (
+              <kbd className="hidden sm:inline-block text-[11px] font-sans font-bold px-1.5 py-0.5 rounded border border-theme-border bg-theme-surface">
+                H
+              </kbd>
+            )}
           </button>
 
           {/* Submit Exam Button (Desktop) */}
@@ -583,9 +605,11 @@ export const Header: React.FC = () => {
             >
               <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
               <span>Submit</span>
-              <kbd className="hidden xl:inline text-[10px] px-1 border border-white/40 rounded bg-white/10">
-                Alt+S
-              </kbd>
+              {fontSize <= 100 && (
+                <kbd className="hidden xl:inline text-[10px] px-1 border border-white/40 rounded bg-white/10">
+                  Alt+S
+                </kbd>
+              )}
             </button>
           )}
         </div>
