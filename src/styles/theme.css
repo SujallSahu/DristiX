@@ -757,16 +757,22 @@ a.bg-theme-primary {
   font-weight: 900 !important;
 }
 
-[data-theme="high-contrast"] .bg-theme-primary *,
-[data-theme="high-contrast"] button.bg-theme-primary *,
-[data-theme="high-contrast"] a.bg-theme-primary *,
-[data-theme="high-contrast"] .dx-btn-primary *,
-[data-theme="high-contrast"] button.dx-btn-primary *,
-[data-theme="high-contrast"] a.dx-btn-primary *,
-[data-theme="high-contrast"] [class*="bg-[#006d5c]"] *,
-[data-theme="high-contrast"] [class*="bg-[#008f7a]"] * {
+[data-theme="high-contrast"] .bg-theme-primary *:not(input):not(textarea):not(select),
+[data-theme="high-contrast"] button.bg-theme-primary *:not(input):not(textarea):not(select),
+[data-theme="high-contrast"] a.bg-theme-primary *:not(input):not(textarea):not(select),
+[data-theme="high-contrast"] .dx-btn-primary *:not(input):not(textarea):not(select),
+[data-theme="high-contrast"] button.dx-btn-primary *:not(input):not(textarea):not(select),
+[data-theme="high-contrast"] a.dx-btn-primary *:not(input):not(textarea):not(select),
+[data-theme="high-contrast"] [class*="bg-[#006d5c]"] *:not(input):not(textarea):not(select),
+[data-theme="high-contrast"] [class*="bg-[#008f7a]"] *:not(input):not(textarea):not(select) {
   color: #000000 !important;
   stroke: #000000 !important;
+}
+
+[data-theme="high-contrast"] input[id^="admin-q-math"] {
+  color: #FFFFFF !important;
+  background-color: #000000 !important;
+  border-color: #FFEE00 !important;
 }
 
 /* Secondary & ghost buttons in High Contrast */
@@ -879,12 +885,30 @@ a.bg-theme-primary {
   font-weight: 700 !important;
 }
 
-[data-theme="dark"] .bg-\[\#006d5c\] *,
-[data-theme="dark"] [class*="bg-[#006d5c]"] *,
-.dark .bg-\[\#006d5c\] *,
-.dark [class*="bg-[#006d5c]"] * {
+[data-theme="dark"] .bg-\[\#006d5c\] *:not(input):not(textarea):not(select),
+[data-theme="dark"] [class*="bg-[#006d5c]"] *:not(input):not(textarea):not(select),
+.dark .bg-\[\#006d5c\] *:not(input):not(textarea):not(select),
+.dark [class*="bg-[#006d5c]"] *:not(input):not(textarea):not(select) {
   color: #071511 !important;
   stroke: #071511 !important;
+}
+
+/* Explicit rule for admin math LaTeX input to guarantee high-contrast legibility */
+input[id^="admin-q-math"] {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+[data-theme="dark"] input[id^="admin-q-math"],
+.dark input[id^="admin-q-math"] {
+  color: #F3F4F6 !important;
+  background-color: #1A1D20 !important;
+}
+
+[data-theme="dark"] input[id^="admin-q-math"]::placeholder,
+.dark input[id^="admin-q-math"]::placeholder {
+  color: #9CA3AF !important;
+  opacity: 0.85 !important;
 }
 
 /* Primary CTA buttons in Dark mode: Vivid Emerald #10B981 with dark text #071511 */
@@ -921,10 +945,15 @@ a.bg-theme-primary {
   box-shadow: 0 8px 24px -4px rgba(124, 58, 237, 0.40) !important;
 }
 
-[data-theme="liquid-glass"] .bg-\[\#006d5c\] *,
-[data-theme="liquid-glass"] [class*="bg-[#006d5c]"] * {
+[data-theme="liquid-glass"] .bg-\[\#006d5c\] *:not(input):not(textarea):not(select),
+[data-theme="liquid-glass"] [class*="bg-[#006d5c]"] *:not(input):not(textarea):not(select) {
   color: #FFFFFF !important;
   stroke: #FFFFFF !important;
+}
+
+[data-theme="liquid-glass"] input[id^="admin-q-math"] {
+  color: #1B1428 !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
 }
 
 /* Frosted surfaces in Liquid Glass */

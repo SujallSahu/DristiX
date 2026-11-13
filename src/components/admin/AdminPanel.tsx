@@ -4452,7 +4452,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                             value={q.mathLatex || ''}
                             onChange={(e) => handleUpdateQuestion(qIdx, 'mathLatex', e.target.value)}
                             placeholder="e.g. E = mc^2 or v = u + at"
-                            className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border font-mono text-xs text-theme-text focus:outline-none focus:ring-2 focus:ring-[#006d5c] placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
+                            className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border font-mono text-xs text-theme-text dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#006d5c] placeholder:text-theme-text/45 dark:placeholder:text-theme-text/40 placeholder:font-normal"
+                            style={{ color: 'var(--text-primary)' }}
                           />
 
                           {q.mathLatex && (
