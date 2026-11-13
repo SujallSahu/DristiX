@@ -883,13 +883,11 @@ export const ExamCatalogScreen: React.FC = () => {
                         type="button"
                         onClick={() => handleStartExam(exam)}
                         className="flex-1 min-w-0 py-3 sm:py-2.5 px-3.5 min-h-[44px] rounded-xl bg-theme-primary text-theme-primary-text font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all focus:outline-none focus:ring-4 focus:ring-theme-focus"
-
-
                         aria-label={`Start ${isPractice ? 'Practice Drill' : 'Examination'}: ${exam.title} (Or press Enter)`}
                       >
                         <span className="shrink-0">{isPractice ? '💡' : '🚀'}</span>
                         <span className="truncate">{isPractice ? 'Start Practice Drill' : 'Start Examination'}</span>
-                        <kbd className="hidden sm:inline-block text-[10px] px-1.5 py-0.5 border border-current/30 rounded bg-black/10 uppercase font-mono shrink-0">
+                        <kbd className="hidden sm:inline-block text-[10px] px-1.5 py-0.5 border border-white/35 rounded bg-black/60 text-white uppercase font-mono font-bold shrink-0 shadow-xs">
                           Enter
                         </kbd>
                       </button>

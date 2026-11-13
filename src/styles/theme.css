@@ -596,20 +596,29 @@ a.bg-theme-primary {
 
 /* Badges/pills with their own dark background inside .bg-theme-primary or admin action buttons */
 .bg-theme-primary span[class*="bg-black"],
+.bg-theme-primary kbd[class*="bg-black"],
+.bg-theme-primary [class*="bg-black"],
 [data-theme="dark"] .bg-theme-primary span[class*="bg-black"],
+[data-theme="dark"] .bg-theme-primary kbd[class*="bg-black"],
+[data-theme="dark"] .bg-theme-primary [class*="bg-black"],
 .dark .bg-theme-primary span[class*="bg-black"],
+.dark .bg-theme-primary kbd[class*="bg-black"],
+.dark .bg-theme-primary [class*="bg-black"],
 [data-theme="dark"] .bg-\[\#006d5c\] span[class*="bg-black"],
 .dark .bg-\[\#006d5c\] span[class*="bg-black"] {
+  background-color: rgba(0, 0, 0, 0.65) !important;
   color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
 }
 
-.bg-theme-primary:not([aria-label*="Text size"]):not([title*="Text size"]) kbd,
-[data-theme="dark"] .bg-theme-primary:not([aria-label*="Text size"]):not([title*="Text size"]) kbd,
-.dark .bg-theme-primary:not([aria-label*="Text size"]):not([title*="Text size"]) kbd {
+.bg-theme-primary:not([aria-label*="Text size"]):not([title*="Text size"]):not([class*="bg-black"]) kbd:not([class*="bg-black"]),
+[data-theme="dark"] .bg-theme-primary:not([aria-label*="Text size"]):not([title*="Text size"]):not([class*="bg-black"]) kbd:not([class*="bg-black"]),
+.dark .bg-theme-primary:not([aria-label*="Text size"]):not([title*="Text size"]):not([class*="bg-black"]) kbd:not([class*="bg-black"]) {
   color: var(--primary-text) !important;
 }
 
-[data-theme="high-contrast"] .bg-theme-primary [class*="bg-black"] {
+[data-theme="high-contrast"] .bg-theme-primary [class*="bg-black"],
+[data-theme="high-contrast"] .bg-theme-primary kbd[class*="bg-black"] {
   background-color: #000000 !important;
   color: #FFEE00 !important;
   border-color: #FFEE00 !important;
