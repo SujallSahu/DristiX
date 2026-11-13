@@ -541,11 +541,16 @@ select:autofill {
 }
 
 .text-theme-primary-text,
-[class*="text-theme-primary-text"] {
+[class~="text-theme-primary-text"] {
   color: var(--primary-text) !important;
 }
 
-[class*="text-theme-primary-text/"] {
+.hover\:text-theme-primary-text:hover,
+[class*="hover:text-theme-primary-text"]:hover {
+  color: var(--primary-text) !important;
+}
+
+[class~="text-theme-primary-text/"] {
   color: var(--primary-text) !important;
   opacity: 0.9;
 }

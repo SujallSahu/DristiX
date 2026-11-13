@@ -317,6 +317,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
       id: `custom-q-1`,
       section: 'Quantitative Aptitude',
       questionNumber: 1,
+      questionType: 'DI',
+      graph: {
+        enabled: true,
+        type: 'bar',
+        title: 'Data Interpretation Graph',
+        xAxisLabel: 'Category',
+        yAxisLabel: 'Value',
+        unit: '',
+        data: [
+          { id: '1', label: 'Item A', value: 30 },
+          { id: '2', label: 'Item B', value: 65 },
+          { id: '3', label: 'Item C', value: 90 },
+        ],
+        sonification: {
+          enabled: true,
+          spatialAudio: true,
+          trendDetection: true,
+          peakDetection: true,
+          haptic: true,
+          voiceDetail: 'standard',
+          minFrequency: 250,
+          maxFrequency: 900,
+        },
+      },
       questionText: STARTER_QUESTION_TEXT,
       mathLatex: 'A + B + C = 180^\\circ',
       options: [
@@ -1152,22 +1176,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
   };
 
   const handleRemoveQuestion = (idx: number) => {
-    if (questions.length <= 1) return;
-    const updated = questions.filter((_, i) => i !== idx).map((q, i) => ({ ...q, questionNumber: i + 1 }));
-    setQuestions(updated);
+    setQuestions((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((_, i) => i !== idx).map((q, i) => ({ ...q, questionNumber: i + 1 }));
+    });
   };
 
   const handleUpdateQuestion = (idx: number, field: keyof QuestionItem, val: any) => {
-    const updated = [...questions];
-    updated[idx] = { ...updated[idx], [field]: val };
-    setQuestions(updated);
+    setQuestions((prev) => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], [field]: val };
+      return updated;
+    });
   };
 
   const handleUpdateOption = (qIdx: number, optNum: number, text: string) => {
-    const updated = [...questions];
-    const opts = updated[qIdx].options.map((o) => (o.number === optNum ? { ...o, text } : o));
-    updated[qIdx] = { ...updated[qIdx], options: opts };
-    setQuestions(updated);
+    setQuestions((prev) => {
+      const updated = [...prev];
+      const opts = updated[qIdx].options.map((o) => (o.number === optNum ? { ...o, text } : o));
+      updated[qIdx] = { ...updated[qIdx], options: opts };
+      return updated;
+    });
   };
 
   const handlePublishExam = async (e: React.FormEvent) => {
@@ -4257,66 +4286,77 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                         </div>
 
                         {/* Question Format & Type Selector */}
-                        <div className="p-3.5 rounded-xl bg-theme-surface border border-theme-border flex flex-wrap items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <label className="text-xs font-bold uppercase tracking-wider text-theme-text/70">
+                        <div className="p-3.5 rounded-xl bg-theme-surface border border-theme-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3">
+                            <label className="text-xs font-bold uppercase tracking-wider text-theme-text/70 shrink-0">
                               Question Format:
                             </label>
-                            <div className="flex items-center gap-3">
-                              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-theme-text">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-theme-text">
                                 <input
                                   type="radio"
                                   name={`q_type_${qIdx}`}
                                   checked={q.questionType !== 'DI'}
                                   onChange={() => {
-                                    handleUpdateQuestion(qIdx, 'questionType', 'MCQ');
-                                    if (q.graph) {
-                                      handleUpdateQuestion(qIdx, 'graph', {
-                                        ...q.graph,
-                                        enabled: false,
-                                      });
-                                    }
+                                    setQuestions((prev) => {
+                                      const updated = [...prev];
+                                      const current = updated[qIdx];
+                                      updated[qIdx] = {
+                                        ...current,
+                                        questionType: 'MCQ',
+                                        ...(current.graph ? { graph: { ...current.graph, enabled: false } } : {}),
+                                      };
+                                      return updated;
+                                    });
                                   }}
-                                  className="accent-[#006d5c]"
+                                  className="accent-[#006d5c] shrink-0"
                                 />
                                 <span>Standard Multiple Choice (MCQ)</span>
                               </label>
-                              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-[#005a4c] dark:text-teal-300">
+                              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#005a4c] dark:text-teal-300">
                                 <input
                                   type="radio"
                                   name={`q_type_${qIdx}`}
                                   checked={q.questionType === 'DI'}
                                   onChange={() => {
-                                    handleUpdateQuestion(qIdx, 'questionType', 'DI');
-                                    const existingGraph = q.graph || {
-                                      enabled: true,
-                                      type: 'bar',
-                                      title: 'Data Interpretation Graph',
-                                      xAxisLabel: 'Category',
-                                      yAxisLabel: 'Value',
-                                      unit: '',
-                                      data: [
-                                        { id: '1', label: 'Item A', value: 30 },
-                                        { id: '2', label: 'Item B', value: 65 },
-                                        { id: '3', label: 'Item C', value: 90 },
-                                      ],
-                                      sonification: {
+                                    setQuestions((prev) => {
+                                      const updated = [...prev];
+                                      const current = updated[qIdx];
+                                      const existingGraph = current.graph || {
                                         enabled: true,
-                                        spatialAudio: true,
-                                        trendDetection: true,
-                                        peakDetection: true,
-                                        haptic: true,
-                                        voiceDetail: 'standard',
-                                        minFrequency: 250,
-                                        maxFrequency: 900,
-                                      },
-                                    };
-                                    handleUpdateQuestion(qIdx, 'graph', {
-                                      ...existingGraph,
-                                      enabled: true,
+                                        type: 'bar',
+                                        title: 'Data Interpretation Graph',
+                                        xAxisLabel: 'Category',
+                                        yAxisLabel: 'Value',
+                                        unit: '',
+                                        data: [
+                                          { id: '1', label: 'Item A', value: 30 },
+                                          { id: '2', label: 'Item B', value: 65 },
+                                          { id: '3', label: 'Item C', value: 90 },
+                                        ],
+                                        sonification: {
+                                          enabled: true,
+                                          spatialAudio: true,
+                                          trendDetection: true,
+                                          peakDetection: true,
+                                          haptic: true,
+                                          voiceDetail: 'standard',
+                                          minFrequency: 250,
+                                          maxFrequency: 900,
+                                        },
+                                      };
+                                      updated[qIdx] = {
+                                        ...current,
+                                        questionType: 'DI',
+                                        graph: {
+                                          ...existingGraph,
+                                          enabled: true,
+                                        },
+                                      };
+                                      return updated;
                                     });
                                   }}
-                                  className="accent-[#006d5c]"
+                                  className="accent-[#006d5c] shrink-0"
                                 />
                                 <span>DI / Data Interpretation (Audio Sonification)</span>
                               </label>
@@ -4324,7 +4364,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           </div>
 
                           {q.questionType === 'DI' && (
-                            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-theme-text">
+                            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-theme-text pt-2 sm:pt-0 border-t sm:border-t-0 border-theme-border/60">
                               <span>Interactive Sonification:</span>
                               <input
                                 type="checkbox"
@@ -4337,7 +4377,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                     });
                                   }
                                 }}
-                                className="w-4 h-4 accent-[#006d5c]"
+                                className="w-4 h-4 accent-[#006d5c] shrink-0"
                               />
                               <span className={q.graph?.enabled ? 'text-emerald-500 font-extrabold' : 'text-theme-text/60'}>
                                 {q.graph?.enabled ? 'ENABLED' : 'DISABLED'}
