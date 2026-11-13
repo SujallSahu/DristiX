@@ -4,7 +4,7 @@
 
 The platform brings accessible exam delivery, assistive interaction, practice resources, and performance tracking together in one place.
 
-**Live Platform:** https://dristi-x.vercel.app  
+**Live Platform:**https://dristix.vercel.app/  
 
 ## Why DristiX?
 
