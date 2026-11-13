@@ -280,7 +280,7 @@ export const InteractiveSonificationGraph: React.FC<InteractiveSonificationGraph
 
   return (
     <div
-      className={`my-4 p-5 rounded-2xl border-2 transition-all shadow-sm ${
+      className={`my-4 p-3.5 sm:p-5 rounded-2xl border-2 transition-all shadow-sm min-w-0 max-w-full overflow-hidden ${
         isExploring
           ? 'border-indigo-500 bg-indigo-500/5 ring-4 ring-indigo-500/20'
           : 'border-theme-border bg-theme-surface'
@@ -515,7 +515,7 @@ export const InteractiveSonificationGraph: React.FC<InteractiveSonificationGraph
             tabIndex={0}
             role="region"
             aria-label="Interactive chart visual graph container"
-            className="w-full overflow-x-auto focus:outline-none focus:ring-2 focus:ring-theme-primary/50 rounded-xl"
+            className="w-full min-w-0 max-w-full overflow-x-auto focus:outline-none focus:ring-2 focus:ring-theme-primary/50 rounded-xl"
           >
             <svg
               viewBox={`0 0 ${svgWidth} ${svgHeight}`}
@@ -693,7 +693,7 @@ export const InteractiveSonificationGraph: React.FC<InteractiveSonificationGraph
       </div>
 
       {/* Active Point Card & Navigation Instructions */}
-      <div className="mt-3 p-3.5 rounded-xl bg-theme-bg border border-theme-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+      <div className="mt-3 p-3 sm:p-3.5 rounded-xl bg-theme-bg border border-theme-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs min-w-0 max-w-full">
         <div className="flex items-center gap-2.5">
           <span className="w-8 h-8 rounded-full bg-indigo-600 text-white font-extrabold flex items-center justify-center font-mono">
             {activeIndex + 1}

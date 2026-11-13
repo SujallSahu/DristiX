@@ -4232,7 +4232,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                       <div
                         key={q.id}
                         id={`question-card-${qIdx}`}
-                        className="p-5 sm:p-6 rounded-2xl bg-theme-bg border border-theme-border shadow-xs space-y-4 hover:border-[#006d5c]/40 transition scroll-mt-24"
+                        className="p-3.5 sm:p-6 rounded-2xl bg-theme-bg border border-theme-border shadow-xs space-y-4 hover:border-[#006d5c]/40 transition scroll-mt-24 min-w-0 max-w-full overflow-hidden"
                       >
                         {/* Question Card Header Bar */}
                         <div className="flex flex-wrap items-center justify-between border-b border-theme-border pb-3 gap-3">
@@ -4789,7 +4789,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     </h3>
 
                     {previewQ.mathLatex && (
-                      <div className="p-3 rounded-xl bg-theme-bg border border-theme-border inline-block">
+                      <div className="p-3 rounded-xl bg-theme-bg border border-theme-border inline-block max-w-full overflow-x-auto">
                         <MathEquation latex={previewQ.mathLatex} displayMode={true} />
                       </div>
                     )}

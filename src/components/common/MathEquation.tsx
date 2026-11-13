@@ -31,12 +31,12 @@ export const MathEquation: React.FC<MathEquationProps> = ({
   }, [latex, verbalOverride]);
 
   return (
-    <span className={`inline-flex items-center gap-1 ${className}`}>
+    <span className={`inline-flex items-center gap-1 max-w-full ${className}`}>
       {/* Visual math presentation hidden from screen readers to prevent gibberish */}
       <span
         aria-hidden="true"
         dangerouslySetInnerHTML={{ __html: html }}
-        className="text-theme-text select-none"
+        className="text-theme-text select-none max-w-full overflow-x-auto"
       />
       {/* Screen-reader verbal speech equivalent */}
       <span className="sr-only">

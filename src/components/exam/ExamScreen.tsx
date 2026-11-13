@@ -171,7 +171,7 @@ export const ExamScreen: React.FC = () => {
       {/* ── Main Question Card ── */}
       <section
         aria-labelledby="q-heading"
-        className="bg-theme-surface border border-theme-border rounded-2xl shadow-md overflow-hidden"
+        className="bg-theme-surface border border-theme-border rounded-2xl shadow-md overflow-hidden min-w-0 max-w-full"
       >
 
         {/* Card Top Bar: Section + Status + Actions */}
@@ -238,7 +238,7 @@ export const ExamScreen: React.FC = () => {
         </div>
 
         {/* ── Question Body ── */}
-        <div className="px-3.5 sm:px-6 pt-4 sm:pt-5 pb-2">
+        <div className="px-3.5 sm:px-6 pt-4 sm:pt-5 pb-2 min-w-0 max-w-full">
 
           {/* Q-number + Question Text */}
           <h2

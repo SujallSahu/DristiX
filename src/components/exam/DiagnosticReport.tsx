@@ -500,7 +500,7 @@ export const DiagnosticReport: React.FC = () => {
                     </h4>
 
                     {q.mathLatex && (
-                      <div className="my-2 p-2 rounded bg-theme-bg border border-theme-border inline-block">
+                      <div className="my-2 p-2 rounded bg-theme-bg border border-theme-border inline-block max-w-full overflow-x-auto">
                         <MathEquation latex={q.mathLatex} displayMode={true} />
                       </div>
                     )}

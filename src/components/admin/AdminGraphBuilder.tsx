@@ -246,15 +246,15 @@ export const AdminGraphBuilder: React.FC<AdminGraphBuilderProps> = ({ graph, onC
   };
 
   return (
-    <div className="p-5 rounded-2xl bg-indigo-500/5 border-2 border-indigo-500/30 space-y-6">
+    <div className="p-3.5 sm:p-5 rounded-2xl bg-indigo-500/5 border-2 border-indigo-500/30 space-y-6 max-w-full overflow-hidden">
       {/* Builder Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-theme-border pb-3">
-        <div className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center text-sm shadow">
-            ðŸ“Š
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-theme-border pb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-extrabold flex items-center justify-center text-sm shadow shrink-0">
+            📊
           </span>
-          <div>
-            <h3 className="text-base font-extrabold text-theme-text">
+          <div className="min-w-0">
+            <h3 className="text-base font-extrabold text-theme-text truncate sm:whitespace-normal">
               Data Sonification Configuration & Graph Builder
             </h3>
             <p className="text-xs text-theme-text/70">
@@ -264,19 +264,19 @@ export const AdminGraphBuilder: React.FC<AdminGraphBuilderProps> = ({ graph, onC
         </div>
 
         {/* Graph Type Selector */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="admin-graph-type" className="text-xs font-bold text-theme-text/80 uppercase">Graph Type:</label>
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start shrink-0">
+          <label htmlFor="admin-graph-type" className="text-xs font-bold text-theme-text/80 uppercase shrink-0">Graph Type:</label>
           <select
             id="admin-graph-type"
             aria-label="Graph Type"
             title="Select Graph Type"
             value={graph.type}
             onChange={(e) => updateGraph('type', e.target.value as GraphType)}
-            className="p-2 rounded-xl bg-theme-surface border-2 border-theme-border font-bold text-xs text-theme-text outline-none focus:border-indigo-500"
+            className="p-2 rounded-xl bg-theme-surface border-2 border-theme-border font-bold text-xs text-theme-text outline-none focus:border-indigo-500 min-w-0 max-w-full"
           >
-            <option value="bar">ðŸ“Š Bar Chart (Comparative)</option>
-            <option value="line">ðŸ“ˆ Line Chart (Temporal / Trend)</option>
-            <option value="pie">ðŸ¥§ Pie Chart (Proportional)</option>
+            <option value="bar">📊 Bar Chart (Comparative)</option>
+            <option value="line">📈 Line Chart (Temporal / Trend)</option>
+            <option value="pie">🥧 Pie Chart (Proportional)</option>
           </select>
         </div>
       </div>
@@ -330,48 +330,48 @@ export const AdminGraphBuilder: React.FC<AdminGraphBuilderProps> = ({ graph, onC
             type="text"
             value={graph.unit || ''}
             onChange={(e) => updateGraph('unit', e.target.value)}
-            placeholder="e.g. â‚¹ Crore, %, Units"
+            placeholder="e.g. ₹ Crore, %, Units"
             className="w-full p-2.5 rounded-lg bg-theme-surface border border-theme-border text-xs font-semibold text-theme-text"
           />
         </div>
       </div>
 
       {/* Builder Inner Tabs */}
-      <div className="flex border-b border-theme-border gap-2">
+      <div className="flex border-b border-theme-border gap-2 overflow-x-auto max-w-full pb-1">
         <button
           type="button"
           onClick={() => setActiveTab('table')}
-          className={`pb-2 px-3 text-xs font-bold border-b-2 transition ${
+          className={`pb-2 px-3 text-xs font-bold border-b-2 transition shrink-0 whitespace-nowrap ${
             activeTab === 'table'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
               : 'border-transparent text-theme-text/70 hover:text-theme-text'
           }`}
         >
-          ðŸ“‹ Data Table Builder ({data.length} points)
+          📋 Data Table Builder ({data.length} points)
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('settings')}
-          className={`pb-2 px-3 text-xs font-bold border-b-2 transition ${
+          className={`pb-2 px-3 text-xs font-bold border-b-2 transition shrink-0 whitespace-nowrap ${
             activeTab === 'settings'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
               : 'border-transparent text-theme-text/70 hover:text-theme-text'
           }`}
         >
-          ðŸŽ›ï¸ Sonification & Pitch Settings
+          🎛️ Sonification & Pitch Settings
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('import')}
-          className={`pb-2 px-3 text-xs font-bold border-b-2 transition ${
+          className={`pb-2 px-3 text-xs font-bold border-b-2 transition shrink-0 whitespace-nowrap ${
             activeTab === 'import'
               ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
               : 'border-transparent text-theme-text/70 hover:text-theme-text'
           }`}
         >
-          ðŸ“ Import CSV / JSON
+          📁 Import CSV / JSON
         </button>
       </div>
 
@@ -620,13 +620,13 @@ export const AdminGraphBuilder: React.FC<AdminGraphBuilderProps> = ({ graph, onC
 
           {importError && (
             <div role="alert" className="p-2.5 rounded-lg bg-red-500/10 border border-red-500 text-red-500 text-xs font-bold">
-              âš ï¸ {importError}
+              ⚠️ {importError}
             </div>
           )}
 
           {importSuccess && (
             <div role="status" className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
-              âœ“ {importSuccess}
+              ✓ {importSuccess}
             </div>
           )}
 
@@ -661,7 +661,7 @@ export const AdminGraphBuilder: React.FC<AdminGraphBuilderProps> = ({ graph, onC
               disabled={previewActiveIndex <= 0}
               className="px-2.5 py-1 rounded bg-theme-surface border border-theme-border hover:bg-theme-border/40 disabled:opacity-40 font-bold"
             >
-              â† Prev Point
+              ← Prev Point
             </button>
             <button
               type="button"
@@ -669,7 +669,7 @@ export const AdminGraphBuilder: React.FC<AdminGraphBuilderProps> = ({ graph, onC
               disabled={previewActiveIndex >= data.length - 1}
               className="px-2.5 py-1 rounded bg-theme-surface border border-theme-border hover:bg-theme-border/40 disabled:opacity-40 font-bold"
             >
-              Next Point â†’
+              Next Point →
             </button>
             <button
               type="button"
