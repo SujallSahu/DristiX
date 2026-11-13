@@ -373,7 +373,7 @@ export const ExamCatalogScreen: React.FC = () => {
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-black shrink-0 whitespace-nowrap ${
                       portalTab === 'exams'
-                        ? 'bg-black/25 text-theme-primary-text border border-theme-primary-text/30 shadow-xs'
+                        ? 'bg-black/45 dark:bg-black/65 text-white border border-white/35 shadow-xs'
                         : 'bg-theme-border/60 text-theme-text'
                     }`}
                   >
@@ -417,7 +417,7 @@ export const ExamCatalogScreen: React.FC = () => {
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-black shrink-0 whitespace-nowrap ${
                       portalTab === 'practice'
-                        ? 'bg-black/25 text-theme-primary-text border border-theme-primary-text/30 shadow-xs'
+                        ? 'bg-black/45 dark:bg-black/65 text-white border border-white/35 shadow-xs'
                         : 'bg-theme-border/60 text-theme-text'
                     }`}
                   >

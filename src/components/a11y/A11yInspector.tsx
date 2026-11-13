@@ -130,7 +130,7 @@ export const A11yInspector: React.FC = () => {
               className={`px-1.5 py-0.2 rounded-full text-[9px] sm:text-[10px] font-black ${
                 auditResults.violations.length === 0
                   ? 'bg-theme-primary text-theme-primary-text shadow-xs'
-                  : 'bg-theme-danger text-white'
+                  : 'bg-red-700 text-white shadow-xs'
               }`}
             >
               {auditResults.violations.length === 0 ? 'Pass' : `${auditResults.violations.length} Fail`}
@@ -251,7 +251,7 @@ export const A11yInspector: React.FC = () => {
                         >
                           <div className="flex items-start justify-between gap-2">
                             <strong className="block font-black text-theme-text text-sm">{v.help} ({v.id})</strong>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-theme-danger text-white shrink-0">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-red-700 text-white shrink-0">
                               {v.impact || 'serious'}
                             </span>
                           </div>

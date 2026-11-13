@@ -3512,7 +3512,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     >
                       <span>🏆 Timed Mocks</span>
                       <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                        manageSubTab === 'exams' ? 'bg-black/25 text-white' : 'bg-theme-surface text-theme-text/80'
+                        manageSubTab === 'exams' ? 'bg-black/45 dark:bg-black/65 text-white' : 'bg-theme-surface text-theme-text/80'
                       }`}>
                         {filteredManageExams.length}
                       </span>
@@ -3534,7 +3534,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                     >
                       <span>💡 Practice Drills</span>
                       <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                        manageSubTab === 'practice' ? 'bg-black/25 text-white' : 'bg-theme-surface text-theme-text/80'
+                        manageSubTab === 'practice' ? 'bg-black/45 dark:bg-black/65 text-white' : 'bg-theme-surface text-theme-text/80'
                       }`}>
                         {filteredManageDrills.length}
                       </span>

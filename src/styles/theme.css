@@ -582,7 +582,7 @@ a.bg-theme-primary {
 [data-theme="dark"] .bg-theme-primary p,
 [data-theme="dark"] .bg-theme-primary span:not([class*="bg-"]),
 [data-theme="dark"] .bg-theme-primary.text-white,
-[data-theme="dark"] .bg-theme-primary .text-white,
+[data-theme="dark"] .bg-theme-primary .text-white:not([class*="bg-"]),
 .dark .bg-theme-primary,
 .dark button.bg-theme-primary,
 .dark a.bg-theme-primary,
@@ -590,8 +590,29 @@ a.bg-theme-primary {
 .dark .bg-theme-primary p,
 .dark .bg-theme-primary span:not([class*="bg-"]),
 .dark .bg-theme-primary.text-white,
-.dark .bg-theme-primary .text-white {
+.dark .bg-theme-primary .text-white:not([class*="bg-"]) {
   color: var(--primary-text) !important;
+}
+
+/* Badges/pills with their own dark background inside .bg-theme-primary or admin action buttons */
+.bg-theme-primary span[class*="bg-black"],
+[data-theme="dark"] .bg-theme-primary span[class*="bg-black"],
+.dark .bg-theme-primary span[class*="bg-black"],
+[data-theme="dark"] .bg-\[\#006d5c\] span[class*="bg-black"],
+.dark .bg-\[\#006d5c\] span[class*="bg-black"] {
+  color: #FFFFFF !important;
+}
+
+.bg-theme-primary kbd,
+[data-theme="dark"] .bg-theme-primary kbd,
+.dark .bg-theme-primary kbd {
+  color: var(--primary-text) !important;
+}
+
+[data-theme="high-contrast"] .bg-theme-primary [class*="bg-black"] {
+  background-color: #000000 !important;
+  color: #FFEE00 !important;
+  border-color: #FFEE00 !important;
 }
 
 [data-theme="high-contrast"] .bg-theme-primary,
@@ -601,7 +622,7 @@ a.bg-theme-primary {
 [data-theme="high-contrast"] .bg-theme-primary p,
 [data-theme="high-contrast"] .bg-theme-primary span:not([class*="bg-"]),
 [data-theme="high-contrast"] .bg-theme-primary.text-white,
-[data-theme="high-contrast"] .bg-theme-primary .text-white {
+[data-theme="high-contrast"] .bg-theme-primary .text-white:not([class*="bg-"]) {
   color: var(--primary-text) !important;
 }
 
@@ -788,6 +809,20 @@ a.bg-theme-primary {
   border-color: #FFEE00 !important;
 }
 
+/* High Contrast: Catalog active tab badge high contrast */
+[data-theme="high-contrast"] [class*="border-theme-primary-text"] {
+  background-color: #000000 !important;
+  color: #FFEE00 !important;
+  border-color: #FFEE00 !important;
+}
+
+[data-theme="high-contrast"] .bg-theme-danger:not([class*="/"]),
+[data-theme="high-contrast"] [class*="bg-theme-danger"]:not([class*="/"]) {
+  background-color: #000000 !important;
+  color: #FF4444 !important;
+  border: 1px solid #FF4444 !important;
+}
+
 /* Secondary & ghost buttons in High Contrast */
 [data-theme="high-contrast"] button:not(.bg-theme-primary):not([class*="bg-theme-primary"]):not(.dx-btn-primary):not([class*="dx-btn-primary"]):not([class*="bg-[#006d5c]"]):not(.btn-signout):not([class*="btn-signout"]) {
   border-color: #FFEE00;
@@ -922,6 +957,23 @@ input[id^="admin-q-math"] {
 .dark input[id^="admin-q-math"]::placeholder {
   color: #9CA3AF !important;
   opacity: 0.85 !important;
+}
+
+/* Charcoal Dark: High-contrast danger background with white text */
+[data-theme="dark"] .bg-theme-danger:not([class*="/"]),
+[data-theme="dark"] [class*="bg-theme-danger"]:not([class*="/"]),
+.dark .bg-theme-danger:not([class*="/"]),
+.dark [class*="bg-theme-danger"]:not([class*="/"]) {
+  background-color: #B91C1C !important;
+  color: #FFFFFF !important;
+}
+
+/* Charcoal Dark: Ensure active catalog tab badges have >= 10:1 AAA contrast */
+[data-theme="dark"] [class*="border-theme-primary-text/"],
+.dark [class*="border-theme-primary-text/"] {
+  background-color: rgba(0, 0, 0, 0.65) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
 }
 
 /* Primary CTA buttons in Dark mode: Vivid Emerald #10B981 with dark text #071511 */
