@@ -312,17 +312,17 @@ export const ExamCatalogScreen: React.FC = () => {
     <main
       id="main-content"
       tabIndex={-1}
-      className="max-w-[1700px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-32 focus:outline-none"
+      className="max-w-[1700px] w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-32 focus:outline-none overflow-x-clip"
       aria-label={
         portalTab === 'practice'
           ? 'Practice Arena and Topic Drills Portal'
           : 'Examination Catalog and Test Series Selection'
       }
     >
-      <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
+      <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0 max-w-full">
         {/* Left Column: Accessible Navigation & Mode Sidebar */}
         <aside
-          className="w-full lg:w-64 xl:w-72 shrink-0 space-y-3.5 lg:sticky lg:top-[104px]"
+          className="w-full lg:w-60 xl:w-64 max-w-full shrink-0 space-y-3.5 lg:sticky lg:top-[104px]"
           aria-label="Portal Navigation and Filters Sidebar"
         >
           {/* 1. Portal Mode Switcher Card (Mock Exams vs Practice Arena) */}
@@ -536,7 +536,7 @@ export const ExamCatalogScreen: React.FC = () => {
         </aside>
 
         {/* Right Column: Main Examination / Drill Cards & Search */}
-        <div className="flex-1 min-w-0 w-full space-y-5">
+        <div className="flex-1 min-w-0 w-full max-w-full space-y-5">
           {/* Welcome / Mode Banner */}
           <section
             className={`p-5 sm:p-6 rounded-2xl bg-theme-surface border-2 shadow-sm transition-all ${
@@ -592,10 +592,10 @@ export const ExamCatalogScreen: React.FC = () => {
             id="panel-exam-catalog"
             role="region"
             aria-label={`Search and Filter ${portalTab === 'practice' ? 'Practice Drills' : 'Examinations'}`}
-            className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 w-full"
+            className="flex flex-col lg:flex-row flex-wrap items-stretch lg:items-center justify-between gap-3 w-full min-w-0 max-w-full"
           >
             {/* Search Input Box */}
-            <div className="relative w-full lg:w-72 xl:w-80 shrink-0">
+            <div className="relative w-full lg:w-72 xl:w-80 shrink-0 max-w-full">
               <label htmlFor="exam-search-input" className="sr-only">
                 Search {portalTab === 'practice' ? 'practice drills' : 'examinations'} by title, code, or keyword (Press slash to focus)
               </label>
@@ -636,30 +636,30 @@ export const ExamCatalogScreen: React.FC = () => {
             {/* Keyboard Shortcuts Reference Bar (Side of Search Bar) */}
             <nav
               aria-label="Catalog Quick Keyboard Shortcuts"
-              className="flex-1 min-w-0 h-auto sm:h-11 px-3.5 py-2 rounded-xl bg-theme-surface border-2 border-theme-border flex flex-wrap items-center justify-between gap-2.5 text-xs shadow-sm"
+              className="flex-1 min-w-0 max-w-full h-auto min-h-[44px] px-3.5 py-2 rounded-xl bg-theme-surface border-2 border-theme-border flex flex-wrap items-center justify-between gap-2.5 text-xs shadow-sm"
             >
               <div className="flex items-center gap-1.5 font-bold text-theme-text shrink-0">
                 <Keyboard className="w-4 h-4 text-theme-primary" aria-hidden="true" />
                 <span className="hidden sm:inline">Shortcuts:</span>
               </div>
-              <div className="flex flex-wrap items-center gap-2.5 text-theme-text-secondary font-medium">
-                <span className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-theme-text-secondary font-medium min-w-0">
+                <span className="flex items-center gap-1 shrink-0">
                   <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px]">T</kbd>
                   <span className="text-[11px]">Mode</span>
                 </span>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 shrink-0">
                   <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px]">↑/↓</kbd>
                   <span className="text-[11px]">Navigate</span>
                 </span>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 shrink-0">
                   <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px]">Enter</kbd>
                   <span className="text-[11px]">Start</span>
                 </span>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 shrink-0">
                   <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px]">O</kbd>
                   <span className="text-[11px]">Overview</span>
                 </span>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 shrink-0">
                   <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px]">C</kbd>
                   <span className="text-[11px]">Category</span>
                 </span>
@@ -667,7 +667,7 @@ export const ExamCatalogScreen: React.FC = () => {
 
               {/* Showing Count */}
               <div
-                className="text-xs font-bold text-theme-text-secondary shrink-0 pl-2 sm:border-l border-theme-border"
+                className="text-xs font-bold text-theme-text-secondary shrink-0 pl-2 sm:border-l border-theme-border ml-auto sm:ml-0"
                 aria-live="polite"
               >
                 <span className="text-theme-primary font-black">{filteredExams.length}</span>/{activeExamsList.length} {portalTab === 'practice' ? 'Drills' : 'Tests'}
@@ -680,7 +680,7 @@ export const ExamCatalogScreen: React.FC = () => {
             aria-label={`${
               portalTab === 'practice' ? 'Practice Drills' : 'Examinations'
             } List. Use Arrow Keys to navigate, Enter to start`}
-            className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full"
+            className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full min-w-0 max-w-full"
           >
             {filteredExams.length === 0 ? (
               <div className="col-span-full p-12 text-center rounded-2xl bg-theme-surface border-2 border-dashed border-theme-border">
@@ -878,11 +878,11 @@ export const ExamCatalogScreen: React.FC = () => {
                     </div>
 
                     {/* Card Actions */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-3 border-t border-theme-border">
+                    <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 pt-3 border-t border-theme-border">
                       <button
                         type="button"
                         onClick={() => handleStartExam(exam)}
-                        className="flex-1 min-w-0 py-3 sm:py-2.5 px-3.5 min-h-[44px] rounded-xl bg-theme-primary text-theme-primary-text font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all focus:outline-none focus:ring-4 focus:ring-theme-focus"
+                        className="flex-1 min-w-0 sm:min-w-[150px] py-3 sm:py-2.5 px-3.5 min-h-[44px] rounded-xl bg-theme-primary text-theme-primary-text font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:scale-[0.99] transition-all focus:outline-none focus:ring-4 focus:ring-theme-focus"
                         aria-label={`Start ${isPractice ? 'Practice Drill' : 'Examination'}: ${exam.title} (Or press Enter)`}
                       >
                         <span className="shrink-0">{isPractice ? '💡' : '🚀'}</span>

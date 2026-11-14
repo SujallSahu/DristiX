@@ -685,7 +685,7 @@ export const App: React.FC = () => {
       <Header />
 
       {/* Primary Content Container: Catalog Dashboard vs Active Exam vs Diagnostic Report vs Analytics */}
-      <div id="main-content" className={`flex-1 ${activeView === 'exam' && !isSubmitted ? 'pb-24 lg:pb-4' : 'pb-20 lg:pb-16'}`}>
+      <div id="main-content" className={`flex-1 min-w-0 max-w-full overflow-x-clip ${activeView === 'exam' && !isSubmitted ? 'pb-24 lg:pb-4' : 'pb-20 lg:pb-16'}`}>
         {activeView === 'analytics' ? (
           <StudentAnalyticsView onReturnToCatalog={returnToCatalog} />
         ) : activeView === 'catalog' ? (
