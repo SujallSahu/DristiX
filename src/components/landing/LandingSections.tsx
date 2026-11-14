@@ -168,18 +168,8 @@ export const HowItWorks: React.FC = () => (
         sub="No tutorials or onboarding videos. The platform explains itself — spoken aloud if you need it."
       />
 
-      {/* Steps grid with connector line */}
+      {/* Steps grid */}
       <div className="relative">
-        {/* Desktop connector line */}
-        <div
-          className="hidden lg:block absolute top-[2.75rem] left-[calc(12.5%+1.5rem)] right-[calc(12.5%+1.5rem)] h-px"
-          aria-hidden="true"
-          style={{
-            background:
-              'linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 35%, transparent) 20%, color-mix(in srgb, var(--primary) 35%, transparent) 80%, transparent)',
-          }}
-        />
-
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {STEPS.map(({ num, icon: Icon, title, body }) => (
             <div key={num} className="dx-step-card p-7 flex flex-col gap-5 group relative">
