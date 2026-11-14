@@ -3743,7 +3743,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                           setActiveAdminTab('create');
                           soundEffects.playSelect();
                         }}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-xs transition hover:brightness-110"
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#006d5c] to-teal-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-xs transition hover:brightness-110"
                       >
                         <PlusCircle className="w-4 h-4" />
                         <span>Create Practice Drill</span>
@@ -3803,7 +3803,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                               <button
                                 type="button"
                                 onClick={() => handleTestAsStudent(drill, 'practice')}
-                                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5 hover:brightness-110 shadow-xs transition"
+                                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#006d5c] to-teal-700 text-white text-xs font-bold flex items-center gap-1.5 hover:brightness-110 shadow-xs transition"
                               >
                                 <Play className="w-3.5 h-3.5" aria-hidden="true" />
                                 <span>Test as Student</span>

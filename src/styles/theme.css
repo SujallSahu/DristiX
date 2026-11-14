@@ -648,7 +648,25 @@ a.bg-theme-primary {
 .dark .bg-emerald-500 .text-white,
 .dark .bg-theme-success.text-white,
 .dark .bg-theme-success .text-white {
-  color: var(--primary-text) !important;
+  background-color: #10B981 !important;
+  color: #071511 !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="dark"] .bg-emerald-600.text-white *:not(input):not(textarea):not(select),
+[data-theme="dark"] .bg-emerald-500.text-white *:not(input):not(textarea):not(select),
+[data-theme="dark"] .bg-emerald-600 .text-white *:not(input):not(textarea):not(select),
+[data-theme="dark"] .bg-emerald-500 .text-white *:not(input):not(textarea):not(select),
+[data-theme="dark"] .bg-theme-success.text-white *:not(input):not(textarea):not(select),
+[data-theme="dark"] .bg-theme-success .text-white *:not(input):not(textarea):not(select),
+.dark .bg-emerald-600.text-white *:not(input):not(textarea):not(select),
+.dark .bg-emerald-500.text-white *:not(input):not(textarea):not(select),
+.dark .bg-emerald-600 .text-white *:not(input):not(textarea):not(select),
+.dark .bg-emerald-500 .text-white *:not(input):not(textarea):not(select),
+.dark .bg-theme-success.text-white *:not(input):not(textarea):not(select),
+.dark .bg-theme-success .text-white *:not(input):not(textarea):not(select) {
+  color: #071511 !important;
+  stroke: #071511 !important;
 }
 
 [data-theme="high-contrast"] .bg-emerald-600.text-white,
@@ -657,7 +675,19 @@ a.bg-theme-primary {
 [data-theme="high-contrast"] .bg-emerald-500 .text-white,
 [data-theme="high-contrast"] .bg-theme-success.text-white,
 [data-theme="high-contrast"] .bg-theme-success .text-white {
+  background-color: #FFEE00 !important;
   color: #000000 !important;
+  border-color: #FFEE00 !important;
+}
+
+[data-theme="high-contrast"] .bg-emerald-600.text-white *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] .bg-emerald-500.text-white *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] .bg-emerald-600 .text-white *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] .bg-emerald-500 .text-white *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] .bg-theme-success.text-white *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd),
+[data-theme="high-contrast"] .bg-theme-success .text-white *:not(input):not(textarea):not(select):not([class*="bg-"]):not(kbd) {
+  color: #000000 !important;
+  stroke: #000000 !important;
 }
 
 /* Light Mode Safeguards against low-contrast yellow text */
