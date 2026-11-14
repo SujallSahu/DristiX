@@ -333,6 +333,7 @@ export const Header: React.FC = () => {
           className={`flex items-center gap-1 sm:gap-1.5 w-full md:w-auto overflow-x-auto md:overflow-visible no-scrollbar pt-1 md:pt-0 border-t border-theme-border/40 md:border-t-0 focus:outline-none flex-wrap ${
             fontSize > 100 ? 'justify-start' : 'justify-between md:justify-end'
           }`}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {/* Current Student Profile Chip (Desktop) */}
           {currentStudent && activeView !== 'exam' && (

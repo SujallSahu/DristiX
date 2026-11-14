@@ -135,7 +135,7 @@ body {
   flex-direction: column;
 }
 
-/* Accessible custom scrollbars */
+/* Accessible custom scrollbars (excluding elements marked no-scrollbar) */
 ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
@@ -153,6 +153,24 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-primary);
+}
+
+/* ========================================================
+   GLOBAL NO-SCROLLBAR UTILITY
+   Completely removes visible scrollbars / scales across all
+   browsers while preserving fluid swiping & responsive layout.
+   ======================================================== */
+.no-scrollbar::-webkit-scrollbar,
+[class*="no-scrollbar"]::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar,
+[class*="no-scrollbar"] {
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important;    /* Firefox */
 }
 
 /* Ensure KaTeX math elements stay visible and high contrast */

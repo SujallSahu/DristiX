@@ -231,7 +231,10 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({ onSignIn, onRegist
         )}
 
         {/* Right: Accessibility controls + Desktop Auth buttons */}
-        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full lg:w-auto overflow-x-auto no-scrollbar pt-1.5 lg:pt-0 border-t border-theme-border/30 lg:border-t-0 shrink-0 ml-auto">
+        <div
+          className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full lg:w-auto overflow-x-auto lg:overflow-visible no-scrollbar pt-1.5 lg:pt-0 border-t border-theme-border/30 lg:border-t-0 shrink-0 ml-auto"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           {/* Accessibility controls */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0" role="group" aria-label="Accessibility controls">
             <button

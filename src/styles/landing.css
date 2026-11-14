@@ -26,7 +26,7 @@
   color: var(--primary-text);
 }
 
-.landing-root * {
+.landing-root *:not(.no-scrollbar):not([class*="no-scrollbar"]) {
   scrollbar-color: var(--border-subtle) var(--bg-surface-elevated);
   scrollbar-width: thin;
 }
@@ -38,6 +38,24 @@
   border-radius: 999px;
 }
 .landing-root ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* Ensure elements marked no-scrollbar never show a scrollbar/scale track */
+.landing-root .no-scrollbar,
+.landing-root [class*="no-scrollbar"],
+.no-scrollbar,
+[class*="no-scrollbar"] {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.landing-root .no-scrollbar::-webkit-scrollbar,
+.landing-root [class*="no-scrollbar"]::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+[class*="no-scrollbar"]::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
 
 
 /* ═══════════════════════════════════════════════
