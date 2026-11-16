@@ -14,6 +14,7 @@ import { isHindiPreferred, voiceRecognition } from './voiceRecognition';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { performScroll } from './scrollHelper';
+import { explainEquation, explainGraph, explainDiagram } from './visualMathExplainer';
 import type { Exam } from '../../shared/types';
 
 const API_KEY_STORAGE = 'dristix_gemini_api_key';
@@ -43,6 +44,10 @@ export interface GeminiParsedCommand {
     | 'JUMP_QUESTION'
     | 'MARK_REVIEW'
     | 'READ_QUESTION'
+    | 'EXPLAIN_QUESTION'
+    | 'EXPLAIN_DIAGRAM'
+    | 'EXPLAIN_GRAPH'
+    | 'EXPLAIN_EQUATION'
     | 'CHECK_TIMER'
     | 'QUESTION_PALETTE'
     | 'SUBMIT_EXAM'
@@ -498,8 +503,12 @@ ${context.analytics?.recentSubmissions?.map((s: any, idx: number) => `    ${idx 
 }
 - Current Exam: ${context.currentExam ? `"${context.currentExam.title}" (${context.currentExam.isPractice ? 'Practice Drill' : 'Live Mock Examination'})` : 'None (On Exam Catalog Screen)'}
 - Current Question: ${context.activeView === 'exam' && context.currentQuestion ? `Q${context.currentQuestion.number}: "${context.currentQuestion.text}"` : 'None (Not in live exam)'}
+- Question Equation/Formula: ${context.currentQuestion?.equationLatex ? `"${context.currentQuestion.equationLatex}" (${context.currentQuestion.isQuadratic ? 'Quadratic Equation' : 'Formula'}). Breakdown: ${context.currentQuestion.equationExplanation || ''}` : 'None'}
+- Attached Visual Graph/Chart: ${context.currentQuestion?.graph ? `Type: ${context.currentQuestion.graph.type}, Title: "${context.currentQuestion.graph.title}", X-Axis: "${context.currentQuestion.graph.xAxisLabel}", Y-Axis: "${context.currentQuestion.graph.yAxisLabel}" (${context.currentQuestion.graph.unit || ''}). Data Points: ${JSON.stringify(context.currentQuestion.graph.data)}. Breakdown: ${context.currentQuestion.graphExplanation || ''}` : 'None'}
+- Attached Visual Diagram: ${context.currentQuestion?.diagramDescription || context.currentQuestion?.diagramAiExplanation ? `Description: "${context.currentQuestion.diagramDescription || ''}". AI Narration: "${context.currentQuestion.diagramAiExplanation?.audioNarration || ''}". Visual Breakdown: ${JSON.stringify(context.currentQuestion.diagramAiExplanation?.visualBreakdown || [])}. Educational Context: "${context.currentQuestion.diagramAiExplanation?.educationalContext || ''}"` : (context.currentQuestion?.diagramUrl ? 'Attached diagram image present on screen.' : 'None')}
 - Available Options: ${context.activeView === 'exam' && context.currentQuestion ? JSON.stringify(context.currentQuestion.options) : '[]'}
 - Current Selected Option: ${context.currentQuestion?.selectedOption ?? 'None'}
+- Test Mode: ${context.currentExam?.isPractice ? 'Practice Drill Arena (Educational step-by-step guidance & hints are permitted)' : 'Timed Mock Examination (Strict exam conditions with negative marking)'}
 - Time Remaining: "${context.timeRemainingFormatted}"
 - Available Exams: ${JSON.stringify(context.availableExams.map((e: any) => ({ id: e.id, title: e.title, code: e.code })))}
 
@@ -547,6 +556,9 @@ ${languageRule}
 - "MARK_REVIEW": Mark for review
 - "READ_QUESTION": Read current question and options
 - "EXPLAIN_QUESTION": User asks to explain, clarify, understand, or read what the question is asking (e.g. "explain question", "explain query", "sawal samjhao", "explain this", "question samjhao", "samjhao", "samjha do", "explain it"). Explain what the problem asks and read options without revealing which option is correct.
+- "EXPLAIN_DIAGRAM": Candidate asks to explain, describe, or detail the attached visual diagram or geometry (e.g. "explain diagram", "describe diagram", "diagram samjhao", "chitra samjhao", "visual guide"). Provide a thorough, accessible description of shapes, angles, vertices, and relationships.
+- "EXPLAIN_GRAPH": Candidate asks to explain the chart, graph, data points, or trends (e.g. "explain graph", "explain chart", "graph samjhao", "chart samjhao", "graph data", "what does the chart show"). State the chart type, axes, every data point with units, peak/minimum values, and trend.
+- "EXPLAIN_EQUATION": Candidate asks to explain the mathematical formula, equation, or quadratic equation (e.g. "explain equation", "explain formula", "quadratic equation samjhao", "explain quadratic equation", "samiikaran samjhao"). For quadratic equations, explain the standard form ax^2 + bx + c = 0, coefficients a, b, c, discriminant b^2 - 4ac, nature of roots, and standard formula/factorization method. In Practice Drill mode, you may provide step-by-step educational hints; in Mock Exam mode, guide through the mathematical structure and coefficients.
 - "TEST_DETAILS": User asks for exam details, total marks, duration, marking scheme, negative marking, or test rules (e.g. "test details", "marking scheme", "negative marking", "is there negative marking", "total marks", "exam info").
 - "EXAM_OVERVIEW": User asks for question overview and exam attempts summary (e.g. "overview", "question overview", "how many attempts", "attempt summary", "exam status", "kitne attempt kiye", "kitne sawal bache").
 - "CLOSE_DIAGRAM": Close visual diagram explainer dialog (e.g. "close diagram", "diagram band karo").
@@ -895,34 +907,118 @@ Return ONLY a valid JSON object matching this schema:
     // STRICT EXAM INTEGRITY INTERCEPTOR:
     // If the candidate is on the live exam screen, NEVER solve or reveal answers!
     // =========================================================================
-    // EXAM INTEGRITY GUARD WITH DIAGRAM ACCESSIBILITY EXEMPTION
     // =========================================================================
+    // EXAM INTEGRITY GUARD WITH MATH EQUATION, GRAPH & DIAGRAM EXEMPTION
+    // =========================================================================
+
+    // 1. MATHEMATICAL FORMULA & QUADRATIC EQUATION EXPLANATION
+    const isEquationQuery =
+      actionUpper === 'EXPLAIN_EQUATION' ||
+      (/(?:quadratic|equation|formula|samiikaran|samikaran|formulae|समीकरण|द्विघात)\b/i.test(queryLower) &&
+        /(?:explain|describe|read|what|tell|batao|samjhao|kya hai|detail|breakdown|guide|kaise)\b/i.test(queryLower) ||
+        /^(?:explain\s+equation|explain\s+quadratic|quadratic\s+equation|equation|formula|samiikaran\s+samjhao|formula\s+samjhao)$/i.test(queryLower.trim()));
+
+    if (context.activeView === 'exam' && isEquationQuery) {
+      const q = context.currentQuestion;
+      if (q?.equationLatex) {
+        const eqRes = explainEquation(q.equationLatex, isHindi, {
+          isPractice: context.currentExam?.isPractice,
+          questionText: q.text,
+        });
+        soundEffects.playSelect();
+        useAnnouncerStore.getState().announce(eqRes.speech, 'assertive', true);
+        return {
+          success: true,
+          intent: 'EXPLAIN_EQUATION',
+          userQuery: rawQuery,
+          assistantReply: eqRes.speech,
+          actionExecuted: eqRes.isQuadratic ? 'Explained Quadratic Equation' : 'Explained Math Equation',
+        };
+      } else {
+        const reply = isHindi
+          ? 'वर्तमान प्रश्न में कोई द्विघात या गणितीय समीकरण नहीं दिया गया है।'
+          : 'There is no mathematical equation or quadratic formula attached to this question.';
+        useAnnouncerStore.getState().announce(reply, 'polite', true);
+        return {
+          success: true,
+          intent: 'EXPLAIN_EQUATION',
+          userQuery: rawQuery,
+          assistantReply: reply,
+          actionExecuted: 'No Equation Attached',
+        };
+      }
+    }
+
+    // 2. CHART & DATA INTERPRETATION GRAPH EXPLANATION
+    const isGraphQuery =
+      actionUpper === 'EXPLAIN_GRAPH' ||
+      (/(?:graph|chart|plot|bar\s*chart|line\s*graph|pie\s*chart|ग्राफ|चार्ट)\b/i.test(queryLower) &&
+        /(?:explain|describe|read|bolo|sunao|what|tell|batao|samjhao|dekho|khol|open|show|dikhao|detail|breakdown|data|points)\b/i.test(queryLower) ||
+        /^(?:explain\s+graph|explain\s+chart|graph\s+samjhao|chart\s+samjhao|graph\s+data|chart\s+data|graph|chart)$/i.test(queryLower.trim()));
+
+    if (context.activeView === 'exam' && isGraphQuery) {
+      const q = context.currentQuestion;
+      if (q?.graph && q.graph.enabled && q.graph.data?.length) {
+        const gRes = explainGraph(q.graph, isHindi);
+        soundEffects.playSelect();
+        useAnnouncerStore.getState().announce(gRes.speech, 'assertive', true);
+        return {
+          success: true,
+          intent: 'EXPLAIN_GRAPH',
+          userQuery: rawQuery,
+          assistantReply: gRes.speech,
+          actionExecuted: 'Explained Chart & Graph Data',
+        };
+      } else if (q?.diagramAiExplanation || q?.diagramDescription || q?.diagramUrl) {
+        const dRes = explainDiagram(q, isHindi);
+        if (q.diagramUrl || q.diagramAiExplanation) {
+          window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
+        }
+        soundEffects.playSelect();
+        useAnnouncerStore.getState().announce(dRes.speech, 'assertive', true);
+        return {
+          success: true,
+          intent: 'EXPLAIN_DIAGRAM',
+          userQuery: rawQuery,
+          assistantReply: dRes.speech,
+          actionExecuted: 'Explained Visual Diagram',
+        };
+      } else {
+        const reply = isHindi
+          ? 'वर्तमान प्रश्न में कोई डेटा ग्राफ या चार्ट संलग्न नहीं है।'
+          : 'This question does not have an attached data chart or graph.';
+        useAnnouncerStore.getState().announce(reply, 'polite', true);
+        return {
+          success: true,
+          intent: 'EXPLAIN_GRAPH',
+          userQuery: rawQuery,
+          assistantReply: reply,
+          actionExecuted: 'No Graph Attached',
+        };
+      }
+    }
+
+    // 3. VISUAL DIAGRAM & GEOMETRY EXPLANATION
     const isDiagramQuery =
-      /(?:diagram|chart|graph|figure|visual|image|चित्र|आरेख|ग्राफ)\b/i.test(rawQuery) &&
-      (/(?:explain|describe|read|what|tell|batao|samjhao|dekho|khol|open|show|dikhao|detail|breakdown|guide)\b/i.test(rawQuery) ||
-        /^(?:explain\s+diagram|describe\s+diagram|read\s+diagram|diagram\s+explain|diagram\s+samjhao|chart\s+samjhao|diagram|chart|figure)$/i.test(rawQuery.trim()));
+      !isGraphQuery &&
+      (actionUpper === 'EXPLAIN_DIAGRAM' ||
+        /(?:diagram|figure|visual|image|chitra|aarekh|चित्र|आरेख|voice\s*guide|visual\s*guide)\b/i.test(queryLower) &&
+        /(?:explain|describe|read|bolo|sunao|what|tell|batao|samjhao|dekho|khol|open|show|dikhao|detail|breakdown|guide)\b/i.test(queryLower) ||
+        /^(?:explain\s+diagram|describe\s+diagram|read\s+diagram|diagram\s+explain|diagram\s+samjhao|diagram|figure)$/i.test(queryLower.trim()));
 
     if (context.activeView === 'exam' && isDiagramQuery) {
-      window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
       const q = context.currentQuestion;
-      let reply = 'Opening AI Diagram Explainer.';
-      if (q) {
-        if (q.diagramAiExplanation?.audioNarration) {
-          reply = q.diagramAiExplanation.audioNarration;
-        } else if (q.diagramDescription) {
-          reply = `Question ${q.questionNumber} diagram: ${q.diagramDescription}. Opening AI Diagram Explainer.`;
-        } else if (q.diagramUrl) {
-          reply = `Opening AI Diagram Explainer for Question ${q.questionNumber}. Analyzing visual elements now.`;
-        } else {
-          reply = `Question ${q.questionNumber} does not have an attached diagram or visual chart.`;
-        }
+      const dRes = explainDiagram(q || {}, isHindi);
+      if (q?.diagramUrl || q?.diagramAiExplanation) {
+        window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
       }
-      useAnnouncerStore.getState().announce(reply, 'assertive', true);
+      soundEffects.playSelect();
+      useAnnouncerStore.getState().announce(dRes.speech, 'assertive', true);
       return {
         success: true,
         intent: 'EXPLAIN_DIAGRAM',
         userQuery: rawQuery,
-        assistantReply: reply,
+        assistantReply: dRes.speech,
         actionExecuted: 'Explained Visual Diagram',
       };
     }
@@ -947,7 +1043,7 @@ Return ONLY a valid JSON object matching this schema:
       queryLower.includes('samjhaiye') ||
       /^(?:explain|explain\s+this|explain\s+it|explain\s+question|explain\s+query|sawal\s+samjhao|question\s+samjhao|samjhao|samjha\s+do|samjhaiye)$/i.test(queryLower.trim());
 
-    if (context.activeView === 'exam' && !isDiagramQuery && isExplainQuestionIntent && context.currentQuestion) {
+    if (context.activeView === 'exam' && !isDiagramQuery && !isGraphQuery && !isEquationQuery && isExplainQuestionIntent && context.currentQuestion) {
       soundEffects.playSelect();
       const q = context.currentQuestion;
       const speech = buildFullQuestionSpeech(q);
@@ -967,6 +1063,9 @@ Return ONLY a valid JSON object matching this schema:
 
     const isSolveOrAnswerIntent =
       !isExplainQuestionIntent &&
+      !isEquationQuery &&
+      !isGraphQuery &&
+      !isDiagramQuery &&
       (
         actionUpper === 'EXAM_INTEGRITY_REFUSAL' ||
         actionUpper === 'HINT' ||
@@ -3078,6 +3177,54 @@ Return ONLY a valid JSON object matching this schema:
         const res = performScroll('bottom', isHindi);
         spokenReply = res.reply;
         actionExecuted = 'Scrolled to Bottom';
+        break;
+      }
+      case 'EXPLAIN_EQUATION': {
+        const q = context.currentQuestion;
+        if (q?.equationLatex) {
+          const eqRes = explainEquation(q.equationLatex, isHindi, {
+            isPractice: context.currentExam?.isPractice,
+            questionText: q.text,
+          });
+          spokenReply = eqRes.speech;
+          actionExecuted = eqRes.isQuadratic ? 'Explained Quadratic Equation' : 'Explained Math Equation';
+        } else {
+          spokenReply = isHindi
+            ? 'वर्तमान प्रश्न में कोई द्विघात या गणितीय समीकरण नहीं दिया गया है।'
+            : 'There is no mathematical equation or quadratic formula attached to this question.';
+          actionExecuted = 'No Equation Attached';
+        }
+        break;
+      }
+      case 'EXPLAIN_GRAPH': {
+        const q = context.currentQuestion;
+        if (q?.graph && q.graph.enabled && q.graph.data?.length) {
+          const gRes = explainGraph(q.graph, isHindi);
+          spokenReply = gRes.speech;
+          actionExecuted = 'Explained Chart & Graph Data';
+        } else {
+          spokenReply = isHindi
+            ? 'वर्तमान प्रश्न में कोई डेटा ग्राफ या चार्ट संलग्न नहीं है।'
+            : 'This question does not have an attached data chart or graph.';
+          actionExecuted = 'No Graph Attached';
+        }
+        break;
+      }
+      case 'EXPLAIN_DIAGRAM': {
+        const q = context.currentQuestion;
+        if (q) {
+          const dRes = explainDiagram(q, isHindi);
+          spokenReply = dRes.speech;
+          if (q.diagramUrl || q.diagramAiExplanation) {
+            window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
+          }
+          actionExecuted = 'Explained Visual Diagram';
+        } else {
+          spokenReply = isHindi
+            ? 'वर्तमान प्रश्न में कोई विजुअल आरेख संलग्न नहीं है।'
+            : 'This question does not have an attached visual diagram.';
+          actionExecuted = 'No Diagram Attached';
+        }
         break;
       }
       default: {

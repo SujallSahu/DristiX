@@ -14,6 +14,7 @@ import { isHindiPreferred, voiceRecognition } from './voiceRecognition';
 import { useNotificationStore, resolveNotificationTestDetails } from '../store/useNotificationStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { performScroll } from './scrollHelper';
+import { explainEquation, explainGraph, explainDiagram } from './visualMathExplainer';
 import type { Exam } from '../../shared/types';
 
 export interface CommandProcessResult {
@@ -125,6 +126,17 @@ export function isIntentionalVoiceCommand(text: string): boolean {
     /^(?:next|next\s+question|agla\s+sawal|aage|previous|prev|previous\s+question|pichhla\s+sawal|read\s+question|repeat\s+question|sawal\s+padho|clear\s+option|unselect|check\s+timer|time\s+remaining|time\s+left|samay\s+batao|kitna\s+time|submit\s+exam|finish\s+exam|stop|ruko|pause|chup)$/i.test(norm) ||
     /^(?:option|select\s+option|vikalp|choice)\s+[1-4a-d]$/i.test(norm) ||
     norm.includes('diagram') ||
+    norm.includes('chart') ||
+    norm.includes('graph') ||
+    norm.includes('quadratic') ||
+    norm.includes('equation') ||
+    norm.includes('formula') ||
+    norm.includes('समीकरण') ||
+    norm.includes('द्विघात') ||
+    norm.includes('ग्राफ') ||
+    norm.includes('चार्ट') ||
+    norm.includes('आरेख') ||
+    norm.includes('चित्र') ||
     norm.includes('hint') ||
     norm.includes('solution') ||
     norm.includes('formula') ||
@@ -212,20 +224,34 @@ export function buildFullQuestionSpeech(
   prefix = ''
 ): string {
   const isHindi = isHindiPreferred();
-  const formulaText = q.equationLatex
-    ? (isHindi ? ` समीकरण: ${verbalizeMath(q.equationLatex)}।` : ` Equation: ${verbalizeMath(q.equationLatex)}.`)
-    : '';
+
+  let formulaText = '';
+  if (q.equationLatex) {
+    const eq = explainEquation(q.equationLatex, isHindi, { isPractice: false, questionText: q.text });
+    if (eq.isQuadratic) {
+      formulaText = isHindi
+        ? ` द्विघात समीकरण: ${verbalizeMath(q.equationLatex)}।`
+        : ` Quadratic Equation: ${verbalizeMath(q.equationLatex)}.`;
+    } else {
+      formulaText = isHindi
+        ? ` समीकरण: ${verbalizeMath(q.equationLatex)}।`
+        : ` Equation: ${verbalizeMath(q.equationLatex)}.`;
+    }
+  }
+
   const diagramText = q.diagramAiExplanation?.audioNarration
-    ? ` Visual Diagram Breakdown: ${q.diagramAiExplanation.audioNarration}.`
+    ? ` ${q.diagramAiExplanation.audioNarration}`
     : q.diagramDescription
-    ? ` Visual Diagram: ${q.diagramDescription}.`
+    ? (isHindi ? ` विजुअल आरेख: ${verbalizeForSpeech(q.diagramDescription)}।` : ` Visual Diagram: ${verbalizeForSpeech(q.diagramDescription)}.`)
     : q.diagramUrl
-    ? ` This question includes an attached visual diagram. Say "Explain diagram" to hear the full visual breakdown.`
+    ? (isHindi ? ` इस प्रश्न में एक विजुअल आरेख शामिल है। विस्तृत विवरण के लिए "डायग्राम समझाओ" कहें।` : ` This question includes an attached visual diagram. Say "Explain diagram" to hear the full visual breakdown.`)
     : '';
-  const graphText =
-    q.graph && q.graph.enabled
-      ? ` Graph details: ${SonificationEngine.generateSummary(q.graph)}.`
-      : '';
+
+  let graphText = '';
+  if (q.graph && q.graph.enabled && q.graph.data?.length) {
+    const gSummary = explainGraph(q.graph, isHindi);
+    graphText = ` ${gSummary.summary}`;
+  }
   const optionsText =
     q.options && q.options.length > 0
       ? (isHindi
@@ -400,6 +426,16 @@ function normalizePhonetics(raw: string): string {
   // Normalize explanation & query clarification requests
   text = text.replace(/(?:एक्सप्लेनेशन|समझाइए|समझाओ|समझा\s+दो|explain\s+query|query\s+explain|explain\s+question|question\s+explain|sawal\s+samjhao|explain\s+this|\bexplain\b|\bexplanation\b)/gi, 'explain_question');
 
+  // 9b. Quadratic Equations & Math Formula Normalizations
+  text = text.replace(/(?:द्विघात\s*समीकरण|quadratic\s*equation|quadratic\s*formula|quad\s*equation|quadratic)/gi, 'quadratic_equation');
+  text = text.replace(/(?:समीकरण|फार्मूला|फॉर्मूला|समीकरन|सूत्र|equation|formula)/gi, 'equation');
+
+  // 9c. Charts & Graphs Normalizations
+  text = text.replace(/(?:बार\s*चार्ट|लाइन\s*ग्राफ|पाई\s*चार्ट|ग्राफ|चार्ट|bar\s*chart|line\s*graph|pie\s*chart)/gi, 'graph');
+
+  // 9d. Visual Diagrams Normalizations
+  text = text.replace(/(?:विजुअल\s*आरेख|आरेख|चित्र|डायग्राम|diagram|figure)/gi, 'diagram');
+
   // 10. Exam lists / inquiries
   text = text.replace(/(मॉक\s*टेस्ट्स?|मॉकटेस्ट|mock\s*tests?|mocktest|moak\s*tests?|moaktest|moak|moke)/gi, 'mocktest');
   text = text.replace(
@@ -479,35 +515,77 @@ function executeCommand(rawTranscript: string, shouldAnnounce = true): CommandPr
     return makeReply('CLOSE_DIAGRAM', reply, 'Closed Visual Diagram Explainer');
   }
 
+  // 1. MATHEMATICAL FORMULAS & QUADRATIC EQUATIONS
+  const isEquationQuery =
+    (combinedText.includes('quadratic_equation') ||
+      /(?:quadratic|equation|formula|samiikaran|samikaran|formulae|समीकरण|द्विघात)\b/i.test(combinedText)) &&
+    (/(?:explain|describe|read|what|tell|batao|samjhao|kya hai|detail|breakdown|guide|kaise)\b/i.test(combinedText) ||
+      /^(?:explain\s+equation|explain\s+quadratic|quadratic\s+equation|equation|formula|samiikaran\s+samjhao|formula\s+samjhao)$/i.test(rawLower));
+
+  if (isEquationQuery && context.activeView === 'exam') {
+    const q = context.currentQuestion;
+    if (q?.equationLatex) {
+      const eqResult = explainEquation(q.equationLatex, isHindi, {
+        isPractice: context.currentExam?.isPractice,
+        questionText: q.text,
+      });
+      return makeReply('EXPLAIN_EQUATION', eqResult.speech, eqResult.isQuadratic ? 'Explained Quadratic Equation' : 'Explained Math Equation');
+    } else {
+      const reply = isHindi
+        ? 'वर्तमान प्रश्न में कोई द्विघात या गणितीय समीकरण नहीं दिया गया है।'
+        : 'There is no mathematical equation or quadratic formula attached to this question.';
+      return makeReply('EXPLAIN_EQUATION', reply, 'No Equation Attached');
+    }
+  }
+
+  // 2. CHARTS & DATA INTERPRETATION GRAPHS
+  const isGraphQuery =
+    /(?:graph|chart|plot|bar\s*chart|line\s*graph|pie\s*chart|ग्राफ|चार्ट)\b/i.test(combinedText) &&
+    (/(?:explain|describe|read|bolo|sunao|what|tell|batao|samjhao|dekho|khol|open|show|dikhao|detail|breakdown|data|points)\b/i.test(combinedText) ||
+      /^(?:explain\s+graph|explain\s+chart|graph\s+samjhao|chart\s+samjhao|graph\s+data|chart\s+data|graph|chart)$/i.test(rawLower));
+
+  if (isGraphQuery && context.activeView === 'exam') {
+    const q = context.currentQuestion;
+    if (q?.graph && q.graph.enabled && q.graph.data?.length) {
+      const gResult = explainGraph(q.graph, isHindi);
+      return makeReply('EXPLAIN_GRAPH', gResult.speech, 'Explained Chart & Graph Data');
+    } else if (q?.diagramAiExplanation || q?.diagramDescription || q?.diagramUrl) {
+      const dResult = explainDiagram(q, isHindi);
+      if (q.diagramUrl || q.diagramAiExplanation) {
+        window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
+      }
+      return makeReply('EXPLAIN_DIAGRAM', dResult.speech, 'Explained Visual Diagram');
+    } else {
+      const reply = isHindi
+        ? 'वर्तमान प्रश्न में कोई डेटा ग्राफ या चार्ट संलग्न नहीं है।'
+        : 'This question does not have an attached data chart or graph.';
+      return makeReply('EXPLAIN_GRAPH', reply, 'No Graph Attached');
+    }
+  }
+
+  // 3. VISUAL DIAGRAMS & GEOMETRY
   const isDiagramQuery =
-    /(?:diagram|chart|graph|figure|visual|image|chitra|aarekh|चित्र|आरेख|ग्राफ|voice\s*guide|visual\s*guide)\b/i.test(combinedText) &&
-    (/(?:explain|describe|read|bolo|sunao|what|tell|batao|samjhao|dekho|khol|open|show|dikhao|detail|breakdown|guide|voice|audio)\b/i.test(combinedText) ||
-      /^(?:explain\s+diagram|describe\s+diagram|read\s+diagram|diagram\s+explain|diagram\s+samjhao|chart\s+samjhao|diagram|chart|figure|voice\s*guide|visual\s*guide|diagram\s*breakdown)$/i.test(rawLower));
+    !isGraphQuery &&
+    !isEquationQuery &&
+    (/(?:diagram|figure|visual|image|chitra|aarekh|चित्र|आरेख|voice\s*guide|visual\s*guide)\b/i.test(combinedText) &&
+      /(?:explain|describe|read|bolo|sunao|what|tell|batao|samjhao|dekho|khol|open|show|dikhao|detail|breakdown|guide)\b/i.test(combinedText) ||
+      /^(?:explain\s+diagram|describe\s+diagram|read\s+diagram|diagram\s+explain|diagram\s+samjhao|diagram|figure)$/i.test(rawLower));
 
   if (isDiagramQuery && context.activeView === 'exam') {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
-    }
     const q = context.currentQuestion;
-    const qNum = q?.questionNumber ?? q?.number ?? 1;
-    void examStore.explainCurrentDiagram(true);
-    const reply = q?.diagramAiExplanation?.audioNarration
-      ? q.diagramAiExplanation.audioNarration
-      : `Opening AI Diagram Explainer and Voice Guide for Question ${qNum}.`;
-    return {
-      success: true,
-      intent: 'EXPLAIN_DIAGRAM',
-      userQuery: rawTranscript,
-      assistantReply: reply,
-      actionExecuted: 'Explained Visual Diagram',
-    };
+    const dResult = explainDiagram(q || {}, isHindi);
+    if (q?.diagramUrl || q?.diagramAiExplanation) {
+      window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
+      void examStore.explainCurrentDiagram(true);
+    }
+    return makeReply('EXPLAIN_DIAGRAM', dResult.speech, 'Explained Visual Diagram');
   }
 
   // ==========================================
   // EXAM INTEGRITY GUARD:
   // Strictly prevent solving questions or revealing answers during live exam
   // ==========================================
-  if (context.activeView === 'exam' && !isDiagramQuery) {
+  if (context.activeView === 'exam' && !isDiagramQuery && !isGraphQuery && !isEquationQuery) {
     const isExplainQuestion =
       normalized.includes('explain_question') ||
       normalized.includes('explain question') ||
@@ -542,6 +620,9 @@ function executeCommand(rawTranscript: string, shouldAnnounce = true): CommandPr
 
     const isSolveOrAnswerRequest =
       !isExplainQuestion &&
+      !isEquationQuery &&
+      !isGraphQuery &&
+      !isDiagramQuery &&
       (
         normalized.includes('solve') ||
         rawLower.includes('solve this') ||

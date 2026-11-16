@@ -45,7 +45,7 @@ interface ChatMessage {
 
 export const VoiceAssistantOrb: React.FC = () => {
 
-  const { activeView } = useExamStore();
+  const { activeView, questions, currentIndex } = useExamStore();
 
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [liveState, setLiveState] = useState<LiveSessionState>('idle');
@@ -86,8 +86,8 @@ export const VoiceAssistantOrb: React.FC = () => {
         next === 'hi-IN'
           ? 'आवाज़ पहचान और जवाब हिन्दी में सेट कर दिया गया है। अब सभी उत्तर हिन्दी में दिए जाएंगे।'
           : next === 'auto'
-          ? 'Recognition language set to auto detect.'
-          : 'Recognition language set to English.',
+            ? 'Recognition language set to auto detect.'
+            : 'Recognition language set to English.',
         'polite',
         true
       );
@@ -383,14 +383,24 @@ export const VoiceAssistantOrb: React.FC = () => {
         'Go to Practice Arena',
       ];
     } else if (activeView === 'exam') {
-      return [
+      const curQ = questions?.[currentIndex];
+      const chips: string[] = [
         'Read question',
         'Select Option 2',
-        'Scroll down',
-        'Next question',
-        'How much time is left?',
-        'Clear option',
       ];
+      if (curQ?.mathLatex) {
+        chips.push(curQ.mathLatex.includes('^2') ? 'Explain quadratic equation' : 'Explain equation');
+      }
+      if (curQ?.graph && curQ.graph.enabled) {
+        chips.push('Explain graph');
+      }
+      if (curQ?.diagramUrl || curQ?.diagramAiExplanation || curQ?.diagramDescription) {
+        chips.push('Explain diagram');
+      }
+      chips.push('Next question');
+      chips.push('How much time is left?');
+      chips.push('Scroll down');
+      return chips;
     } else {
       return [
         'Go to mock test page',
@@ -444,8 +454,8 @@ export const VoiceAssistantOrb: React.FC = () => {
                 onClick={() => setShowKeyConfig((prev) => !prev)}
                 title="Configure Gemini API Key for 100% natural language accuracy"
                 className={`px-2 py-1 rounded-lg border text-[11px] font-bold transition flex items-center gap-1 shadow-xs ${geminiVoiceService.hasApiKey()
-                    ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                    : 'border-theme-border bg-theme-bg/90 hover:bg-theme-bg text-theme-text'
+                  ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                  : 'border-theme-border bg-theme-bg/90 hover:bg-theme-bg text-theme-text'
                   }`}
               >
                 <Key className="w-3 h-3" />
@@ -558,8 +568,8 @@ export const VoiceAssistantOrb: React.FC = () => {
               {keyValidationResult && (
                 <div
                   className={`p-2 rounded-lg text-[11px] leading-relaxed border ${keyValidationResult.ok
-                      ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
-                      : 'bg-red-950/60 border-red-500/40 text-red-300'
+                    ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                    : 'bg-red-950/60 border-red-500/40 text-red-300'
                     }`}
                 >
                   <p className="font-bold">
@@ -588,12 +598,12 @@ export const VoiceAssistantOrb: React.FC = () => {
                         key={idx}
                         style={{ height: `${barHeight}px` }}
                         className={`w-1 rounded-full transition-all duration-75 ${liveState === 'user_speaking'
-                            ? 'bg-emerald-400 shadow-sm shadow-emerald-400'
-                            : liveState === 'assistant_speaking'
-                              ? 'bg-purple-400 shadow-sm shadow-purple-400'
-                              : liveState === 'processing'
-                                ? 'bg-yellow-400 animate-pulse'
-                                : 'bg-cyan-400/60'
+                          ? 'bg-emerald-400 shadow-sm shadow-emerald-400'
+                          : liveState === 'assistant_speaking'
+                            ? 'bg-purple-400 shadow-sm shadow-purple-400'
+                            : liveState === 'processing'
+                              ? 'bg-yellow-400 animate-pulse'
+                              : 'bg-cyan-400/60'
                           }`}
                       />
                     );
@@ -669,8 +679,8 @@ export const VoiceAssistantOrb: React.FC = () => {
 
                 <div
                   className={`max-w-[82%] p-2.5 rounded-2xl text-xs leading-relaxed ${m.sender === 'user'
-                      ? 'bg-theme-primary text-theme-primary-text rounded-tr-xs font-medium shadow-sm'
-                      : 'bg-theme-surface border border-theme-border text-theme-text rounded-tl-xs shadow-sm'
+                    ? 'bg-theme-primary text-theme-primary-text rounded-tr-xs font-medium shadow-sm'
+                    : 'bg-theme-surface border border-theme-border text-theme-text rounded-tl-xs shadow-sm'
                     }`}
                 >
                   <p>{m.text}</p>
@@ -782,12 +792,12 @@ export const VoiceAssistantOrb: React.FC = () => {
               : 'Start AI Conversational Voice Assistant. Click or press V to talk.'
           }
           className={`relative group w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center transition-all duration-150 shadow-2xl focus:outline-none focus:ring-4 focus:ring-yellow-400 ${isAnyListening
-              ? liveState === 'user_speaking'
-                ? 'bg-gradient-to-tr from-emerald-500 via-teal-400 to-green-500 ring-4 ring-emerald-300 shadow-emerald-500/50'
-                : liveState === 'assistant_speaking'
-                  ? 'bg-gradient-to-tr from-purple-600 via-teal-600 to-emerald-500 ring-4 ring-purple-400 shadow-purple-500/50'
-                  : 'bg-gradient-to-tr from-teal-500 via-emerald-500 to-teal-600 ring-4 ring-teal-400/60'
-              : 'bg-gradient-to-tr from-teal-700 via-emerald-600 to-teal-800 hover:scale-105 hover:shadow-teal-500/50'
+            ? liveState === 'user_speaking'
+              ? 'bg-gradient-to-tr from-emerald-500 via-teal-400 to-green-500 ring-4 ring-emerald-300 shadow-emerald-500/50'
+              : liveState === 'assistant_speaking'
+                ? 'bg-gradient-to-tr from-purple-600 via-teal-600 to-emerald-500 ring-4 ring-purple-400 shadow-purple-500/50'
+                : 'bg-gradient-to-tr from-teal-500 via-emerald-500 to-teal-600 ring-4 ring-teal-400/60'
+            : 'bg-gradient-to-tr from-teal-700 via-emerald-600 to-teal-800 hover:scale-105 hover:shadow-teal-500/50'
             }`}
         >
           {/* Animated soundwave ring when listening */}

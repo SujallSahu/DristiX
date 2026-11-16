@@ -6,6 +6,7 @@ import {
 } from '../store/useAuthStore';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import { voiceRecognition } from './voiceRecognition';
+import { explainEquation, explainGraph, explainDiagram } from './visualMathExplainer';
 import type { QuestionItem } from '../../shared/types';
 
 export interface PageContextSnapshot {
@@ -95,16 +96,20 @@ export interface PageContextSnapshot {
     text: string;
     section: string;
     equationLatex?: string;
+    equationExplanation?: string;
+    isQuadratic?: boolean;
     options: { number: number; text: string; isSelected: boolean }[];
     selectedOption: number | null;
     isMarkedForReview: boolean;
     hint?: string;
     explanation?: string;
     graph?: import('../../shared/types').QuestionGraph;
+    graphExplanation?: string;
     diagramUrl?: string;
     diagramType?: 'image' | 'chart' | 'geometry' | 'svg';
     diagramDescription?: string;
     diagramAiExplanation?: import('../../shared/types').AiDiagramExplanation;
+    diagramExplanation?: string;
   };
   analytics?: {
     totalTests: number;
@@ -356,12 +361,20 @@ export function getAssistantContext(): PageContextSnapshot {
     };
 
     if (curQ) {
+      const isHindi = voiceRecognition.isHindiMode() || voiceRecognition.getLanguageMode() === 'hi-IN';
+      const isPractice = examStore.examMode === 'practice';
+      const eqAnalysis = curQ.mathLatex ? explainEquation(curQ.mathLatex, isHindi, { isPractice, questionText: curQ.questionText }) : undefined;
+      const graphAnalysis = (curQ.graph && curQ.graph.enabled && curQ.graph.data?.length) ? explainGraph(curQ.graph, isHindi) : undefined;
+      const diagAnalysis = (curQ.diagramAiExplanation || curQ.diagramDescription || curQ.diagramUrl || curQ.graph) ? explainDiagram(curQ, isHindi) : undefined;
+
       snapshot.currentQuestion = {
         number: curQ.questionNumber,
         questionNumber: curQ.questionNumber,
         text: curQ.questionText,
         section: curQ.section,
         equationLatex: curQ.mathLatex,
+        equationExplanation: eqAnalysis?.speech,
+        isQuadratic: eqAnalysis?.isQuadratic,
         options: curQ.options.map((opt) => ({
           number: opt.number,
           text: opt.text,
@@ -372,10 +385,12 @@ export function getAssistantContext(): PageContextSnapshot {
         hint: curQ.hint,
         explanation: curQ.explanation,
         graph: curQ.graph,
+        graphExplanation: graphAnalysis?.speech,
         diagramUrl: curQ.diagramUrl,
         diagramType: curQ.diagramType,
         diagramDescription: curQ.diagramDescription,
         diagramAiExplanation: curQ.diagramAiExplanation,
+        diagramExplanation: diagAnalysis?.speech,
       };
     }
   }
