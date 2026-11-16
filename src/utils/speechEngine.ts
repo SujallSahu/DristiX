@@ -468,12 +468,12 @@ class SpeechEngine {
   }
 
   /**
-   * Returns true if assistant is actively speaking OR finished speaking less than 350ms ago.
+   * Returns true if assistant is actively speaking OR finished speaking less than 450ms ago.
    * Prevents microphone from picking up acoustic reflections/room echo from laptop speakers.
    */
   public isEchoGuardActive(): boolean {
     if (this.isSpeaking()) return true;
-    return Date.now() - this.lastSpeechEndTime < 350;
+    return Date.now() - this.lastSpeechEndTime < 450;
   }
 
   /**
@@ -487,8 +487,8 @@ class SpeechEngine {
 
     const now = Date.now();
     const isActivelySpeaking = this.internalSpeaking;
-    // Acoustic speaker echo can occur while speaking or within 3500ms after speech ended (covers network Whisper latency)
-    const isRecentlyActive = isActivelySpeaking || (now - this.lastSpeechEndTime < 3500);
+    // Acoustic speaker echo can occur while speaking or within 4500ms after speech ended (covers network Whisper latency)
+    const isRecentlyActive = isActivelySpeaking || (now - this.lastSpeechEndTime < 4500);
     if (!isRecentlyActive && this.spokenHistory.length === 0) {
       return false;
     }
@@ -532,9 +532,9 @@ class SpeechEngine {
       }
     }
 
-    // Check against recent utterances within last 4 seconds
-    const recentHistory = this.spokenHistory.filter((entry) => now - entry.time < 4000);
-    if (recentHistory.length === 0 && (isActivelySpeaking || now - this.lastSpeechEndTime < 3500) && this.lastSpokenText) {
+    // Check against recent utterances within last 6 seconds
+    const recentHistory = this.spokenHistory.filter((entry) => now - entry.time < 6000);
+    if (recentHistory.length === 0 && (isActivelySpeaking || now - this.lastSpeechEndTime < 4500) && this.lastSpokenText) {
       const words = new Set(this.lastSpokenText.replace(/[^\w\s\u0900-\u097F]/gi, ' ').split(/\s+/).filter((w) => w.length >= 2));
       recentHistory.push({ text: this.lastSpokenText, time: this.lastSpeechEndTime || now, words });
     }

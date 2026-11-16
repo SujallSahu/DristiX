@@ -16,6 +16,17 @@ export interface AudioNoiseStats {
   isHardwareFiltered: boolean; // True when browser DSP echo/noise suppression is active
 }
 
+export interface NoiseFilteredPipeline {
+  filteredStream: MediaStream;
+  analyser: AnalyserNode;
+  gainNode: GainNode;
+  highPassFilter: BiquadFilterNode;
+  notchFilter: BiquadFilterNode;
+  lowPassFilter: BiquadFilterNode;
+  compressor: DynamicsCompressorNode;
+  cleanup: () => void;
+}
+
 type AudioStatsCallback = (stats: AudioNoiseStats) => void;
 
 class AudioNoiseFilterService {
@@ -182,6 +193,95 @@ class AudioNoiseFilterService {
    */
   public isSpeechActive(): boolean {
     return Date.now() - this.lastSpeechTimestamp < 600;
+  }
+
+  /**
+   * Constructs a high-performance Web Audio DSP noise cancellation and voice enhancement pipeline.
+   *
+   * 1. High-Pass Filter (85Hz): Cuts sub-audible table thuds, fan drone, HVAC hum, and breath pops.
+   * 2. Notch Filter (50Hz): Eliminates electrical mains hum.
+   * 3. Low-Pass Filter (7500Hz): Eliminates high-frequency hissing and RF static.
+   * 4. Dynamics Compressor: Smooths vocal volume, boosts quiet speech, prevents clipping.
+   * 5. Gain Node: Provides instant software-level muting during TTS speech or earcon output.
+   * 6. MediaStreamDestination: Feeds clean, noise-suppressed studio audio to MediaRecorder.
+   */
+  public createNoiseFilteredPipeline(
+    audioCtx: AudioContext,
+    inputStream: MediaStream
+  ): NoiseFilteredPipeline {
+    const source = audioCtx.createMediaStreamSource(inputStream);
+
+    // 1. High-pass filter: cut frequencies < 85Hz
+    const highPass = audioCtx.createBiquadFilter();
+    highPass.type = 'highpass';
+    highPass.frequency.setValueAtTime(85, audioCtx.currentTime);
+    highPass.Q.setValueAtTime(0.707, audioCtx.currentTime);
+
+    // 2. 50Hz notch filter: eliminate AC power hum
+    const notch = audioCtx.createBiquadFilter();
+    notch.type = 'notch';
+    notch.frequency.setValueAtTime(50, audioCtx.currentTime);
+    notch.Q.setValueAtTime(4.0, audioCtx.currentTime);
+
+    // 3. Low-pass filter: cut frequencies > 7500Hz
+    const lowPass = audioCtx.createBiquadFilter();
+    lowPass.type = 'lowpass';
+    lowPass.frequency.setValueAtTime(7500, audioCtx.currentTime);
+    lowPass.Q.setValueAtTime(0.707, audioCtx.currentTime);
+
+    // 4. Dynamics Compressor for vocal clarity
+    const compressor = audioCtx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-24, audioCtx.currentTime);
+    compressor.knee.setValueAtTime(30, audioCtx.currentTime);
+    compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
+    compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
+    compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
+
+    // 5. Gain node for instant acoustic echo mute guard
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
+
+    // 6. MediaStreamDestination for MediaRecorder
+    const dest = audioCtx.createMediaStreamDestination();
+
+    // 7. Analyser for speech volume and VAD
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.4;
+
+    // Connect DSP chain:
+    // source -> highPass -> notch -> lowPass -> compressor -> gainNode -> dest
+    // gainNode -> analyser (Do NOT connect to audioCtx.destination to prevent speaker loopback)
+    source.connect(highPass);
+    highPass.connect(notch);
+    notch.connect(lowPass);
+    lowPass.connect(compressor);
+    compressor.connect(gainNode);
+    gainNode.connect(dest);
+    gainNode.connect(analyser);
+
+    const cleanup = () => {
+      try {
+        source.disconnect();
+        highPass.disconnect();
+        notch.disconnect();
+        lowPass.disconnect();
+        compressor.disconnect();
+        gainNode.disconnect();
+        analyser.disconnect();
+      } catch {}
+    };
+
+    return {
+      filteredStream: dest.stream,
+      analyser,
+      gainNode,
+      highPassFilter: highPass,
+      notchFilter: notch,
+      lowPassFilter: lowPass,
+      compressor,
+      cleanup,
+    };
   }
 
   /**

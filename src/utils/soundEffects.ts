@@ -6,6 +6,51 @@
 class SoundEffectsEngine {
   private ctx: AudioContext | null = null;
   public enabled: boolean = true;
+  private activeSoundCount = 0;
+  private lastSoundEndTime = 0;
+  private soundStartListeners: Set<() => void> = new Set();
+  private soundEndListeners: Set<() => void> = new Set();
+
+  public isPlaying(): boolean {
+    return this.activeSoundCount > 0;
+  }
+
+  public isEchoGuardActive(): boolean {
+    return this.isPlaying() || Date.now() - this.lastSoundEndTime < 300;
+  }
+
+  public onSoundStart(cb: () => void): () => void {
+    this.soundStartListeners.add(cb);
+    return () => this.soundStartListeners.delete(cb);
+  }
+
+  public onSoundEnd(cb: () => void): () => void {
+    this.soundEndListeners.add(cb);
+    return () => this.soundEndListeners.delete(cb);
+  }
+
+  private notifySoundStart() {
+    this.activeSoundCount++;
+    this.soundStartListeners.forEach((cb) => {
+      try {
+        cb();
+      } catch {}
+    });
+  }
+
+  private notifySoundEnd(delayMs: number) {
+    setTimeout(() => {
+      this.activeSoundCount = Math.max(0, this.activeSoundCount - 1);
+      if (this.activeSoundCount === 0) {
+        this.lastSoundEndTime = Date.now();
+        this.soundEndListeners.forEach((cb) => {
+          try {
+            cb();
+          } catch {}
+        });
+      }
+    }, Math.max(20, delayMs));
+  }
 
   public initCtx() {
     if (!this.ctx && typeof window !== 'undefined') {
@@ -35,6 +80,7 @@ class SoundEffectsEngine {
       this.initCtx();
       if (!this.ctx) return;
 
+      this.notifySoundStart();
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
 
@@ -49,6 +95,7 @@ class SoundEffectsEngine {
 
       osc.start();
       osc.stop(this.ctx.currentTime + duration);
+      this.notifySoundEnd(duration * 1000 + 40);
     } catch {
       // Audio playback failsafe
     }
@@ -70,6 +117,7 @@ class SoundEffectsEngine {
     try {
       this.initCtx();
       if (!this.ctx) return;
+      this.notifySoundStart();
       const now = this.ctx.currentTime;
       [523.25, 659.25].forEach((freq, idx) => {
         const osc = this.ctx!.createOscillator();
@@ -82,6 +130,7 @@ class SoundEffectsEngine {
         osc.start(now + idx * 0.08);
         osc.stop(now + idx * 0.08 + 0.12);
       });
+      this.notifySoundEnd(240);
     } catch {
       // safe fallback
     }
@@ -98,6 +147,7 @@ class SoundEffectsEngine {
     try {
       this.initCtx();
       if (!this.ctx) return;
+      this.notifySoundStart();
       const now = this.ctx.currentTime;
       [523.25, 783.99].forEach((freq, idx) => {
         const osc = this.ctx!.createOscillator();
@@ -111,6 +161,7 @@ class SoundEffectsEngine {
         osc.start(now + idx * 0.09);
         osc.stop(now + idx * 0.09 + 0.14);
       });
+      this.notifySoundEnd(280);
     } catch {}
   }
 
@@ -120,6 +171,7 @@ class SoundEffectsEngine {
     try {
       this.initCtx();
       if (!this.ctx) return;
+      this.notifySoundStart();
       const now = this.ctx.currentTime;
       [659.25, 440].forEach((freq, idx) => {
         const osc = this.ctx!.createOscillator();
@@ -133,6 +185,7 @@ class SoundEffectsEngine {
         osc.start(now + idx * 0.08);
         osc.stop(now + idx * 0.08 + 0.12);
       });
+      this.notifySoundEnd(240);
     } catch {}
   }
 
@@ -142,6 +195,7 @@ class SoundEffectsEngine {
     try {
       this.initCtx();
       if (!this.ctx) return;
+      this.notifySoundStart();
       const now = this.ctx.currentTime;
       [880, 880, 880].forEach((freq, idx) => {
         const osc = this.ctx!.createOscillator();
@@ -154,6 +208,7 @@ class SoundEffectsEngine {
         osc.start(now + idx * 0.15);
         osc.stop(now + idx * 0.15 + 0.1);
       });
+      this.notifySoundEnd(480);
     } catch {
       // safe fallback
     }
@@ -165,6 +220,7 @@ class SoundEffectsEngine {
     try {
       this.initCtx();
       if (!this.ctx) return;
+      this.notifySoundStart();
       const now = this.ctx.currentTime;
       [440, 554.37, 659.25, 880].forEach((freq, idx) => {
         const osc = this.ctx!.createOscillator();
@@ -177,6 +233,7 @@ class SoundEffectsEngine {
         osc.start(now + idx * 0.1);
         osc.stop(now + idx * 0.1 + 0.25);
       });
+      this.notifySoundEnd(620);
     } catch {
       // safe fallback
     }
