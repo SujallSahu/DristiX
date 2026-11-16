@@ -1,4 +1,4 @@
-﻿import { geminiVoiceService } from './geminiVoiceService';
+import { geminiVoiceService } from './geminiVoiceService';
 import { processVoiceCommand, isPhantomNoise } from './voiceCommandProcessor';
 import type { CommandProcessResult } from './voiceCommandProcessor';
 import { speechEngine } from './speechEngine';
@@ -52,6 +52,7 @@ export class GeminiLiveVoiceSession {
   private hasSpokenInCurrentChunk = false;
   private isRunning = false;
   private callbacks: Partial<LiveSessionCallbacks> = {};
+  private unbindSpeechStart: (() => void) | null = null;
   private unbindSpeechEnd: (() => void) | null = null;
   private unbindTranscript: (() => void) | null = null;
   private currentSpeechTranscript: string = '';
@@ -178,34 +179,46 @@ export class GeminiLiveVoiceSession {
       // Start real-time speech recognition for live streaming words & instant zero-latency NLP fallback
       this.unbindTranscript = voiceRecognition.addListener({
         onTranscript: (transcript: string, isFinal: boolean, alternatives?: string[]) => {
-          if (transcript.trim() && !isPhantomNoise(transcript.trim())) {
-            this.currentSpeechTranscript = transcript.trim();
-            if (alternatives && alternatives.length > 0) {
-              this.currentAlternatives = alternatives.filter((a) => !isPhantomNoise(a));
-            }
-            this.callbacks.onLiveTranscript?.(transcript.trim(), isFinal);
+          const clean = transcript.trim();
+          if (!clean || isPhantomNoise(clean) || speechEngine.isTextEcho(clean)) {
+            return;
+          }
+          if (
+            speechEngine.isSpeaking() ||
+            speechEngine.isEchoGuardActive() ||
+            this.state === 'assistant_speaking'
+          ) {
+            return;
+          }
 
-            // Speech activity is now derived from the transcript
-            this.hasSpokenInCurrentChunk = true;
-            if (this.state === 'listening') this.setState('user_speaking');
+          this.currentSpeechTranscript = clean;
+          if (alternatives && alternatives.length > 0) {
+            this.currentAlternatives = alternatives.filter(
+              (a) => !isPhantomNoise(a) && !speechEngine.isTextEcho(a)
+            );
+          }
+          this.callbacks.onLiveTranscript?.(clean, isFinal);
 
-            // If a final recognition arrives while user spoke, commit promptly after brief settle (300ms).
-            // This timer is protected so background noise will not wipe it out and force 12s of recording.
-            if (isFinal && this.isRunning) {
-              if (this.silenceTimer) {
-                clearTimeout(this.silenceTimer);
-                this.silenceTimer = null;
-              }
-              if (this.finalCommitTimer) {
-                clearTimeout(this.finalCommitTimer);
-              }
-              this.finalCommitTimer = setTimeout(() => {
-                this.finalCommitTimer = null;
-                if (this.isRunning && this.hasSpokenInCurrentChunk) {
-                  this.commitCurrentUtterance();
-                }
-              }, 300);
+          // Speech activity is now derived from the transcript
+          this.hasSpokenInCurrentChunk = true;
+          if (this.state === 'listening') this.setState('user_speaking');
+
+          // If a final recognition arrives while user spoke, commit promptly after brief settle (300ms).
+          // This timer is protected so background noise will not wipe it out and force 12s of recording.
+          if (isFinal && this.isRunning) {
+            if (this.silenceTimer) {
+              clearTimeout(this.silenceTimer);
+              this.silenceTimer = null;
             }
+            if (this.finalCommitTimer) {
+              clearTimeout(this.finalCommitTimer);
+            }
+            this.finalCommitTimer = setTimeout(() => {
+              this.finalCommitTimer = null;
+              if (this.isRunning && this.hasSpokenInCurrentChunk) {
+                this.commitCurrentUtterance();
+              }
+            }, 300);
           }
         },
         onStateChange: (state) => {
@@ -229,19 +242,84 @@ export class GeminiLiveVoiceSession {
         voiceRecognition.stop();
       }
 
-      // Listen for assistant speech completion to resume listening
-      this.unbindSpeechEnd = speechEngine.onSpeechEnd(() => {
-        if (this.isRunning && this.state === 'assistant_speaking') {
-          setTimeout(() => {
-            if (this.isRunning && !speechEngine.isSpeaking() && !speechEngine.isEchoGuardActive()) {
-              this.currentSpeechTranscript = '';
-              this.audioChunks = [];
-              this.hasSpokenInCurrentChunk = false;
-              this.setState('listening');
-              this.startSegmentRecording();
-            }
-          }, 850);
+      // When speech begins, immediately mute microphone hardware tracks, halt browser recognition,
+      // and drain audio buffers so no speaker sound enters recording or prompts a self-trigger loop
+      this.unbindSpeechStart = speechEngine.onSpeechStart(() => {
+        if (!this.isRunning) return;
+
+        // 1. Mute microphone hardware tracks immediately to guarantee zero speaker audio enters the audio graph
+        if (this.mediaStream) {
+          this.mediaStream.getAudioTracks().forEach((track) => {
+            track.enabled = false;
+          });
         }
+
+        // 2. Halt browser recogniser while assistant is speaking
+        if (this.browserRecogniserAvailable) {
+          try {
+            voiceRecognition.stop();
+          } catch {}
+        }
+
+        // 3. Clear audio and transcript buffers
+        this.audioChunks = [];
+        this.currentSpeechTranscript = '';
+        this.currentAlternatives = [];
+        this.hasSpokenInCurrentChunk = false;
+        this.speechConsecutiveFrames = 0;
+        if (this.silenceTimer) {
+          clearTimeout(this.silenceTimer);
+          this.silenceTimer = null;
+        }
+        if (this.finalCommitTimer) {
+          clearTimeout(this.finalCommitTimer);
+          this.finalCommitTimer = null;
+        }
+
+        // 4. Set state to assistant_speaking
+        this.setState('assistant_speaking');
+      });
+
+      // Listen for assistant speech completion to resume listening cleanly
+      this.unbindSpeechEnd = speechEngine.onSpeechEnd(() => {
+        if (!this.isRunning) return;
+
+        // Discard any residual speech buffer immediately
+        this.audioChunks = [];
+        this.currentSpeechTranscript = '';
+        this.currentAlternatives = [];
+        this.hasSpokenInCurrentChunk = false;
+        this.speechConsecutiveFrames = 0;
+
+        // Settle window (350ms) for speaker acoustic decay in room before unmuting mic
+        setTimeout(() => {
+          if (!this.isRunning || speechEngine.isSpeaking()) return;
+
+          // 1. Re-enable microphone hardware tracks
+          if (this.mediaStream) {
+            this.mediaStream.getAudioTracks().forEach((track) => {
+              track.enabled = true;
+            });
+          }
+
+          // 2. Freshly clear buffers before user speaks
+          this.audioChunks = [];
+          this.currentSpeechTranscript = '';
+          this.currentAlternatives = [];
+          this.hasSpokenInCurrentChunk = false;
+          this.speechConsecutiveFrames = 0;
+
+          // 3. Restart browser speech recogniser
+          if (this.browserRecogniserAvailable) {
+            try {
+              voiceRecognition.start();
+            } catch {}
+          }
+
+          // 4. Return to listening state and start fresh recording segment
+          this.setState('listening');
+          this.startSegmentRecording();
+        }, 350);
       });
 
       this.setState('listening');
@@ -351,12 +429,15 @@ export class GeminiLiveVoiceSession {
 
       this.callbacks.onVolumeChange?.(normalizedVolume);
 
-      // Guard: Ignore mic input while assistant is speaking aloud or within echo guard window
+      // Guard: Ignore mic input and drain buffers while assistant is speaking aloud or within echo guard window
       if (
         speechEngine.isSpeaking() ||
         speechEngine.isEchoGuardActive() ||
         this.state === 'assistant_speaking'
       ) {
+        this.audioChunks = [];
+        this.currentSpeechTranscript = '';
+        this.currentAlternatives = [];
         this.hasSpokenInCurrentChunk = false;
         this.speechConsecutiveFrames = 0;
         if (this.silenceTimer) {
@@ -511,9 +592,14 @@ export class GeminiLiveVoiceSession {
         if (!this.isRunning || this.currentUtteranceId !== thisUtteranceId) return;
       }
       capturedTranscript = this.currentSpeechTranscript.trim();
+      if (isPhantomNoise(capturedTranscript) || speechEngine.isTextEcho(capturedTranscript)) {
+        capturedTranscript = '';
+      }
     }
 
-    const capturedAlternatives = [...this.currentAlternatives];
+    const capturedAlternatives = this.currentAlternatives.filter(
+      (alt) => !isPhantomNoise(alt) && !speechEngine.isTextEcho(alt)
+    );
     this.currentSpeechTranscript = '';
     this.currentAlternatives = [];
 
@@ -627,6 +713,11 @@ export class GeminiLiveVoiceSession {
     if (this.animFrameId) {
       cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;
+    }
+
+    if (this.unbindSpeechStart) {
+      this.unbindSpeechStart();
+      this.unbindSpeechStart = null;
     }
 
     if (this.unbindSpeechEnd) {

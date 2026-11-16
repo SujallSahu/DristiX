@@ -636,32 +636,32 @@ export const ExamCatalogScreen: React.FC = () => {
             {/* Keyboard Shortcuts Reference Bar (Side of Search Bar) */}
             <nav
               aria-label="Catalog Quick Keyboard Shortcuts"
-              className="flex-1 min-w-0 max-w-full h-auto min-h-[44px] px-3.5 py-2 rounded-xl bg-theme-surface border-2 border-theme-border flex flex-wrap items-center justify-between gap-2.5 text-xs shadow-sm"
+              className="flex-1 min-w-0 max-w-full h-auto min-h-[44px] px-3.5 py-2.5 rounded-xl bg-theme-surface border-2 border-theme-border flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-xs shadow-sm"
             >
               <div className="flex items-center gap-1.5 font-bold text-theme-text shrink-0">
                 <Keyboard className="w-4 h-4 text-theme-primary" aria-hidden="true" />
                 <span className="hidden sm:inline">Shortcuts:</span>
               </div>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-theme-text-secondary font-medium min-w-0">
-                <span className="flex items-center gap-1 shrink-0">
-                  <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px]">T</kbd>
-                  <span className="text-[11px]">Mode</span>
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-theme-text-secondary font-medium min-w-0">
+                <span className="inline-flex items-center gap-1 shrink-0">
+                  <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px] leading-none shadow-2xs">T</kbd>
+                  <span className="text-[11px] font-semibold">Mode</span>
                 </span>
-                <span className="flex items-center gap-1 shrink-0">
-                  <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px]">↑/↓</kbd>
-                  <span className="text-[11px]">Navigate</span>
+                <span className="inline-flex items-center gap-1 shrink-0">
+                  <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px] leading-none shadow-2xs">↑/↓</kbd>
+                  <span className="text-[11px] font-semibold">Navigate</span>
                 </span>
-                <span className="flex items-center gap-1 shrink-0">
-                  <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px]">Enter</kbd>
-                  <span className="text-[11px]">Start</span>
+                <span className="inline-flex items-center gap-1 shrink-0">
+                  <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px] leading-none shadow-2xs">Enter</kbd>
+                  <span className="text-[11px] font-semibold">Start</span>
                 </span>
-                <span className="flex items-center gap-1 shrink-0">
-                  <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px]">O</kbd>
-                  <span className="text-[11px]">Overview</span>
+                <span className="inline-flex items-center gap-1 shrink-0">
+                  <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px] leading-none shadow-2xs">O</kbd>
+                  <span className="text-[11px] font-semibold">Overview</span>
                 </span>
-                <span className="flex items-center gap-1 shrink-0">
-                  <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px]">C</kbd>
-                  <span className="text-[11px]">Category</span>
+                <span className="inline-flex items-center gap-1 shrink-0">
+                  <kbd className="px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg font-mono font-bold text-theme-text text-[10px] leading-none shadow-2xs">C</kbd>
+                  <span className="text-[11px] font-semibold">Category</span>
                 </span>
               </div>
 

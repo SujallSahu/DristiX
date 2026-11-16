@@ -14,7 +14,7 @@ let messageCounter = 0;
 const messageId = (prefix: string) => `${prefix}-${Date.now()}-${++messageCounter}`;
 import type { VoiceState } from '../../utils/voiceRecognition';
 import { speechEngine } from '../../utils/speechEngine';
-import { processVoiceCommand, isPhantomNoise, isIntentionalVoiceCommand } from '../../utils/voiceCommandProcessor';
+import { processVoiceCommand, isPhantomNoise } from '../../utils/voiceCommandProcessor';
 import type { CommandProcessResult } from '../../utils/voiceCommandProcessor';
 import { geminiVoiceService } from '../../utils/geminiVoiceService';
 import { GeminiLiveVoiceSession } from '../../utils/geminiLiveVoiceSession';
@@ -146,30 +146,23 @@ export const VoiceAssistantOrb: React.FC = () => {
       return;
     }
 
-    const isCommand =
-      isIntentionalVoiceCommand(cleanQuery) ||
-      (alternatives && alternatives.some((alt) => isIntentionalVoiceCommand(alt)));
-
-    if (isCommand && speechEngine.isSpeaking()) {
-      speechEngine.stop();
-    }
-
     // Acoustic Echo Guard: Prevent assistant from hearing its own speakers in a loop
-    if (!isCommand && speechEngine.isTextEcho(cleanQuery)) {
+    if (speechEngine.isTextEcho(cleanQuery)) {
       console.log('🔇 Suppressed acoustic speaker echo query:', cleanQuery);
       return;
     }
 
-    // If assistant is actively vocalizing and user provides a new command, stop assistant and prioritize candidate
+    // If assistant is actively vocalizing and candidate provides a genuine new utterance, interrupt assistant immediately
     if (speechEngine.isSpeaking()) {
       speechEngine.stop();
     }
 
+    const validAlternatives = alternatives
+      ? alternatives.filter((alt) => !speechEngine.isTextEcho(alt) && !isPhantomNoise(alt))
+      : [];
+
     let result: CommandProcessResult | null = null;
-    const candidates = alternatives && alternatives.length > 0 ? alternatives : [cleanQuery];
-    if (!candidates.includes(cleanQuery)) {
-      candidates.unshift(cleanQuery);
-    }
+    const candidates = [cleanQuery, ...validAlternatives];
 
     // 2. High-Precision Instant Local NLP (0ms execution for exam navigation, options, timer, submit, etc.)
     const localResult = processVoiceCommand(candidates);
@@ -386,12 +379,14 @@ export const VoiceAssistantOrb: React.FC = () => {
         'Read notifications',
         'List available exams',
         'Start SSC CGL test',
+        'Scroll down',
         'Go to Practice Arena',
       ];
     } else if (activeView === 'exam') {
       return [
         'Read question',
         'Select Option 2',
+        'Scroll down',
         'Next question',
         'How much time is left?',
         'Clear option',
@@ -400,6 +395,7 @@ export const VoiceAssistantOrb: React.FC = () => {
       return [
         'Go to mock test page',
         'Choose another exam',
+        'Scroll down',
         'Read report summary',
         'Retake test',
       ];

@@ -80,6 +80,7 @@ class SpeechEngine {
   private lastSpeechEndTime: number = 0;
   private lastSpokenText: string = '';
   private lastSpokenAt: number = 0;
+  private spokenHistory: Array<{ text: string; time: number; words: Set<string> }> = [];
   /**
    * Handle to the `speak()` call that is still waiting out its start delay.
    *
@@ -467,45 +468,120 @@ class SpeechEngine {
   }
 
   /**
-   * Returns true if assistant is actively speaking OR finished speaking less than 850ms ago.
+   * Returns true if assistant is actively speaking OR finished speaking less than 350ms ago.
    * Prevents microphone from picking up acoustic reflections/room echo from laptop speakers.
    */
   public isEchoGuardActive(): boolean {
     if (this.isSpeaking()) return true;
-    return Date.now() - this.lastSpeechEndTime < 1100;
+    return Date.now() - this.lastSpeechEndTime < 350;
   }
 
   /**
    * Checks if candidate recognized transcript is an acoustic echo of what the assistant spoke aloud.
+   * Employs history buffer, cross-language mapping, and fuzzy word matching to eliminate self-trigger loops.
    */
   public isTextEcho(candidateText: string): boolean {
-    if (!candidateText || !this.lastSpokenText) return false;
+    if (!candidateText) return false;
+    const normCand = candidateText.toLowerCase().replace(/[^\w\s\u0900-\u097F]/gi, ' ').replace(/\s+/g, ' ').trim();
+    if (!normCand || normCand.length < 2) return false;
 
-    // Acoustic speaker echo can only occur if assistant is currently speaking or spoke within 2500ms
-    const isRecentlySpeaking = this.internalSpeaking || (Date.now() - this.lastSpeechEndTime < 2500);
-    if (!isRecentlySpeaking) {
+    const now = Date.now();
+    const isActivelySpeaking = this.internalSpeaking;
+    // Acoustic speaker echo can occur while speaking or within 3500ms after speech ended (covers network Whisper latency)
+    const isRecentlyActive = isActivelySpeaking || (now - this.lastSpeechEndTime < 3500);
+    if (!isRecentlyActive && this.spokenHistory.length === 0) {
       return false;
     }
 
-    const normCand = candidateText.toLowerCase().replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
-    const normSpoken = this.lastSpokenText.toLowerCase().replace(/[^\w\s\u0900-\u097F]/gi, '').trim();
-    if (!normCand || !normSpoken) return false;
+    const candWords = normCand.split(/\s+/).filter((w) => w.length >= 2);
+    if (candWords.length === 0) return false;
 
-    // 1. Direct match: identical text
-    if (normSpoken === normCand) return true;
+    // Common Hindi/English equivalent terms to bridge cross-language speech recognition leakage
+    const termEquivalents: Record<string, string[]> = {
+      'feedback': ['फीडबैक', 'प्रतिक्रिया', 'रेटिंग'],
+      'फीडबैक': ['feedback', 'rating'],
+      'rating': ['रेटिंग', 'स्टार', 'stars'],
+      'रेटिंग': ['rating', 'star', 'stars'],
+      'star': ['स्टार', 'सितारा'],
+      'stars': ['स्टार', 'सितारा'],
+      'स्टार': ['star', 'stars'],
+      'option': ['विकल्प', 'vikalp', 'choice'],
+      'विकल्प': ['option', 'choice'],
+      'question': ['प्रश्न', 'सवाल', 'sawal', 'prashna'],
+      'प्रश्न': ['question', 'sawal'],
+      'सवाल': ['question', 'prashna'],
+      'submit': ['सबमिट', 'जमा'],
+      'सबमिट': ['submit'],
+      'timer': ['टाइम', 'समय', 'samay'],
+      'समय': ['time', 'timer'],
+      'time': ['समय', 'टाइम', 'timer'],
+      'next': ['अगला', 'agla'],
+      'अगला': ['next'],
+      'previous': ['पिछला', 'pichhla', 'prev'],
+      'पिछला': ['previous', 'prev'],
+      'explain': ['समझाओ', 'समझाइए', 'explanation'],
+      'समझाओ': ['explain', 'explanation'],
+    };
 
-    // 2. Substring match: recognized text is contained in what was just spoken
-    // (e.g. assistant said "You can say Start SSC CGL" and mic heard "Start SSC CGL")
-    if (normSpoken.includes(normCand) && normCand.length >= 4) return true;
-    if (normCand.includes(normSpoken) && normSpoken.length >= 4) return true;
+    const expandedCandWords = new Set<string>(candWords);
+    for (const w of candWords) {
+      if (termEquivalents[w]) {
+        for (const eq of termEquivalents[w]) {
+          expandedCandWords.add(eq.toLowerCase());
+        }
+      }
+    }
 
-    // 3. Word overlap: if candidate words appear heavily in spoken reply
-    const timeSinceSpoken = Date.now() - this.lastSpeechEndTime;
-    const candWords = normCand.split(/\s+/).filter((w) => w.length > 2);
-    if (candWords.length >= 2) {
-      const matchWords = candWords.filter((w) => normSpoken.includes(w));
-      const overlapThreshold = timeSinceSpoken < 1200 ? 0.50 : 0.75;
-      if (matchWords.length / candWords.length >= overlapThreshold) return true;
+    // Check against recent utterances within last 4 seconds
+    const recentHistory = this.spokenHistory.filter((entry) => now - entry.time < 4000);
+    if (recentHistory.length === 0 && (isActivelySpeaking || now - this.lastSpeechEndTime < 3500) && this.lastSpokenText) {
+      const words = new Set(this.lastSpokenText.replace(/[^\w\s\u0900-\u097F]/gi, ' ').split(/\s+/).filter((w) => w.length >= 2));
+      recentHistory.push({ text: this.lastSpokenText, time: this.lastSpeechEndTime || now, words });
+    }
+
+    for (const entry of recentHistory) {
+      const normSpoken = entry.text.toLowerCase().replace(/[^\w\s\u0900-\u097F]/gi, ' ').replace(/\s+/g, ' ').trim();
+      if (!normSpoken) continue;
+
+      // 1. Exact match: candidate is identical to what assistant spoke
+      if (normSpoken === normCand) return true;
+
+      // 2. Candidate contains the entire spoken sentence (candidate absorbed assistant speech)
+      if (normSpoken.length >= 8 && normCand.includes(normSpoken)) return true;
+
+      // 3. If assistant is actively speaking right now:
+      // Any candidate captured while speakers are vocalizing that matches spoken text is an echo
+      if (isActivelySpeaking) {
+        if (normSpoken.includes(normCand)) return true;
+        let activeMatchCount = 0;
+        for (const w of expandedCandWords) {
+          if (entry.words.has(w) || normSpoken.includes(w)) {
+            activeMatchCount++;
+          }
+        }
+        if (activeMatchCount >= 2 && activeMatchCount / candWords.length >= 0.5) return true;
+      }
+
+      // 4. If assistant has ALREADY FINISHED speaking:
+      // Short candidate commands (<= 3 words, e.g. "Next question", "Option 1", "Explain this", "Submit")
+      // are INTENTIONAL USER SPEECH, NOT ECHOES!
+      // Do NOT discard short commands as echoes after speech ended!
+      if (candWords.length <= 3) {
+        continue;
+      }
+
+      // 5. For longer candidates (>= 4 words) arriving after speech ended:
+      // Require substantial multi-word overlap to qualify as an acoustic echo
+      let matchCount = 0;
+      for (const w of expandedCandWords) {
+        if (entry.words.has(w) || normSpoken.includes(w)) {
+          matchCount++;
+        }
+      }
+
+      if (matchCount >= 4 && matchCount / candWords.length >= 0.75) {
+        return true;
+      }
     }
 
     return false;
@@ -554,6 +630,18 @@ class SpeechEngine {
 
     this.lastSpokenText = cleanText.toLowerCase();
     this.lastSpokenAt = now;
+
+    // Maintain recent spoken utterances history for acoustic echo cancellation
+    const words = new Set(
+      cleanText.toLowerCase().replace(/[^\w\s\u0900-\u097F]/gi, ' ').split(/\s+/).filter((w) => w.length >= 2)
+    );
+    this.spokenHistory.push({ text: cleanText.toLowerCase(), time: now, words });
+    if (this.spokenHistory.length > 8) {
+      this.spokenHistory.shift();
+    }
+    // Prune entries older than 12s
+    this.spokenHistory = this.spokenHistory.filter((entry) => now - entry.time < 12000);
+
     // This announcement is the live one now; a stop that ended the previous
     // one no longer describes the current state.
     this.interruptedAt = 0;

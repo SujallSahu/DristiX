@@ -76,6 +76,14 @@ export interface PageContextSnapshot {
     totalQuestions: number;
     currentQuestionNumber: number;
     durationMinutes: number;
+    totalMarks?: number;
+    negativeMarking?: string;
+    difficulty?: string;
+    category?: string;
+    sections?: string[];
+    attemptedCount?: number;
+    unattemptedCount?: number;
+    markedCount?: number;
     timeRemainingFormatted: string;
     remainingMinutes: number;
     remainingSeconds: number;
@@ -322,6 +330,10 @@ export function getAssistantContext(): PageContextSnapshot {
     const selectedOpt = curQ ? examStore.selectedOptions[curQ.id] || null : null;
     const isMarked = curQ ? !!examStore.markedForReview[curQ.id] : false;
 
+    const attemptedCount = Object.keys(examStore.selectedOptions).length;
+    const markedCount = Object.values(examStore.markedForReview).filter(Boolean).length;
+    const unattemptedCount = Math.max(0, examStore.questions.length - attemptedCount);
+
     snapshot.currentExam = {
       id: curExam.id,
       code: curExam.code,
@@ -329,6 +341,14 @@ export function getAssistantContext(): PageContextSnapshot {
       totalQuestions: examStore.questions.length,
       currentQuestionNumber: examStore.currentIndex + 1,
       durationMinutes: curExam.durationMinutes,
+      totalMarks: curExam.totalMarks || examStore.questions.length * 2,
+      negativeMarking: curExam.negativeMarking || (examStore.examMode === 'practice' ? 'No negative marking (Practice)' : '-0.50 per incorrect answer'),
+      difficulty: curExam.difficulty,
+      category: curExam.category,
+      sections: curExam.sections || [],
+      attemptedCount,
+      unattemptedCount,
+      markedCount,
       timeRemainingFormatted: examStore.formattedTime,
       remainingMinutes: Math.floor(examStore.timeRemaining / 60),
       remainingSeconds: examStore.timeRemaining % 60,

@@ -559,7 +559,7 @@ export const ExamScreen: React.FC = () => {
         aria-hidden="true"
         className="mt-3 text-center text-xs text-theme-text-secondary/60 font-mono tracking-wide select-none"
       >
-        1–4 Select Option &nbsp;·&nbsp; R Speak &nbsp;·&nbsp; S Stop &nbsp;·&nbsp; M Mark &nbsp;·&nbsp; C Clear &nbsp;·&nbsp; ←/→ Navigate &nbsp;·&nbsp; P Palette
+        1–4 Select Option &nbsp;·&nbsp; R Speak &nbsp;·&nbsp; O Overview &nbsp;·&nbsp; M Mark &nbsp;·&nbsp; C Clear &nbsp;·&nbsp; ←/→ Navigate &nbsp;·&nbsp; Q Palette
       </p>
     </main>
   );

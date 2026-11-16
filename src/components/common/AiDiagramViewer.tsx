@@ -64,15 +64,22 @@ export const AiDiagramViewer: React.FC<AiDiagramViewerProps> = ({ question, clas
     }
   }, [diagramUrl, diagramDescription, question.id, question.questionText, question.mathLatex, diagramType, cachedExplanation, question]);
 
-  // Listen for voice assistant event to open the diagram explainer
+  // Listen for voice assistant event to open or close the diagram explainer
   useEffect(() => {
     const handleOpenDiagram = () => {
       if (diagramUrl || diagramDescription) {
         setIsModalOpen(true);
       }
     };
+    const handleCloseDiagram = () => {
+      setIsModalOpen(false);
+    };
     window.addEventListener('dristix:open-diagram-explainer', handleOpenDiagram);
-    return () => window.removeEventListener('dristix:open-diagram-explainer', handleOpenDiagram);
+    window.addEventListener('dristix:close-diagram-explainer', handleCloseDiagram);
+    return () => {
+      window.removeEventListener('dristix:open-diagram-explainer', handleOpenDiagram);
+      window.removeEventListener('dristix:close-diagram-explainer', handleCloseDiagram);
+    };
   }, [diagramUrl, diagramDescription]);
 
   const handleExplanationGenerated = useCallback(

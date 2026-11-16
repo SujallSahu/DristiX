@@ -245,19 +245,43 @@ export function useGlobalShortcuts() {
             break;
 
           case 'n':
+          case 'arrowright':
             e.preventDefault();
             store.nextQuestion();
             break;
 
           case 'p':
+          case 'arrowleft':
             e.preventDefault();
             store.previousQuestion();
             break;
 
           case 'm':
+          case 'u':
             e.preventDefault();
             store.toggleMarkForReview();
             break;
+
+          case 'o': {
+            e.preventDefault();
+            const curQ = store.questions[store.currentIndex];
+            const total = store.questions.length;
+            const attempted = Object.keys(store.selectedOptions).length;
+            const unattempted = Math.max(0, total - attempted);
+            const marked = Object.values(store.markedForReview).filter(Boolean).length;
+            const minutes = Math.floor(store.timeRemaining / 60);
+            const seconds = store.timeRemaining % 60;
+            const selectedOpt = curQ ? store.selectedOptions[curQ.id] : undefined;
+            const isMarked = curQ ? !!store.markedForReview[curQ.id] : false;
+            const statusDesc = selectedOpt
+              ? `Answered with Option ${selectedOpt} selected`
+              : 'Unanswered';
+            const markDesc = isMarked ? ', Marked for review' : '';
+            const diagramDesc = curQ?.diagramUrl || curQ?.diagramDescription ? '. Includes visual diagram' : '';
+            const msg = `Question ${store.currentIndex + 1} of ${total} in section ${curQ?.section || 'General'}. Status: ${statusDesc}${markDesc}${diagramDesc}. Test attempts: ${attempted} answered, ${unattempted} unattempted, ${marked} marked for review. ${minutes} minutes and ${seconds} seconds remaining.`;
+            useAnnouncerStore.getState().announce(msg, 'assertive', true);
+            break;
+          }
 
           case '1':
             e.preventDefault();

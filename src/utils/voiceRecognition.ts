@@ -1,4 +1,4 @@
-﻿import { speechEngine } from './speechEngine';
+import { speechEngine } from './speechEngine';
 import { isPhantomNoise, isIntentionalVoiceCommand } from './voiceCommandProcessor';
 
 export type VoiceState = 'idle' | 'listening' | 'processing' | 'speaking' | 'error';
@@ -46,21 +46,26 @@ class VoiceRecognitionService {
 
   private bindSpeechEngineLifecycle() {
     speechEngine.onSpeechStart(() => {
-      // When TTS is vocalizing, visually indicate speaking and ignore mic input
+      // When TTS is vocalizing, visually indicate speaking and abort speech recognition to prevent speaker leakage
       if (this.isListeningActive) {
         this.setState('speaking');
+        try {
+          this.recognition?.abort();
+        } catch {}
       }
     });
 
     speechEngine.onSpeechEnd(() => {
-      // When TTS finishes, quickly restore listening state without keeping mic muted
+      // When TTS finishes, restore listening state after reverb decay window
       if (this.isListeningActive) {
         setTimeout(() => {
           if (this.isListeningActive && !speechEngine.isSpeaking()) {
             this.setState('listening');
-
+            try {
+              this.recognition?.start();
+            } catch {}
           }
-        }, 150);
+        }, 350);
       }
     });
   }
@@ -300,7 +305,11 @@ class VoiceRecognitionService {
       (alternatives && alternatives.some((alt) => /@|gmail|googlemail|email|mail|dot\s*com|एट|जीमेल|ईमेल|डाट\s*काम|password|passcode|pass|pin|पिन|पासवर्ड|पासकोड|student\d+|dx-\d+/i.test(alt)));
 
     // Suppress if the transcript is an echo of the assistant's own voice or within echo guard window
-    if (speechEngine.isSpeaking() || speechEngine.isEchoGuardActive() || speechEngine.isTextEcho(transcript)) {
+    if (
+      speechEngine.isSpeaking() ||
+      speechEngine.isEchoGuardActive() ||
+      speechEngine.isTextEcho(transcript)
+    ) {
       const cleanLower = transcript.trim().toLowerCase();
       const isExplicitStop = /^(?:stop|ruko|chup|pause|wait)$/i.test(cleanLower);
       if (isExplicitStop && !speechEngine.isTextEcho(transcript)) {
@@ -311,11 +320,15 @@ class VoiceRecognitionService {
       return;
     }
 
+    const filteredAlternatives = alternatives
+      ? alternatives.filter((alt) => !speechEngine.isTextEcho(alt) && !isPhantomNoise(alt))
+      : undefined;
+
     if (isCommand || isAuthOrCredential) {
       if (speechEngine.isSpeaking()) {
         speechEngine.stop();
       }
-      this.listeners.forEach((cb) => cb.onTranscript(transcript, isFinal, alternatives));
+      this.listeners.forEach((cb) => cb.onTranscript(transcript, isFinal, filteredAlternatives));
       return;
     }
 
@@ -325,7 +338,7 @@ class VoiceRecognitionService {
       return;
     }
 
-    this.listeners.forEach((cb) => cb.onTranscript(transcript, isFinal, alternatives));
+    this.listeners.forEach((cb) => cb.onTranscript(transcript, isFinal, filteredAlternatives));
   }
 
   private notifyError(error: string) {

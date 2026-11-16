@@ -26,8 +26,13 @@ export function isPracticeTabNavigation(rawQuery: string): boolean {
     q.includes('practic') ||
     q.includes('pratic') ||
     q.includes('drill') ||
+    q.includes('drils') ||
+    q.includes('reel') ||
+    q.includes('reels') ||
     q.includes('प्रैक') ||
     q.includes('अभ्यास') ||
+    q.includes('रील्स') ||
+    q.includes('रिल') ||
     q.includes('ड्रिल');
 
   if (!mentionsPractice) return false;

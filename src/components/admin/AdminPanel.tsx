@@ -3679,8 +3679,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                 onClick={() => handleTestAsStudent(exam, 'exam')}
                                 className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#006d5c] to-teal-700 text-white text-xs font-bold flex items-center gap-1.5 hover:brightness-110 shadow-xs transition"
                               >
-                                <Play className="w-3.5 h-3.5" aria-hidden="true" />
-                                <span>Test as Student</span>
+                                <Play className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+                                <span className="text-white">Test as Student</span>
                               </button>
 
                               <button
@@ -3805,8 +3805,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onReturnToStudent }) => 
                                 onClick={() => handleTestAsStudent(drill, 'practice')}
                                 className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#006d5c] to-teal-700 text-white text-xs font-bold flex items-center gap-1.5 hover:brightness-110 shadow-xs transition"
                               >
-                                <Play className="w-3.5 h-3.5" aria-hidden="true" />
-                                <span>Test as Student</span>
+                                <Play className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+                                <span className="text-white">Test as Student</span>
                               </button>
 
                               <button

@@ -157,14 +157,25 @@ body {
 
 /* ========================================================
    GLOBAL NO-SCROLLBAR UTILITY
-   Completely removes visible scrollbars / scales across all
-   browsers while preserving fluid swiping & responsive layout.
+   Completely removes visible scrollbars / tracks / arrow buttons
+   across all browsers while preserving fluid swiping & responsive layout.
    ======================================================== */
 .no-scrollbar::-webkit-scrollbar,
-[class*="no-scrollbar"]::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar-thumb,
+.no-scrollbar::-webkit-scrollbar-track,
+.no-scrollbar::-webkit-scrollbar-button,
+.no-scrollbar::-webkit-scrollbar-corner,
+[class*="no-scrollbar"]::-webkit-scrollbar,
+[class*="no-scrollbar"]::-webkit-scrollbar-thumb,
+[class*="no-scrollbar"]::-webkit-scrollbar-track,
+[class*="no-scrollbar"]::-webkit-scrollbar-button,
+[class*="no-scrollbar"]::-webkit-scrollbar-corner {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
+  background: transparent !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
 }
 
 .no-scrollbar,

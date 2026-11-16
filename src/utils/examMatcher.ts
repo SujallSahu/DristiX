@@ -304,9 +304,14 @@ export function matchExamFromQuery(
     return allExams[extractedTargetIdx];
   }
 
-  // Fallback to first practice exam if query explicitly mentions practice
-  if (combined.includes('practice') || combined.includes('drill') || combined.includes('अभ्यास')) {
-    const practice = allExams.find((e) => e.id.includes('practice'));
+  // Fallback to first practice exam ONLY if query is an explicit request to start/open a drill,
+  // and NOT a listing/reading/inquiry query (e.g. "read all available practice drills")
+  const isListingOrReadingQuery = /\b(?:read|list|show|available|all|explain|what|which|batao|dikhao|sunao|padho|uplabdh|tab|page|arena|catalog|overview)\b/i.test(combined);
+  const isExplicitStartDrill =
+    /\b(?:start|launch|open|begin|take|chalu|shuru|kholo|lagao)\b/i.test(combined) && !isListingOrReadingQuery;
+
+  if (isExplicitStartDrill && (combined.includes('practice') || combined.includes('drill') || combined.includes('अभ्यास'))) {
+    const practice = allExams.find((e) => e.id.includes('practice') || e.id.includes('drill'));
     if (practice) return practice;
   }
 
