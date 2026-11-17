@@ -40,6 +40,13 @@ class VoiceRecognitionService {
   private audioChunks: Blob[] = [];
 
   constructor() {
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('dristix_voice_lang');
+      if (saved === 'hi-IN' || saved === 'en-US') {
+        this.languageMode = saved;
+        this.currentLanguage = saved;
+      }
+    }
     this.initRecognition();
     this.bindSpeechEngineLifecycle();
   }
@@ -298,11 +305,23 @@ class VoiceRecognitionService {
       isIntentionalVoiceCommand(transcript) ||
       (alternatives && alternatives.some((alt) => isIntentionalVoiceCommand(alt)));
 
-    // If candidate gave an explicit command (e.g. "Yes, Final Submit", "Continue to Exam", "Option 2"),
+    // If candidate gave an intentional command (e.g. "अगला प्रश्न", "Next", "Option 2", "बैक", "सबमिट"),
     // immediately silence TTS and dispatch with zero delay!
     const isAuthOrCredential =
       /@|gmail|googlemail|email|mail|dot\s*com|एट|जीमेल|ईमेल|डाट\s*काम|password|passcode|pass|pin|पिन|पासवर्ड|पासकोड|student\d+|dx-\d+/i.test(transcript) ||
       (alternatives && alternatives.some((alt) => /@|gmail|googlemail|email|mail|dot\s*com|एट|जीमेल|ईमेल|डाट\s*काम|password|passcode|pass|pin|पिन|पासवर्ड|पासकोड|student\d+|dx-\d+/i.test(alt)));
+
+    const filteredAlternatives = alternatives
+      ? alternatives.filter((alt) => !speechEngine.isTextEcho(alt) && !isPhantomNoise(alt))
+      : undefined;
+
+    if (isCommand || isAuthOrCredential) {
+      if (speechEngine.isSpeaking()) {
+        speechEngine.stop();
+      }
+      this.listeners.forEach((cb) => cb.onTranscript(transcript, isFinal, filteredAlternatives));
+      return;
+    }
 
     // Suppress if the transcript is an echo of the assistant's own voice or within echo guard window
     if (
@@ -317,18 +336,6 @@ class VoiceRecognitionService {
         return;
       }
       console.log('Suppressed acoustic speaker echo transcript:', transcript);
-      return;
-    }
-
-    const filteredAlternatives = alternatives
-      ? alternatives.filter((alt) => !speechEngine.isTextEcho(alt) && !isPhantomNoise(alt))
-      : undefined;
-
-    if (isCommand || isAuthOrCredential) {
-      if (speechEngine.isSpeaking()) {
-        speechEngine.stop();
-      }
-      this.listeners.forEach((cb) => cb.onTranscript(transcript, isFinal, filteredAlternatives));
       return;
     }
 
@@ -573,15 +580,154 @@ class VoiceRecognitionService {
 export const voiceRecognition = new VoiceRecognitionService();
 
 /**
+ * Checks if the utterance requests or uses any language other than English or Hindi.
+ * DristiX strictly supports and entertains ONLY English and Hindi.
+ */
+export function isOtherLanguageRequested(text?: string): boolean {
+  if (!text) return false;
+  const lower = text.toLowerCase().trim();
+
+  // 1. Explicit requests to switch, translate, explain, or speak in any language OTHER than English or Hindi
+  const otherLangPattern =
+    /(?:in|into|to|speak|explain|talk|tell|translate|switch\s+to|change\s+to|convert\s+to|set\s+language\s+to)\s+(?:spanish|french|german|japanese|chinese|mandarin|russian|arabic|bengali|bangla|tamil|telugu|marathi|gujarati|urdu|kannada|malayalam|punjabi|odia|oriya|assamese|italian|portuguese|korean|turkish|persian|farsi|sanskrit|dutch|swedish|latin)\b/i;
+
+  const otherLangExact =
+    /^(?:spanish|french|german|japanese|chinese|mandarin|russian|arabic|bengali|bangla|tamil|telugu|marathi|gujarati|urdu|kannada|malayalam|punjabi|odia|oriya|assamese|italian|portuguese|korean|turkish|persian|farsi|sanskrit|dutch|swedish|latin)(?:\s+(?:language|please))?$/i;
+
+  const otherLangHinglish =
+    /(?:spanish|french|german|japanese|chinese|mandarin|russian|arabic|bengali|bangla|tamil|telugu|marathi|gujarati|urdu|kannada|malayalam|punjabi|odia|oriya|assamese|italian|portuguese|korean|turkish|persian|farsi|sanskrit)\s+me\s+(?:baat\s+karo|bolo|batao|samjhao|padho|kaho|sunao|kijiye|dijiye|karo|change|switch)/i;
+
+  const otherLangDevanagari =
+    /(?:फ्रेंच|स्पैनिश|स्पेनिश|जर्मन|जापानी|चीनी|चाइनीज|रूसी|रशियन|अरबी|बंगाली|बांग्ला|तमिल|तेलुगु|मराठी|गुजराती|उर्दू|कन्नड़|मलयालम|पंजाबी|ओडिया|उड़िया|इटालियन|पुर्तगाली|कोरियन|तुर्की|फ़ारसी|फारसी|संस्कृत)\s*(?:में)?\s*(?:बात\s*करो|बातचीत\s*करो|बोलो|बताओ|समझाओ|कहो|सुनाओ|करो|कीजिए|चेंज\s*करो|बदलो|स्विच\s*करो|बोलिए|बताइए|समझाइए|चाहिए|प्लीज)/i;
+
+  const otherLangDevanagariReverse =
+    /(?:बात\s*करो|बातचीत\s*करो|बोलो|बताओ|समझाओ|कहो|सुनाओ|बोलिए|बताइए|समझाइए)\s*(?:फ्रेंच|स्पैनिश|स्पेनिश|जर्मन|जापानी|चीनी|चाइनीज|रूसी|रशियन|अरबी|बंगाली|बांग्ला|तमिल|तेलुगु|मराठी|गुजराती|उर्दू|कन्नड़|मलयालम|पंजाबी|ओडिया|उड़िया|इटालियन|पुर्तगाली|कोरियन|तुर्की|फ़ारसी|फारसी|संस्कृत)\s*में/i;
+
+  const otherLangDevanagariExact =
+    /^(?:फ्रेंच|स्पैनिश|स्पेनिश|जर्मन|जापानी|चीनी|चाइनीज|रूसी|रशियन|अरबी|बंगाली|बांग्ला|तमिल|तेलुगु|मराठी|गुजराती|उर्दू|कन्नड़|मलयालम|पंजाबी|ओडिया|उड़िया|इटालियन|पुर्तगाली|कोरियन|तुर्की|फ़ारसी|फारसी|संस्कृत)(?:\s*(?:में|प्लीज|भाषा|लैंग्वेज|करो))?$/i;
+
+  // 2. Utterances containing non-Latin, non-Devanagari foreign scripts (e.g. Cyrillic, Arabic, CJK, Hangul, Bengali, Tamil, Telugu)
+  const foreignScript = /[\u0400-\u04FF\u0600-\u06FF\u4E00-\u9FFF\uAC00-\uD7AF\u0980-\u09FF\u0B80-\u0BFF\u0C00-\u0C7F]/.test(lower);
+
+  return (
+    otherLangPattern.test(lower) ||
+    otherLangExact.test(lower) ||
+    otherLangHinglish.test(lower) ||
+    otherLangDevanagari.test(lower) ||
+    otherLangDevanagariReverse.test(lower) ||
+    otherLangDevanagariExact.test(lower) ||
+    foreignScript
+  );
+}
+
+/**
+ * Detects whether an utterance expresses an explicit request to switch or explain
+ * in English or Hindi, or requests an unsupported language.
+ */
+export function detectLanguageSwitchIntent(text?: string): 'en' | 'hi' | 'unsupported' | null {
+  if (!text) return null;
+  if (isOtherLanguageRequested(text)) return 'unsupported';
+  const lower = text.toLowerCase().trim();
+
+  // 1. Explicit English triggers (Phrases requesting English explanations or mode)
+  const wantsEnglish =
+    // English phrasing
+    /(?:explain|speak|talk|tell|say|read|give|translate|narrate|guide|answer|respond|communicate|should\s+communicate)\s+(?:me\s+)?(?:everything\s+)?(?:in|into)\s+english(?:\s+language)?/i.test(lower) ||
+    /(?:switch|change|convert|set|turn)\s+(?:the\s+)?(?:voice\s+)?(?:language|mode)?\s*(?:to\s+)?english/i.test(lower) ||
+    /(?:english\s+(?:language|mode|voice|please)|in\s+english(?:\s+please)?)$/i.test(lower) ||
+    /^(?:english|speak\s+english|talk\s+in\s+english|explain\s+in\s+english|in\s+english|english\s+please|english\s+language|switch\s+to\s+english|switch\s+english)$/i.test(lower) ||
+    /(?:make\s+it\s+english|change\s+to\s+english|switch\s+to\s+english)/i.test(lower) ||
+    // Hinglish (Roman Hindi)
+    /(?:english|angrezi|angreji)\s+me\s+(?:baat\s+karo|bolo|batao|samjhao|padho|kaho|sunao|kijiye|dijiye|karo|change|switch)/i.test(lower) ||
+    /(?:angrezi|angreji)\s+me/i.test(lower) ||
+    /(?:baat\s+karo|bolo|batao|samjhao|padho|sunao)\s+(?:in\s+)?(?:english|angrezi|angreji)(?:\s+me)?/i.test(lower) ||
+    /^(?:angrezi|angreji|angrezi\s+me|angreji\s+me|in\s+angrezi|in\s+angreji)$/i.test(lower) ||
+    // Devanagari Hindi phrasing requesting English (including phonetic English transliteration e.g. "स्विच टू इंग्लिश लैंग्वेज")
+    /(?:स्विच|चेंज|कन्वर्ट|बदलो|टर्न|सेट)\s*(?:टू\s*|में\s*)?(?:इंग्लिश|अंग्रेजी|अंग्रेज़ी)(?:\s*(?:लैंग्वेज|भाषा|मोड|में))?/i.test(lower) ||
+    /(?:शोल्ड|शुड|कैन|प्लीज)?\s*कम्युनिकेट\s*इन\s*(?:इंग्लिश|अंग्रेजी|अंग्रेज़ी)(?:\s*लैंग्वेज)?/i.test(lower) ||
+    /(?:इंग्लिश|अंग्रेजी|अंग्रेज़ी|आंग्ल)\s*(?:में)?\s*(?:बात\s*करो|बातचीत\s*करो|बोलो|बताओ|समझाओ|कहो|सुनाओ|करो|कीजिए|चेंज\s*करो|बदलो|स्विच\s*करो|बोलिए|बताइए|समझाइए|चाहिए|प्लीज)/i.test(lower) ||
+    /(?:बात\s*करो|बातचीत\s*करो|बोलो|बताओ|समझाओ|कहो|सुनाओ|बोलिए|बताइए|समझाइए)\s*(?:इंग्लिश|अंग्रेजी|अंग्रेज़ी)\s*में/i.test(lower) ||
+    /(?:भाषा|लैंग्वेज|बोली)\s*(?:को\s*)?(?:इंग्लिश|अंग्रेजी|अंग्रेज़ी)\s*(?:करो|बदलो|में)/i.test(lower) ||
+    /^(?:स्विच\s+)?(?:टू\s+)?(?:इंग्लिश|अंग्रेजी|अंग्रेज़ी)(?:\s*(?:में|प्लीज|भाषा|लैंग्वेज|करो|मोड))?$/i.test(lower) ||
+    /(?:इंग्लिश|अंग्रेजी|अंग्रेज़ी)\s*(?:में|लैंग्वेज|भाषा)/i.test(lower);
+
+  if (wantsEnglish) return 'en';
+
+  // 2. Explicit Hindi triggers (Phrases requesting Hindi explanations or mode)
+  const wantsHindi =
+    // English phrasing
+    /(?:explain|speak|talk|tell|say|read|give|translate|narrate|guide|answer|respond|communicate|should\s+communicate)\s+(?:me\s+)?(?:everything\s+)?(?:in|into)\s+hindi(?:\s+language)?/i.test(lower) ||
+    /(?:switch|change|convert|set|turn)\s+(?:the\s+)?(?:voice\s+)?(?:language|mode)?\s*(?:to\s+)?hindi/i.test(lower) ||
+    /(?:hindi\s+(?:language|mode|voice|please)|in\s+hindi(?:\s+please)?)$/i.test(lower) ||
+    /^(?:hindi|speak\s+hindi|talk\s+in\s+hindi|explain\s+in\s+hindi|in\s+hindi|hindi\s+please|hindi\s+language|switch\s+to\s+hindi|switch\s+hindi)$/i.test(lower) ||
+    /(?:make\s+it\s+hindi|change\s+to\s+hindi|switch\s+to\s+hindi)/i.test(lower) ||
+    // Hinglish (Roman Hindi)
+    /hindi\s+me\s+(?:baat\s+karo|bolo|batao|samjhao|padho|kaho|sunao|kijiye|dijiye|karo|change|switch)/i.test(lower) ||
+    /(?:baat\s+karo|bolo|batao|samjhao|padho|sunao)\s+(?:in\s+)?hindi(?:\s+me)?/i.test(lower) ||
+    /^(?:hindi\s+me|hindi\s+mein)$/i.test(lower) ||
+    // Devanagari Hindi phrasing requesting Hindi (including phonetic English transliteration e.g. "शोल्ड कम्युनिकेट इन हिंदी लैंग्वेज")
+    /(?:स्विच|चेंज|कन्वर्ट|बदलो|टर्न|सेट)\s*(?:टू\s*|में\s*)?(?:हिंदी|हिन्दी)(?:\s*(?:लैंग्वेज|भाषा|मोड|में))?/i.test(lower) ||
+    /(?:शोल्ड|शुड|कैन|प्लीज)?\s*कम्युनिकेट\s*इन\s*(?:हिंदी|हिन्दी)(?:\s*लैंग्वेज)?/i.test(lower) ||
+    /(?:हिंदी|हिन्दी)\s*(?:में)?\s*(?:बात\s*करो|बातचीत\s*करो|बोलो|बताओ|समझाओ|कहो|सुनाओ|करो|कीजिए|चेंज\s*करो|बदलो|स्विच\s*करो|बोलिए|बताइए|समझाइए|चाहिए|प्लीज)/i.test(lower) ||
+    /(?:बात\s*करो|बातचीत\s*करो|बोलो|बताओ|समझाओ|कहो|सुनाओ|बोलिए|बताइए|समझाइए)\s*(?:हिंदी|हिन्दी)\s*में/i.test(lower) ||
+    /(?:भाषा|लैंग्वेज|बोली)\s*(?:को\s*)?(?:हिंदी|हिन्दी)\s*(?:करो|बदलो|में)/i.test(lower) ||
+    /^(?:स्विच\s+)?(?:टू\s+)?(?:हिंदी|हिन्दी)(?:\s*(?:में|प्लीज|भाषा|लैंग्वेज|करो|मोड))?$/i.test(lower) ||
+    /(?:हिंदी|हिन्दी)\s*(?:में|लैंग्वेज|भाषा)/i.test(lower);
+
+  if (wantsHindi) return 'hi';
+
+  return null;
+}
+
+/**
+ * Universally sets and persists the voice assistant language across the platform.
+ * Dispatches `dristix:language-change` event to sync VoiceAssistantOrb, headers, and UI.
+ */
+export function applyVoiceLanguageChange(targetLang: 'en-US' | 'hi-IN'): void {
+  voiceRecognition.setLanguage(targetLang);
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem('dristix_voice_lang', targetLang);
+    } catch {
+      // ignore storage quota errors
+    }
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('dristix:language-change', {
+        detail: {
+          lang: targetLang,
+          isHindi: targetLang === 'hi-IN',
+        },
+      })
+    );
+  }
+}
+
+/**
  * Determines if Hindi should be used for TTS / assistant responses.
  * Returns true if:
- * 1. User explicitly selected Hindi mode ('hi-IN')
- * 2. User spoke in Devanagari script or common Hindi/Hinglish phrasing (in 'auto' mode)
+ * 1. User query explicitly requested Hindi
+ * 2. User explicitly selected Hindi mode ('hi-IN') (unless query explicitly requested English)
+ * 3. User spoke in Devanagari script or common Hindi/Hinglish phrasing (in 'auto' mode)
  */
 export function isHindiPreferred(query?: string): boolean {
+  if (query) {
+    const explicitIntent = detectLanguageSwitchIntent(query);
+    if (explicitIntent === 'en') return false;
+    if (explicitIntent === 'hi') return true;
+  }
+
   const mode = voiceRecognition.getLanguageMode();
   if (mode === 'hi-IN') return true;
   if (mode === 'en-US') return false;
+
+  if (typeof localStorage !== 'undefined') {
+    const stored = localStorage.getItem('dristix_voice_lang');
+    if (stored === 'hi-IN') return true;
+    if (stored === 'en-US') return false;
+  }
+
   if (!query) return false;
   // If Devanagari script is present
   if (/[\u0900-\u097F]/.test(query)) return true;

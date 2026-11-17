@@ -106,7 +106,28 @@ export const Header: React.FC = () => {
       onStateChange: (state) => setVoiceState(state),
       onError: () => { },
     });
-    return unsub;
+
+    const handleVoiceStateEvent = (e: Event) => {
+      const customEvt = e as CustomEvent<{ state: string }>;
+      if (customEvt.detail?.state) {
+        const s = customEvt.detail.state;
+        if (s === 'listening' || s === 'user_speaking') {
+          setVoiceState('listening');
+        } else if (s === 'assistant_speaking') {
+          setVoiceState('speaking');
+        } else if (s === 'error') {
+          setVoiceState('error');
+        } else if (s === 'idle') {
+          setVoiceState('idle');
+        }
+      }
+    };
+
+    window.addEventListener('dristix-voice-state-change', handleVoiceStateEvent);
+    return () => {
+      unsub();
+      window.removeEventListener('dristix-voice-state-change', handleVoiceStateEvent);
+    };
   }, []);
 
   const handleAnnounceTime = () => {

@@ -50,5 +50,8 @@ export const useAnnouncerStore = create<AnnouncerState>((set) => ({
   stopSpeech: () => {
     set({ politeMessage: '', assertiveMessage: '' });
     speechEngine.stop();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('dristix-stop-speech'));
+    }
   },
 }));

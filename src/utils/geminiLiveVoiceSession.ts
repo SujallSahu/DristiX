@@ -57,12 +57,14 @@ export class GeminiLiveVoiceSession {
   private segmentTimeout: any = null;
   private hasSpokenInCurrentChunk = false;
   private isRunning = false;
+  private isStarting = false;
   private callbacks: Partial<LiveSessionCallbacks> = {};
   private unbindSpeechStart: (() => void) | null = null;
   private unbindSpeechEnd: (() => void) | null = null;
   private unbindSoundStart: (() => void) | null = null;
   private unbindSoundEnd: (() => void) | null = null;
   private unbindTranscript: (() => void) | null = null;
+  private unbindStopSpeech: (() => void) | null = null;
   private currentSpeechTranscript: string = '';
   private currentAlternatives: string[] = [];
   private currentUtteranceId: number = 0;
@@ -137,6 +139,8 @@ export class GeminiLiveVoiceSession {
    */
   public async start(): Promise<boolean> {
     if (this.isRunning) return true;
+    if (this.isStarting) return false;
+    this.isStarting = true;
 
     this.hasReportedError = false;
 
@@ -255,6 +259,19 @@ export class GeminiLiveVoiceSession {
       this.unbindSoundStart = soundEffects.onSoundStart(() => this.handleAudioOutputStart());
       this.unbindSoundEnd = soundEffects.onSoundEnd(() => this.handleAudioOutputEnd());
 
+      // Bind global emergency stop speech event to instantly interrupt assistant vocalization
+      const handleStopSpeechEvent = () => {
+        if (this.isRunning) {
+          this.interruptSpeaking();
+        }
+      };
+      if (typeof window !== 'undefined') {
+        window.addEventListener('dristix-stop-speech', handleStopSpeechEvent);
+        this.unbindStopSpeech = () => {
+          window.removeEventListener('dristix-stop-speech', handleStopSpeechEvent);
+        };
+      }
+
       // After mic start chime finishes (290ms), unmute mic hardware & DSP gain and start recording
       if (this.micUnmuteTimer) {
         clearTimeout(this.micUnmuteTimer);
@@ -292,6 +309,8 @@ export class GeminiLiveVoiceSession {
         'Microphone access denied. Allow the microphone in your browser address bar, then try again.'
       );
       return false;
+    } finally {
+      this.isStarting = false;
     }
   }
 
@@ -351,8 +370,9 @@ export class GeminiLiveVoiceSession {
   /**
    * Handle assistant speech or sound effect end:
    * Waits for 450ms room reverberation decay tail before unmuting microphone.
+   * Retries if speech/sound is still in flight so microphone never gets permanently trapped muted.
    */
-  private handleAudioOutputEnd() {
+  private handleAudioOutputEnd(retryCount = 0) {
     if (!this.isRunning) return;
 
     if (this.audioOutputSettleTimer) {
@@ -366,10 +386,16 @@ export class GeminiLiveVoiceSession {
     this.hasSpokenInCurrentChunk = false;
     this.speechConsecutiveFrames = 0;
 
-    // Settle window (450ms) for speaker acoustic room reverberation decay before unmuting mic
+    const delay = retryCount === 0 ? 450 : 250;
+    // Settle window for speaker acoustic room reverberation decay before unmuting mic
     this.audioOutputSettleTimer = setTimeout(() => {
       this.audioOutputSettleTimer = null;
-      if (!this.isRunning || speechEngine.isSpeaking() || soundEffects.isPlaying()) return;
+      if (!this.isRunning) return;
+
+      if ((speechEngine.isSpeaking() || soundEffects.isPlaying()) && retryCount < 8) {
+        this.handleAudioOutputEnd(retryCount + 1);
+        return;
+      }
 
       this.isAudioOutputActive = false;
 
@@ -404,7 +430,7 @@ export class GeminiLiveVoiceSession {
       // 5. Return to listening state and start fresh recording segment
       this.setState('listening');
       this.startSegmentRecording();
-    }, 450);
+    }, delay);
   }
 
   private startSegmentRecording() {
@@ -502,6 +528,26 @@ export class GeminiLiveVoiceSession {
       const normalizedVolume = Math.min(100, Math.round((avg / 128) * 100));
 
       this.callbacks.onVolumeChange?.(normalizedVolume);
+
+      // Self-healing Watchdog: Auto-release acoustic guard if audio output finished and settle timer is gone
+      if (
+        this.isAudioOutputActive &&
+        !speechEngine.isSpeaking() &&
+        !soundEffects.isPlaying() &&
+        !this.audioOutputSettleTimer
+      ) {
+        this.isAudioOutputActive = false;
+        if (this.mediaStream) {
+          this.mediaStream.getAudioTracks().forEach((track) => {
+            track.enabled = true;
+          });
+        }
+        if (this.noisePipeline?.gainNode && this.audioContext) {
+          try {
+            this.noisePipeline.gainNode.gain.setValueAtTime(1.0, this.audioContext.currentTime);
+          } catch {}
+        }
+      }
 
       // Guard: Ignore mic input and drain buffers while assistant is speaking aloud or within echo guard window
       if (
@@ -629,14 +675,17 @@ export class GeminiLiveVoiceSession {
         const activeQNum = examState.currentIndex + 1;
         const totalQ = examState.questions?.length || 0;
         const examTitle = examState.currentExam?.title || '';
-        const inHindi = isHindiPreferred();
+        const inHindi =
+          voiceRecognition.getLanguageMode() === 'hi-IN' ||
+          (typeof localStorage !== 'undefined' && localStorage.getItem('dristix_voice_lang') === 'hi-IN') ||
+          isHindiPreferred();
         const dynamicPrompt = inHindi
           ? (examTitle
-              ? `परीक्षा: ${examTitle}। सक्रिय प्रश्न संख्या ${activeQNum} कुल ${totalQ} में से। विकल्प 1, 2, 3, 4। अगला सवाल, पिछला सवाल, सबमिट करो।`
-              : 'अभ्यर्थी पोर्टल निर्देश: परीक्षा शुरू करो, डैशबोर्ड, एनालिटिक्स, सवाल पढ़ो।')
+              ? `परीक्षा: ${examTitle}। सक्रिय प्रश्न संख्या ${activeQNum} कुल ${totalQ} में से। विकल्प 1, 2, 3, 4। अगला प्रश्न, पिछला सवाल, सवाल पढ़ो, समझाओ, सबमिट, समय बताओ, वापस, बैक।`
+              : 'अभ्यर्थी पोर्टल निर्देश: एसएससी सीजीएल, आरआरबी एनटीपीसी, परीक्षा शुरू करो, डैशबोर्ड, एनालिटिक्स, सवाल पढ़ो, टेस्ट लिस्ट, वापस।')
           : (examTitle
-              ? `Exam: ${examTitle}. Active Question: ${activeQNum} of ${totalQ}. Options 1, 2, 3, 4.`
-              : 'Candidate portal commands: Start exam, List exams, Practice arena, Analytics.');
+              ? `Exam: ${examTitle}. Active Question: ${activeQNum} of ${totalQ}. Options 1, 2, 3, 4. Next question, Previous question, Read question, Explain, Submit exam, Time.`
+              : 'Candidate portal commands: SSC CGL, RRB NTPC, Start exam, List exams, Practice arena, Analytics, Back to catalog.');
 
         const result = await getDataSource().ai.transcribe(audioBlob, 'clip.webm', {
           prompt: dynamicPrompt,
@@ -834,6 +883,10 @@ export class GeminiLiveVoiceSession {
       this.unbindTranscript();
       this.unbindTranscript = null;
     }
+    if (this.unbindStopSpeech) {
+      this.unbindStopSpeech();
+      this.unbindStopSpeech = null;
+    }
     voiceRecognition.stop();
 
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
@@ -873,6 +926,57 @@ export class GeminiLiveVoiceSession {
     } else {
       this.start();
       return true;
+    }
+  }
+
+  /**
+   * Immediately interrupts assistant vocalization and transitions back to listening state
+   */
+  public interruptSpeaking() {
+    // 1. Cancel in-flight synthesis and speech
+    speechEngine.stop();
+
+    if (this.audioOutputSettleTimer) {
+      clearTimeout(this.audioOutputSettleTimer);
+      this.audioOutputSettleTimer = null;
+    }
+
+    this.isAudioOutputActive = false;
+
+    // 2. Discard residual speech buffers immediately
+    this.audioChunks = [];
+    this.currentSpeechTranscript = '';
+    this.currentAlternatives = [];
+    this.hasSpokenInCurrentChunk = false;
+    this.speechConsecutiveFrames = 0;
+
+    if (this.isRunning) {
+      // 3. Re-enable microphone hardware tracks
+      if (this.mediaStream) {
+        this.mediaStream.getAudioTracks().forEach((track) => {
+          track.enabled = true;
+        });
+      }
+
+      // 4. Restore Web Audio DSP gain
+      if (this.noisePipeline?.gainNode && this.audioContext) {
+        try {
+          this.noisePipeline.gainNode.gain.setValueAtTime(1.0, this.audioContext.currentTime);
+        } catch {}
+      }
+
+      // 5. Restart browser speech recogniser if available
+      if (this.browserRecogniserAvailable) {
+        try {
+          voiceRecognition.start();
+        } catch {}
+      }
+
+      // 6. Return state to listening and resume segment recording
+      this.setState('listening');
+      this.startSegmentRecording();
+    } else {
+      this.setState('idle');
     }
   }
 }

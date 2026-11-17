@@ -30,9 +30,12 @@ export function isPracticeTabNavigation(rawQuery: string): boolean {
     q.includes('reel') ||
     q.includes('reels') ||
     q.includes('प्रैक') ||
+    q.includes('प्रैक्टिस') ||
     q.includes('अभ्यास') ||
     q.includes('रील्स') ||
     q.includes('रिल') ||
+    q.includes('रेल') ||
+    q.includes('रियल') ||
     q.includes('ड्रिल');
 
   if (!mentionsPractice) return false;
@@ -53,10 +56,18 @@ export function isPracticeTabNavigation(rawQuery: string): boolean {
     q.includes('टैब') ||
     q.includes('पेज') ||
     q.includes('अरीना') ||
+    q.includes('एरिना') ||
+    q.includes('एरिया') ||
+    q.includes('रेल') ||
+    q.includes('रियल') ||
     q.includes('डैशबोर्ड') ||
+    q.includes('ओपन') ||
     q.includes('खोलो') ||
     q.includes('दिखाओ') ||
     q.includes('जाओ') ||
-    /^(?:practice|practice arena|drills|practice drills|अभ्यास)$/i.test(q)
+    q.includes('चलो') ||
+    q.includes('लगाओ') ||
+    q.includes('करो') ||
+    /^(?:practice|practice arena|drills|practice drills|अभ्यास|प्रैक्टिस)$/i.test(q)
   );
 }

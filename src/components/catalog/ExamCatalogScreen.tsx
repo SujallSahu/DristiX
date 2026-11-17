@@ -248,6 +248,14 @@ export const ExamCatalogScreen: React.FC = () => {
       // If user is actively typing in the search box, let native typing happen
       if (isTyping) return;
 
+      // 'a' or 'A' opens Accessibility Preferences (matching the [⚙ A] shortcut badge in header)
+      if ((e.key === 'a' || e.key === 'A') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        searchInputRef.current?.blur();
+        store.setSettingsOpen(true);
+        return;
+      }
+
       // 't' or 'T' toggles portal mode (Mock Exams ⇄ Practice Arena)
       if (e.key === 't' || e.key === 'T') {
         e.preventDefault();
@@ -307,6 +315,18 @@ export const ExamCatalogScreen: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focusedIndex, filteredExams, selectedCategory, portalTab]);
+
+  // Listen for voice-driven category filter changes
+  useEffect(() => {
+    const handleCategoryFilterEvent = (e: Event) => {
+      const customEvt = e as CustomEvent<{ category: ExamCategory }>;
+      if (customEvt.detail && customEvt.detail.category) {
+        handleCategoryChange(customEvt.detail.category);
+      }
+    };
+    window.addEventListener('dristix-filter-category', handleCategoryFilterEvent);
+    return () => window.removeEventListener('dristix-filter-category', handleCategoryFilterEvent);
+  }, [portalTab, activeExamsList]);
 
   return (
     <main
@@ -602,9 +622,42 @@ export const ExamCatalogScreen: React.FC = () => {
               <input
                 ref={searchInputRef}
                 id="exam-search-input"
-                type="search"
+                name="dristix-exam-catalog-search"
+                type="text"
+                role="searchbox"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                aria-autocomplete="none"
+                data-form-type="other"
+                data-lpignore="true"
+                data-1p-ignore="true"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    searchInputRef.current?.blur();
+                    focusCard(focusedIndex, false);
+                    return;
+                  }
+                  // If search box is empty and user presses keyboard navigation key 'A', trigger Accessibility Preferences
+                  if ((e.key === 'a' || e.key === 'A') && !e.ctrlKey && !e.metaKey && !e.altKey && !searchQuery) {
+                    e.preventDefault();
+                    searchInputRef.current?.blur();
+                    useExamStore.getState().setSettingsOpen(true);
+                    return;
+                  }
+                }}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  // Prevent browser autofill or accidental entry of "admin" (which matches 0 exams and breaks catalog view)
+                  if (val.trim().toLowerCase() === 'admin' || val.trim().toLowerCase() === 'administrator') {
+                    setSearchQuery('');
+                    return;
+                  }
+                  setSearchQuery(val);
+                }}
                 placeholder={`Search ${portalTab === 'practice' ? 'practice topics' : 'mock tests'} (Press /)...`}
                 className="w-full h-11 px-4 pl-10 pr-16 rounded-xl bg-theme-surface border-2 border-theme-border text-theme-text placeholder:text-theme-text-secondary focus:border-theme-primary focus:ring-4 focus:ring-theme-focus outline-none font-medium text-sm transition-all"
               />
@@ -618,12 +671,13 @@ export const ExamCatalogScreen: React.FC = () => {
                     type="button"
                     onClick={() => {
                       setSearchQuery('');
-                      searchInputRef.current?.focus();
+                      searchInputRef.current?.blur();
+                      focusCard(0, false);
                     }}
-                    className="text-xs px-2 py-0.5 rounded bg-theme-border text-theme-text hover:bg-theme-primary hover:text-theme-primary-text"
+                    className="btn-clear-search text-xs px-2.5 py-0.5 rounded-lg border border-theme-border bg-theme-surface-elevated text-theme-text hover:bg-theme-primary hover:text-theme-primary-text font-bold transition-all shadow-2xs focus:outline-none focus:ring-2 focus:ring-theme-focus"
                     aria-label="Clear search query"
                   >
-                    Clear
+                    <span className="select-none font-bold">Clear</span>
                   </button>
                 ) : (
                   <kbd className="text-[10px] px-1.5 py-0.5 rounded border border-theme-border bg-theme-bg text-theme-text-secondary font-mono font-bold">

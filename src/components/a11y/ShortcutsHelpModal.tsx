@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useExamStore } from '../../store/useExamStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import { soundEffects } from '../../utils/soundEffects';
 import { isHindiPreferred } from '../../utils/voiceRecognition';
@@ -58,6 +59,64 @@ export const ShortcutsHelpModal: React.FC = () => {
       return;
     }
 
+    const isStop =
+      (
+        (e.key && (e.key.toLowerCase() === 's' || e.key === 'े' || e.key === 'स' || e.key === 'ए')) ||
+        e.code === 'KeyS' ||
+        e.keyCode === 83 ||
+        e.which === 83
+      ) &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.metaKey;
+
+    const isStudent =
+      Boolean(useAuthStore.getState().currentStudent) &&
+      !(typeof window !== 'undefined' && window.location.pathname.startsWith('/admin'));
+
+    if (isStop && isStudent) {
+      e.preventDefault();
+      e.stopPropagation();
+      useAnnouncerStore.getState().stopSpeech();
+      soundEffects.playSelect();
+      return;
+    }
+
+    const isToggleVoice =
+      (
+        (e.key && (e.key.toLowerCase() === 'v' || e.key === 'ल' || e.key === 'न')) ||
+        e.code === 'KeyV' ||
+        e.keyCode === 86 ||
+        e.which === 86 ||
+        (e.altKey && (e.key?.toLowerCase() === 'v' || e.code === 'KeyV' || e.key === 'ल' || e.key === 'न'))
+      ) &&
+      !e.ctrlKey &&
+      !e.metaKey;
+
+    if (isToggleVoice) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.dispatchEvent(new CustomEvent('dristix-toggle-voice'));
+      return;
+    }
+
+    const isLang =
+      (
+        (e.key && (e.key.toLowerCase() === 'l' || e.key === 'त' || e.key === 'ल')) ||
+        e.code === 'KeyL' ||
+        e.keyCode === 76 ||
+        e.which === 76
+      ) &&
+      !e.ctrlKey &&
+      !e.metaKey;
+
+    if (isLang) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.dispatchEvent(new CustomEvent('dristix-toggle-voice-language'));
+      return;
+    }
+
     if (e.key === 'Tab') {
       const container = modalContainerRef.current;
       if (!container) return;
@@ -90,6 +149,7 @@ export const ShortcutsHelpModal: React.FC = () => {
     { key: 'A', desc: 'Open Accessibility Preferences (Themes, Font Scale, Speech)' },
     { key: 'H or ? or F1', desc: 'Open this Keyboard Shortcuts Guide' },
     { key: 'V', desc: 'Toggle AI Conversational Voice Assistant (Hindi / English microphone)' },
+    { key: 'L or Alt + L', desc: 'Switch Voice Assistant Language (Toggle English ↔ हिन्दी)' },
     { key: 'D', desc: 'Open My Performance & Score Analytics Dashboard' },
     { key: 'B', desc: 'Back to Test Catalog from Analytics or Exam' },
     { key: 'N or →', desc: 'Navigate to Next Question' },
@@ -100,7 +160,7 @@ export const ShortcutsHelpModal: React.FC = () => {
     { key: 'C', desc: 'Clear currently selected option for this question' },
     { key: 'T', desc: 'Vocalize / Announce remaining exam time via screen reader' },
     { key: 'R', desc: 'Read question, equation, and options aloud via TTS' },
-    { key: 'S', desc: 'Stop / Silence ongoing voice reading immediately' },
+    { key: 'S', desc: 'Stop / Silence ongoing voice reading immediately (Student Portal after login)' },
     { key: 'Q', desc: 'Toggle Question Palette / Navigation Drawer' },
     { key: '+ or -', desc: 'Increase (+) or Decrease (-) UI & Text Magnification Scale globally' },
     { key: '0 or Ctrl + 0', desc: 'Reset UI & Text Magnification Scale back to 100% normal' },

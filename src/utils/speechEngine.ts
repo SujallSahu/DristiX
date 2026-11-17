@@ -213,12 +213,13 @@ class SpeechEngine {
     const anyHindi = list.find((v) => {
       const l = (v.lang || '').toLowerCase();
       const n = (v.name || '').toLowerCase();
-      return l.startsWith('hi') || l === 'hi-in' || n.includes('hindi');
+      return l.startsWith('hi') || l === 'hi-in' || n.includes('hindi') || n.includes('हिन्दी');
     });
     if (anyHindi) return anyHindi;
 
-    // 4. Fallback to Indian English Neerja
-    return this.findNeerjaVoice();
+    // Return null if no dedicated Hindi voice is installed.
+    // Leaving voice as null allows Chromium to route 'hi-IN' utterances to its online/cloud Hindi engine!
+    return null;
   }
 
   /**
@@ -361,11 +362,12 @@ class SpeechEngine {
 
     // Default: Intelligent auto-routing based on text modality
     if (det.modality === 'hindi') {
+      const voice = this.findMadhurVoice();
       return {
-        voice: this.findMadhurVoice(),
+        voice,
         lang: 'hi-IN',
         modality: 'hindi',
-        voiceId: EDGE_TTS_VOICES.HINDI,
+        voiceId: voice?.voiceURI || EDGE_TTS_VOICES.HINDI,
       };
     }
 

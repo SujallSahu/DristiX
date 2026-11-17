@@ -624,6 +624,19 @@ a.bg-theme-primary {
   border-color: #FFEE00 !important;
 }
 
+/* High Contrast Theme: Search Clear Button legibility guarantee */
+[data-theme="high-contrast"] button[aria-label="Clear search query"] {
+  background-color: #161616 !important;
+  color: #FFEE00 !important;
+  border: 1px solid #FFEE00 !important;
+}
+
+[data-theme="high-contrast"] button[aria-label="Clear search query"]:hover {
+  background-color: #FFEE00 !important;
+  color: #000000 !important;
+  border: 1px solid #FFEE00 !important;
+}
+
 [data-theme="high-contrast"] .bg-theme-primary,
 [data-theme="high-contrast"] button.bg-theme-primary,
 [data-theme="high-contrast"] a.bg-theme-primary,
@@ -1419,4 +1432,41 @@ header .btn-signout span {
     isolation: isolate !important;
   }
 }
+
+/* ========================================================
+   EXAM CATALOG SEARCH CLEAR BUTTON HIGH-CONTRAST VISIBILITY
+   Guarantees 21:1 AAA contrast for the search Clear button
+   ======================================================== */
+[data-theme="high-contrast"] button[aria-label="Clear search query"],
+[data-theme="high-contrast"] button.btn-clear-search {
+  background-color: #000000 !important;
+  color: #FFEE00 !important;
+  border: 2px solid #FFEE00 !important;
+  font-weight: 900 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+[data-theme="high-contrast"] button[aria-label="Clear search query"] *,
+[data-theme="high-contrast"] button.btn-clear-search * {
+  color: #FFEE00 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="high-contrast"] button[aria-label="Clear search query"]:hover,
+[data-theme="high-contrast"] button[aria-label="Clear search query"]:focus,
+[data-theme="high-contrast"] button.btn-clear-search:hover,
+[data-theme="high-contrast"] button.btn-clear-search:focus {
+  background-color: #FFEE00 !important;
+  color: #000000 !important;
+  border: 2px solid #FFEE00 !important;
+}
+
+[data-theme="high-contrast"] button[aria-label="Clear search query"]:hover *,
+[data-theme="high-contrast"] button[aria-label="Clear search query"]:focus *,
+[data-theme="high-contrast"] button.btn-clear-search:hover *,
+[data-theme="high-contrast"] button.btn-clear-search:focus * {
+  color: #000000 !important;
+}
+
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { voiceRecognition } from '../../utils/voiceRecognition';
+import { voiceRecognition, applyVoiceLanguageChange } from '../../utils/voiceRecognition';
 import type { VoiceLangMode } from '../../utils/voiceRecognition';
 
 /**
@@ -20,6 +20,7 @@ import { geminiVoiceService } from '../../utils/geminiVoiceService';
 import { GeminiLiveVoiceSession } from '../../utils/geminiLiveVoiceSession';
 import type { LiveSessionState } from '../../utils/geminiLiveVoiceSession';
 import { useExamStore } from '../../store/useExamStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import { soundEffects } from '../../utils/soundEffects';
 import {
@@ -32,6 +33,7 @@ import {
   User,
   Key,
   Volume2,
+  VolumeX,
   AlertCircle,
 } from 'lucide-react';
 
@@ -62,38 +64,38 @@ export const VoiceAssistantOrb: React.FC = () => {
   const [langMode, setLangMode] = useState<VoiceLangMode>(() => {
     if (typeof localStorage !== 'undefined') {
       const saved = localStorage.getItem('dristix_voice_lang') as VoiceLangMode;
-      if (saved === 'hi-IN' || saved === 'en-US' || saved === 'auto') {
+      if (saved === 'hi-IN' || saved === 'en-US') {
         voiceRecognition.setLanguage(saved);
         return saved;
       }
     }
-    return voiceRecognition.getLanguageMode() || 'auto';
+    const current = voiceRecognition.getLanguageMode();
+    if (current === 'hi-IN' || current === 'en-US') return current;
+    return 'hi-IN';
   });
-  const langLabel =
-    langMode === 'auto' ? 'Auto' : langMode === 'hi-IN' ? 'हिन्दी' : 'English';
+  const langLabel = langMode === 'hi-IN' ? 'हिन्दी' : 'English';
 
   const cycleLanguage = () => {
-    const order: VoiceLangMode[] = ['auto', 'en-US', 'hi-IN'];
-    const next = order[(order.indexOf(langMode) + 1) % order.length];
+    // Strictly toggle between English and Hindi (no other languages supported)
+    // Dynamically retrieve current language mode to prevent stale closure lock
+    const currentMode = voiceRecognition.getLanguageMode() || langMode;
+    const next: VoiceLangMode = currentMode === 'hi-IN' ? 'en-US' : 'hi-IN';
     setLangMode(next);
-    voiceRecognition.setLanguage(next);
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('dristix_voice_lang', next);
-    }
+    applyVoiceLanguageChange(next);
+    soundEffects.playSelect();
     useAnnouncerStore
       .getState()
       .announce(
         next === 'hi-IN'
           ? 'आवाज़ पहचान और जवाब हिन्दी में सेट कर दिया गया है। अब सभी उत्तर हिन्दी में दिए जाएंगे।'
-          : next === 'auto'
-            ? 'Recognition language set to auto detect.'
-            : 'Recognition language set to English.',
-        'polite',
+          : 'Voice Assistant set to English. All voice responses will be in English.',
+        'assertive',
         true
       );
   };
-  const [liveVolume, setLiveVolume] = useState<number>(0);
+
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [liveVolume, setLiveVolume] = useState<number>(0);
   const [interimTranscript, setInterimTranscript] = useState<string>('');
   const [typedInput, setTypedInput] = useState<string>('');
   const [showKeyConfig, setShowKeyConfig] = useState<boolean>(false);
@@ -117,6 +119,47 @@ export const VoiceAssistantOrb: React.FC = () => {
   const liveSessionRef = useRef<GeminiLiveVoiceSession | null>(null);
   const lastExecutedQueryRef = useRef<{ text: string; time: number }>({ text: '', time: 0 });
 
+  // Synchronize language mode whenever changed via voice command or external control
+  useEffect(() => {
+    const handleLanguageChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.lang) {
+        setLangMode(detail.lang);
+      }
+    };
+    window.addEventListener('dristix:language-change', handleLanguageChange);
+
+    // Global stop speech listener: halt any active assistant speech, abort in-flight requests, and reset state
+    const handleStopSpeech = () => {
+      geminiVoiceService.abortActiveRequest();
+      if (liveSessionRef.current) {
+        if (liveSessionRef.current.getState() === 'assistant_speaking' || liveSessionRef.current.getState() === 'processing') {
+          liveSessionRef.current.stop();
+          // Short delay then resume listening if orb was active
+          setTimeout(() => {
+            if (isExpanded) {
+              void liveSessionRef.current?.start();
+            }
+          }, 200);
+        }
+      }
+      setLiveState('listening');
+      setInterimTranscript('');
+    };
+    window.addEventListener('dristix-stop-speech', handleStopSpeech);
+
+    const handleToggleLanguageEvent = () => {
+      cycleLanguage();
+    };
+    window.addEventListener('dristix-toggle-voice-language', handleToggleLanguageEvent);
+
+    return () => {
+      window.removeEventListener('dristix:language-change', handleLanguageChange);
+      window.removeEventListener('dristix-stop-speech', handleStopSpeech);
+      window.removeEventListener('dristix-toggle-voice-language', handleToggleLanguageEvent);
+    };
+  }, [isExpanded, langMode]);
+
   const handleExecuteQuery = async (query: string, alternatives?: string[]) => {
     const cleanQuery = query.trim();
     if (!cleanQuery) return;
@@ -127,13 +170,14 @@ export const VoiceAssistantOrb: React.FC = () => {
       return;
     }
 
-    // Suppress duplicate identical queries within 1.5s
+    // Rapid duplicate suppression (only drops instant Web Speech API double-firing within 350ms)
+    // Allows candidates to intentionally repeat commands (e.g. "अगला" / "Next", "विकल्प 2", "समय", "बैक")
     const now = Date.now();
     if (
       lastExecutedQueryRef.current.text === cleanQuery &&
-      now - lastExecutedQueryRef.current.time < 1500
+      now - lastExecutedQueryRef.current.time < 350
     ) {
-      console.log('🔇 Suppressed duplicate query within 1.5s window:', cleanQuery);
+      console.log('🔇 Suppressed rapid Web Speech API duplicate event within 350ms:', cleanQuery);
       return;
     }
     lastExecutedQueryRef.current = { text: cleanQuery, time: now };
@@ -226,32 +270,48 @@ export const VoiceAssistantOrb: React.FC = () => {
     }
   };
 
+  const isTogglingRef = useRef(false);
+
   // Primary Voice Toggle: Unified Gemini Live Voice Session with instant fallback
   const handleToggleMic = async () => {
-    const session = liveSessionRef.current;
-    if (session) {
-      if (session.getState() !== 'idle') {
-        session.stop();
-      } else {
-        setIsExpanded(true);
-        // start() returns false when recognition is unavailable; it has already
-        // reported why through onError, so the panel must not keep implying the
-        // microphone is live.
-        const started = await session.start();
-        if (!started) {
-          setIsExpanded(true);
-          return;
-        }
-      }
-      return;
-    }
+    if (isTogglingRef.current) return;
+    isTogglingRef.current = true;
 
-    const active = voiceRecognition.toggle();
-    if (active) {
-      soundEffects.playMicStart();
-      setIsExpanded(true);
-    } else {
-      soundEffects.playMicStop();
+    try {
+      const session = liveSessionRef.current;
+      if (session) {
+        if (session.getState() !== 'idle') {
+          session.stop();
+          setLiveState('idle');
+          setLiveError(null);
+          setInterimTranscript('');
+        } else {
+          setIsExpanded(true);
+          setLiveError(null);
+          // start() returns false when recognition is unavailable; it has already
+          // reported why through onError, so the panel must not keep implying the
+          // microphone is live.
+          const started = await session.start();
+          if (!started) {
+            setIsExpanded(true);
+            setLiveState('error');
+            return;
+          }
+        }
+        return;
+      }
+
+      const active = voiceRecognition.toggle();
+      if (active) {
+        soundEffects.playMicStart();
+        setIsExpanded(true);
+      } else {
+        soundEffects.playMicStop();
+      }
+    } finally {
+      setTimeout(() => {
+        isTogglingRef.current = false;
+      }, 150);
     }
   };
 
@@ -267,6 +327,9 @@ export const VoiceAssistantOrb: React.FC = () => {
     const session = new GeminiLiveVoiceSession({
       onStateChange: (state) => {
         setLiveState(state);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('dristix-voice-state-change', { detail: { state } }));
+        }
       },
       onVolumeChange: (vol) => {
         setLiveVolume(vol);
@@ -330,6 +393,98 @@ export const VoiceAssistantOrb: React.FC = () => {
       window.removeEventListener('dristix-toggle-voice', handleGlobalToggle);
     };
   }, []);
+
+  // Universal Stop Speaking & Language Switch Handler for DristiX Voice Assistant
+  // Listens in capture phase for S, s, KeyS, Escape, or Hindi InScript keys ('े' / 'स' / 'ए')
+  // Stop shortcut S operates strictly in student portal after login.
+  // Also supports Alt+L or physical KeyL ('त' / 'ल') to switch language across both English and Hindi
+  useEffect(() => {
+    const handleVoiceAssistantKeyDown = (e: KeyboardEvent) => {
+      const isStopKey =
+        (
+          (e.key && (e.key.toLowerCase() === 's' || e.key === 'े' || e.key === 'स' || e.key === 'ए')) ||
+          e.code === 'KeyS' ||
+          e.keyCode === 83 ||
+          e.which === 83
+        ) &&
+        !e.altKey &&
+        !e.ctrlKey &&
+        !e.metaKey;
+
+      const isToggleVoiceKey =
+        (
+          (e.key && (e.key.toLowerCase() === 'v' || e.key === 'ल' || e.key === 'न')) ||
+          e.code === 'KeyV' ||
+          e.keyCode === 86 ||
+          e.which === 86 ||
+          (e.altKey && (e.key?.toLowerCase() === 'v' || e.code === 'KeyV' || e.key === 'ल' || e.key === 'न'))
+        ) &&
+        !e.ctrlKey &&
+        !e.metaKey;
+
+      const isLangKey =
+        (
+          (e.key && (e.key.toLowerCase() === 'l' || e.key === 'त' || e.key === 'ल')) ||
+          e.code === 'KeyL' ||
+          e.keyCode === 76 ||
+          e.which === 76
+        ) &&
+        !e.ctrlKey &&
+        !e.metaKey;
+
+      const isEscapeKey = e.key === 'Escape';
+
+      const isSpeakingNow =
+        liveState === 'assistant_speaking' ||
+        speechEngine.isSpeaking() ||
+        voiceRecognition.getState() === 'speaking';
+
+      const isStudentPortal =
+        Boolean(useAuthStore.getState().currentStudent) &&
+        !(typeof window !== 'undefined' && window.location.pathname.startsWith('/admin'));
+
+      // S key stops speech only in the student portal after login
+      if ((isStopKey && isStudentPortal || isEscapeKey) && isSpeakingNow) {
+        e.preventDefault();
+        e.stopPropagation();
+        useAnnouncerStore.getState().stopSpeech();
+        if (liveSessionRef.current) {
+          liveSessionRef.current.interruptSpeaking();
+        }
+        soundEffects.playSelect();
+        return;
+      }
+
+      // V key toggles voice assistant
+      const activeEl = document.activeElement;
+      const isTyping =
+        activeEl &&
+        (activeEl.tagName === 'TEXTAREA' ||
+          (activeEl.tagName === 'INPUT' &&
+            ['text', 'search', 'password', 'email', 'tel', 'url', 'number'].includes(
+              ((activeEl as HTMLInputElement).type || 'text').toLowerCase()
+            )));
+
+      if (isToggleVoiceKey && (!isTyping || e.altKey)) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleToggleMic();
+        return;
+      }
+
+      if (e.altKey && isLangKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        cycleLanguage();
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleVoiceAssistantKeyDown, true);
+    return () => {
+      window.removeEventListener('keydown', handleVoiceAssistantKeyDown, true);
+    };
+  }, [liveState]);
 
   // Connect local Web Speech fallback callbacks
   useEffect(() => {
@@ -448,6 +603,22 @@ export const VoiceAssistantOrb: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-1.5">
+              {/* Emergency Stop Speech & Assistant Button (Shortcut: S or Esc) */}
+              <button
+                type="button"
+                onClick={() => {
+                  useAnnouncerStore.getState().stopSpeech();
+                  liveSessionRef.current?.interruptSpeaking();
+                  soundEffects.playSelect();
+                }}
+                title="Stop voice assistant speaking immediately (Shortcut: S or Esc)"
+                aria-label="Stop voice assistant speaking immediately (Shortcut: S or Esc)"
+                className="px-2 py-1 rounded-lg border border-red-500/50 bg-red-500/15 hover:bg-red-500/25 text-red-600 dark:text-red-300 text-[11px] font-bold flex items-center gap-1 shadow-xs transition active:scale-95 cursor-pointer"
+              >
+                <VolumeX className="w-3.5 h-3.5 text-red-500 shrink-0" aria-hidden="true" />
+                <span>Stop <kbd className="font-mono text-[9px] opacity-75">(S)</kbd></span>
+              </button>
+
               {/* Gemini API Key Toggle */}
               <button
                 type="button"
@@ -465,12 +636,13 @@ export const VoiceAssistantOrb: React.FC = () => {
               <button
                 type="button"
                 onClick={cycleLanguage}
-                title="Recognition language. Click to switch between Auto, English and Hindi."
-                aria-label={`Recognition language: ${langLabel}. Activate to change.`}
-                className="px-2 py-1 rounded-lg border border-theme-border bg-theme-bg/90 text-[11px] font-bold flex items-center gap-1.5 text-theme-text shadow-xs hover:border-theme-primary transition focus:ring-2 focus:ring-theme-focus-ring"
+                title="Switch voice assistant language (English ↔ हिन्दी). Keyboard shortcut: L"
+                aria-label={`Voice Assistant Language: ${langLabel}. Press Enter or press L to switch between English and Hindi.`}
+                className="px-2 py-1 rounded-lg border border-theme-border bg-theme-bg/90 text-[11px] font-bold flex items-center gap-1.5 text-theme-text shadow-xs hover:border-theme-primary transition focus:ring-2 focus:ring-theme-focus-ring cursor-pointer"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
                 <span>🌐 {langLabel}</span>
+                <kbd className="text-[9px] px-1 py-0.5 rounded bg-theme-surface/80 border border-theme-border text-theme-muted font-mono" title="Shortcut key: L">L</kbd>
               </button>
 
               <button
@@ -653,6 +825,24 @@ export const VoiceAssistantOrb: React.FC = () => {
                   Send Now →
                 </button>
               )}
+
+              {/* Stop Speaking button when assistant is talking */}
+              {(liveState === 'assistant_speaking' || speechEngine.isSpeaking()) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    useAnnouncerStore.getState().stopSpeech();
+                    liveSessionRef.current?.interruptSpeaking();
+                    soundEffects.playSelect();
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-sm cursor-pointer shrink-0 animate-pulse"
+                  title="Stop speaking (Shortcut: S or Esc)"
+                  aria-label="Stop assistant speaking"
+                >
+                  <VolumeX className="w-3.5 h-3.5 shrink-0" />
+                  <span>Stop (S)</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -744,6 +934,79 @@ export const VoiceAssistantOrb: React.FC = () => {
               type="text"
               value={typedInput}
               onChange={(e) => setTypedInput(e.target.value)}
+              onKeyDown={(e) => {
+                const isStopKey =
+                  (
+                    (e.key && (e.key.toLowerCase() === 's' || e.key === 'े' || e.key === 'स' || e.key === 'ए')) ||
+                    e.code === 'KeyS' ||
+                    e.keyCode === 83 ||
+                    e.which === 83
+                  ) &&
+                  !e.altKey &&
+                  !e.ctrlKey &&
+                  !e.metaKey;
+
+                const isToggleVoiceKey =
+                  (
+                    (e.key && (e.key.toLowerCase() === 'v' || e.key === 'ल' || e.key === 'न')) ||
+                    e.code === 'KeyV' ||
+                    e.keyCode === 86 ||
+                    e.which === 86 ||
+                    (e.altKey && (e.key?.toLowerCase() === 'v' || e.code === 'KeyV' || e.key === 'ल' || e.key === 'न'))
+                  ) &&
+                  !e.ctrlKey &&
+                  !e.metaKey;
+
+                const isLangKey =
+                  (
+                    (e.key && (e.key.toLowerCase() === 'l' || e.key === 'त' || e.key === 'ल')) ||
+                    e.code === 'KeyL' ||
+                    e.keyCode === 76 ||
+                    e.which === 76
+                  ) &&
+                  !e.ctrlKey &&
+                  !e.metaKey;
+
+                const isVocalizing =
+                  liveState === 'assistant_speaking' ||
+                  speechEngine.isSpeaking() ||
+                  voiceRecognition.getState() === 'speaking';
+
+                const isStudentPortal =
+                  Boolean(useAuthStore.getState().currentStudent) &&
+                  !(typeof window !== 'undefined' && window.location.pathname.startsWith('/admin'));
+
+                if ((isStopKey && isStudentPortal || e.key === 'Escape') && isVocalizing) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  useAnnouncerStore.getState().stopSpeech();
+                  liveSessionRef.current?.interruptSpeaking();
+                  soundEffects.playSelect();
+                  return;
+                }
+
+                if (isToggleVoiceKey && (!typedInput.trim() || e.altKey)) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleToggleMic();
+                  return;
+                }
+
+                // If user presses Alt+L or presses L while input is empty, cycle voice language
+                if (e.altKey && isLangKey) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  cycleLanguage();
+                  return;
+                }
+
+                if (isLangKey && !typedInput.trim()) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  cycleLanguage();
+                  return;
+                }
+              }}
               placeholder="Ask anything or speak in Hindi/English..."
               className="flex-1 px-3 py-2 rounded-xl border border-theme-border bg-theme-surface text-theme-text text-xs focus:outline-none focus:ring-2 focus:ring-yellow-400"
             />

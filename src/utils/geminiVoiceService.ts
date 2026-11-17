@@ -4,13 +4,13 @@ import { useAnnouncerStore } from '../store/useAnnouncerStore';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import type { TextScale } from '../store/usePreferencesStore';
 import { soundEffects } from './soundEffects';
-import { buildFullQuestionSpeech } from './voiceCommandProcessor';
+import { buildFullQuestionSpeech, isCloseAction } from './voiceCommandProcessor';
 import type { CommandProcessResult } from './voiceCommandProcessor';
 import { describeOptionSelection, describeClearSelection } from './optionSpeech';
 import { matchExamFromQuery } from './examMatcher';
 import { isPracticeTabNavigation } from './practiceTabNavigation';
 import { getDataSource } from '../services/dataSource';
-import { isHindiPreferred, voiceRecognition } from './voiceRecognition';
+import { isHindiPreferred, voiceRecognition, detectLanguageSwitchIntent, applyVoiceLanguageChange, isOtherLanguageRequested } from './voiceRecognition';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { performScroll } from './scrollHelper';
@@ -69,10 +69,15 @@ export interface GeminiParsedCommand {
     | 'SCROLL_BOTTOM'
     | 'NAVIGATE_LOGIN'
     | 'EXAM_INTEGRITY_REFUSAL'
-    | 'GENERAL_QUERY';
+    | 'SWITCH_LANGUAGE'
+    | 'CHANGE_LANGUAGE'
+    | 'UNSUPPORTED_LANGUAGE'
+    | 'GENERAL_QUERY'
+    | (string & {});
   param?: number | string | null;
-  transcript: string;
+  transcript?: string;
   reply: string;
+  confidence?: number;
 }
 
 class GeminiVoiceService {
@@ -82,6 +87,15 @@ class GeminiVoiceService {
   private groqActiveModels: string[] = [];
   private lastApiError: string = '';
   private activeAbortController: AbortController | null = null;
+
+  public abortActiveRequest() {
+    if (this.activeAbortController) {
+      try {
+        this.activeAbortController.abort();
+      } catch {}
+      this.activeAbortController = null;
+    }
+  }
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -450,12 +464,15 @@ class GeminiVoiceService {
    * Universal Structured System Prompt enforcing Language Matching and Strict Exam Integrity
    */
   private buildSystemPrompt(context: any, rawText: string): string {
+    const langIntent = detectLanguageSwitchIntent(rawText);
     const userSpeaksHindi =
-      context.voiceLanguageMode === 'hi-IN' ||
-      context.isHindiMode ||
-      voiceRecognition.isHindiMode() ||
-      /[\u0900-\u097F]/.test(rawText) ||
-      (context.voiceLanguageMode !== 'en-US' && isHindiPreferred(rawText));
+      langIntent === 'hi' ? true :
+      langIntent === 'en' ? false :
+      (context.voiceLanguageMode === 'hi-IN' ||
+       context.isHindiMode ||
+       voiceRecognition.isHindiMode() ||
+       /[\u0900-\u097F]/.test(rawText) ||
+       (context.voiceLanguageMode !== 'en-US' && isHindiPreferred(rawText)));
 
     const languageRule = userSpeaksHindi
       ? `1. MANDATORY HINDI FOR ALL SPOKEN REPLIES AND ANNOUNCEMENTS (CRITICAL):
@@ -515,6 +532,14 @@ ${context.analytics?.recentSubmissions?.map((s: any, idx: number) => `    ${idx 
 User Spoken Command: "${rawText}"
 
 CRITICAL SYSTEM RULES (STRICT COMPLIANCE REQUIRED):
+
+0. STRICT DUAL-LANGUAGE CONSTRAINT (ENTERTAIN ONLY ENGLISH AND HINDI):
+- DristiX AI Voice Assistant is strictly and exclusively constrained to entertain ONLY ENGLISH and HINDI.
+- Absolutely NO OTHER LANGUAGE (e.g. Spanish, French, German, Japanese, Chinese, Russian, Arabic, Bengali, Tamil, Telugu, Marathi, Gujarati, Urdu, Kannada, Malayalam, Punjabi, etc.) is supported or permitted.
+- If the candidate speaks in or requests any language other than English or Hindi:
+  * DO NOT fulfill the request or translate into that language.
+  * Set "action": "UNSUPPORTED_LANGUAGE"
+  * In the "reply" field, politely state in ${userSpeaksHindi ? 'Hindi' : 'English'} that DristiX AI Voice Assistant strictly supports only English and Hindi, and prompt them to speak in English or Hindi.
 
 ${languageRule}
 
@@ -745,6 +770,27 @@ Return ONLY a valid JSON object matching this schema:
     if (!this.hasApiKey()) return null;
 
     const context = getAssistantContext();
+    const langSwitchIntent = detectLanguageSwitchIntent(rawText);
+    if (langSwitchIntent === 'unsupported' || isOtherLanguageRequested(rawText)) {
+      const isHindi =
+        context.voiceLanguageMode === 'hi-IN' ||
+        context.isHindiMode ||
+        voiceRecognition.isHindiMode() ||
+        /[\u0900-\u097F]/.test(rawText) ||
+        isHindiPreferred(rawText);
+      const refusalReply = isHindi
+        ? 'DristiX AI वॉयस असिस्टेंट केवल अंग्रेज़ी और हिन्दी भाषा का समर्थन करता है। अन्य किसी भाषा का उपयोग समर्थित नहीं है। कृपया केवल अंग्रेज़ी या हिन्दी में बात करें।'
+        : 'DristiX AI Voice Assistant strictly supports only English and Hindi languages. Other languages are not entertained. Please speak in English or Hindi.';
+      return this.executeParsedAction(
+        {
+          action: 'UNSUPPORTED_LANGUAGE',
+          reply: refusalReply,
+          confidence: 1.0,
+        },
+        rawText
+      );
+    }
+
     const systemPrompt = this.buildSystemPrompt(context, rawText);
 
     let parsed: GeminiParsedCommand | null = null;
@@ -896,12 +942,52 @@ Return ONLY a valid JSON object matching this schema:
      * same action is suppressed so the two cannot interrupt each other.
      */
     let spokenReply = parsed.reply;
+    const langIntent = detectLanguageSwitchIntent(rawQuery);
+    if (langIntent === 'hi' || langIntent === 'en') {
+      applyVoiceLanguageChange(langIntent === 'hi' ? 'hi-IN' : 'en-US');
+    }
+
     const isHindi =
-      context.voiceLanguageMode === 'hi-IN' ||
-      context.isHindiMode ||
-      voiceRecognition.isHindiMode() ||
-      /[\u0900-\u097F]/.test(rawQuery) ||
-      (context.voiceLanguageMode !== 'en-US' && isHindiPreferred(rawQuery));
+      langIntent === 'hi' ? true :
+      langIntent === 'en' ? false :
+      (context.voiceLanguageMode === 'hi-IN' ||
+       context.isHindiMode ||
+       voiceRecognition.isHindiMode() ||
+       /[\u0900-\u097F]/.test(rawQuery) ||
+       (context.voiceLanguageMode !== 'en-US' && isHindiPreferred(rawQuery)));
+
+    if (langIntent === 'unsupported' || actionUpper === 'UNSUPPORTED_LANGUAGE' || isOtherLanguageRequested(rawQuery)) {
+      const refusalReply = isHindi
+        ? 'DristiX AI वॉयस असिस्टेंट केवल अंग्रेज़ी और हिन्दी भाषा का समर्थन करता है। अन्य किसी भाषा का उपयोग समर्थित नहीं है। कृपया केवल अंग्रेज़ी या हिन्दी में बात करें।'
+        : 'DristiX AI Voice Assistant strictly supports only English and Hindi languages. Other languages are not entertained. Please speak in English or Hindi.';
+      soundEffects.playSelect();
+      useAnnouncerStore.getState().announce(refusalReply, 'assertive', true);
+      return {
+        success: true,
+        intent: 'UNSUPPORTED_LANGUAGE',
+        userQuery: rawQuery,
+        assistantReply: refusalReply,
+        actionExecuted: 'Refused Unsupported Language',
+      };
+    }
+
+    // 0. STOP / SILENCE COMMAND (Immediate silence without vocal feedback)
+    const isStopCommand =
+      /^(?:stop|pause|quiet|silence|ruko|ruk\s*jao|chup|chup\s*raho|bas|bas\s*karo|shant|shant\s*raho|band\s*karo|स्टॉप|रुको|रुक\s*जाओ|चुप|चुप\s*रहो|शांत|शांत\s*रहो|बंद\s*करो|बस|बस\s*करो|बोलना\s*बंद\s*करो|आवाज\s*बंद|आवाज़\s*बंद|चुप\s*हो\s*जाओ)$/i.test(queryLower.trim()) ||
+      actionUpper === 'STOP' || actionUpper === 'STOP_SPEECH' || actionUpper === 'SILENCE';
+
+    if (isStopCommand) {
+      useAnnouncerStore.getState().stopSpeech();
+      this.abortActiveRequest();
+      soundEffects.playSelect();
+      return {
+        success: true,
+        intent: 'STOP_SPEECH',
+        userQuery: rawQuery,
+        assistantReply: isHindi ? 'आवाज़ बंद कर दी गई है।' : 'Voice reading stopped.',
+        actionExecuted: 'Stopped Voice Reading',
+      };
+    }
 
     // =========================================================================
     // STRICT EXAM INTEGRITY INTERCEPTOR:
@@ -914,16 +1000,25 @@ Return ONLY a valid JSON object matching this schema:
     // 1. MATHEMATICAL FORMULA & QUADRATIC EQUATION EXPLANATION
     const isEquationQuery =
       actionUpper === 'EXPLAIN_EQUATION' ||
-      (/(?:quadratic|equation|formula|samiikaran|samikaran|formulae|समीकरण|द्विघात)\b/i.test(queryLower) &&
-        /(?:explain|describe|read|what|tell|batao|samjhao|kya hai|detail|breakdown|guide|kaise)\b/i.test(queryLower) ||
-        /^(?:explain\s+equation|explain\s+quadratic|quadratic\s+equation|equation|formula|samiikaran\s+samjhao|formula\s+samjhao)$/i.test(queryLower.trim()));
+      (
+        (
+          /(?:समीकरण|द्विघात|फॉर्मूला|फार्मूला|सूत्र|इक्वेशन|मैथ्स|मैथ|गणित|बीजगणित|एक्सप्रेशन)/.test(queryLower) ||
+          /\b(?:quadratic|equation|formula|samiikaran|samikaran|formulae|math|maths|algebraic|expression)\b/i.test(queryLower)
+        ) &&
+        (
+          /(?:समझाओ|समझाइए|समझाएं|समझा दो|बताओ|बताइए|क्या है|सुनाओ|पढ़ो|दिखाओ|विश्लेषण|डिटेल)/.test(queryLower) ||
+          /\b(?:explain|describe|read|what|tell|batao|samjhao|samjha|kya hai|detail|breakdown|guide|kaise|solve|analysis)\b/i.test(queryLower)
+        )
+      ) ||
+      /^(?:explain\s+equation|explain\s+quadratic|quadratic\s+equation|equation|formula|samiikaran\s+samjhao|formula\s+samjhao|द्विघात|समीकरण|मैथ्स|गणित)$/i.test(queryLower.trim());
 
     if (context.activeView === 'exam' && isEquationQuery) {
       const q = context.currentQuestion;
-      if (q?.equationLatex) {
-        const eqRes = explainEquation(q.equationLatex, isHindi, {
+      const mathLatex = q?.equationLatex || (q as any)?.mathLatex;
+      if (mathLatex) {
+        const eqRes = explainEquation(mathLatex, isHindi, {
           isPractice: context.currentExam?.isPractice,
-          questionText: q.text,
+          questionText: q?.text,
         });
         soundEffects.playSelect();
         useAnnouncerStore.getState().announce(eqRes.speech, 'assertive', true);
@@ -952,9 +1047,17 @@ Return ONLY a valid JSON object matching this schema:
     // 2. CHART & DATA INTERPRETATION GRAPH EXPLANATION
     const isGraphQuery =
       actionUpper === 'EXPLAIN_GRAPH' ||
-      (/(?:graph|chart|plot|bar\s*chart|line\s*graph|pie\s*chart|ग्राफ|चार्ट)\b/i.test(queryLower) &&
-        /(?:explain|describe|read|bolo|sunao|what|tell|batao|samjhao|dekho|khol|open|show|dikhao|detail|breakdown|data|points)\b/i.test(queryLower) ||
-        /^(?:explain\s+graph|explain\s+chart|graph\s+samjhao|chart\s+samjhao|graph\s+data|chart\s+data|graph|chart)$/i.test(queryLower.trim()));
+      (
+        (
+          /(?:ग्राफ|चार्ट|प्लॉट|बार\s*चार्ट|लाइन\s*ग्राफ|पाई\s*चार्ट|डेटा\s*चार्ट)/.test(queryLower) ||
+          /\b(?:graph|chart|plot|bar\s*chart|line\s*graph|pie\s*chart|data\s*chart)\b/i.test(queryLower)
+        ) &&
+        (
+          /(?:समझाओ|समझाइए|समझाएं|समझा दो|बताओ|बताइए|क्या है|सुनाओ|पढ़ो|दिखाओ|खोलो|डेटा|पॉइंट्स|ट्रेंड)/.test(queryLower) ||
+          /\b(?:explain|describe|read|bolo|sunao|what|tell|batao|samjhao|dekho|khol|open|show|dikhao|detail|breakdown|data|points|trend)\b/i.test(queryLower)
+        )
+      ) ||
+      /^(?:explain\s+graph|explain\s+chart|graph\s+samjhao|chart\s+samjhao|graph\s+data|chart\s+data|graph|chart|ग्राफ|चार्ट)$/i.test(queryLower.trim());
 
     if (context.activeView === 'exam' && isGraphQuery) {
       const q = context.currentQuestion;
@@ -971,7 +1074,7 @@ Return ONLY a valid JSON object matching this schema:
         };
       } else if (q?.diagramAiExplanation || q?.diagramDescription || q?.diagramUrl) {
         const dRes = explainDiagram(q, isHindi);
-        if (q.diagramUrl || q.diagramAiExplanation) {
+        if (q.diagramUrl || q.diagramAiExplanation || q.diagramDescription) {
           window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
         }
         soundEffects.playSelect();
@@ -1001,15 +1104,25 @@ Return ONLY a valid JSON object matching this schema:
     // 3. VISUAL DIAGRAM & GEOMETRY EXPLANATION
     const isDiagramQuery =
       !isGraphQuery &&
-      (actionUpper === 'EXPLAIN_DIAGRAM' ||
-        /(?:diagram|figure|visual|image|chitra|aarekh|चित्र|आरेख|voice\s*guide|visual\s*guide)\b/i.test(queryLower) &&
-        /(?:explain|describe|read|bolo|sunao|what|tell|batao|samjhao|dekho|khol|open|show|dikhao|detail|breakdown|guide)\b/i.test(queryLower) ||
-        /^(?:explain\s+diagram|describe\s+diagram|read\s+diagram|diagram\s+explain|diagram\s+samjhao|diagram|figure)$/i.test(queryLower.trim()));
+      (
+        actionUpper === 'EXPLAIN_DIAGRAM' ||
+        (
+          (
+            /(?:डायग्राम|चित्र|आरेख|आकृति|विजुअल|फिगर)/.test(queryLower) ||
+            /\b(?:diagram|figure|visual|image|chitra|aarekh|akriti|voice\s*guide|visual\s*guide)\b/i.test(queryLower)
+          ) &&
+          (
+            /(?:समझाओ|समझाइए|समझाएं|समझा दो|बताओ|बताइए|क्या है|सुनाओ|पढ़ो|दिखाओ|खोलो|विवरण|गाइड)/.test(queryLower) ||
+            /\b(?:explain|describe|read|bolo|sunao|what|tell|batao|samjhao|dekho|khol|open|show|dikhao|detail|breakdown|guide)\b/i.test(queryLower)
+          )
+        ) ||
+        /^(?:explain\s+diagram|describe\s+diagram|read\s+diagram|diagram\s+explain|diagram\s+samjhao|diagram|figure|डायग्राम|चित्र|आरेख)$/i.test(queryLower.trim())
+      );
 
     if (context.activeView === 'exam' && isDiagramQuery) {
       const q = context.currentQuestion;
       const dRes = explainDiagram(q || {}, isHindi);
-      if (q?.diagramUrl || q?.diagramAiExplanation) {
+      if (q?.diagramUrl || q?.diagramAiExplanation || q?.diagramDescription) {
         window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
       }
       soundEffects.playSelect();
@@ -1628,6 +1741,74 @@ Return ONLY a valid JSON object matching this schema:
       };
     }
 
+    // 1b. Category Filter on Examination Catalog
+    if (
+      (
+        actionUpper === 'FILTER_CATEGORY' ||
+        queryLower.includes('staff selection') ||
+        queryLower.includes('banking') ||
+        queryLower.includes('civil services') ||
+        queryLower.includes('railways') ||
+        queryLower.includes('स्टाफ सिलेक्शन') ||
+        queryLower.includes('बैंकिंग') ||
+        queryLower.includes('सिविल') ||
+        queryLower.includes('रेलवे')
+      ) &&
+      (
+        queryLower.includes('show') ||
+        queryLower.includes('filter') ||
+        queryLower.includes('select') ||
+        queryLower.includes('category') ||
+        queryLower.includes('dikhao') ||
+        queryLower.includes('chuno') ||
+        queryLower.includes('lagao') ||
+        queryLower.includes('दिखाओ') ||
+        queryLower.includes('चुनो') ||
+        queryLower.includes('लगाओ') ||
+        queryLower.includes('करो') ||
+        queryLower.includes('हटाओ') ||
+        actionUpper === 'FILTER_CATEGORY'
+      ) &&
+      (context.activeView === 'catalog' || context.activeView === 'report')
+    ) {
+      let targetCat: 'All' | 'Staff Selection' | 'Banking & Insurance' | 'Civil Services' | 'Railways' | null = null;
+      let catNameHindi = '';
+      if (queryLower.includes('staff') || queryLower.includes('स्टाफ') || queryLower.includes('ssc') || queryLower.includes('एसएससी')) {
+        targetCat = 'Staff Selection';
+        catNameHindi = 'स्टाफ सिलेक्शन (SSC)';
+      } else if (queryLower.includes('bank') || queryLower.includes('बैंकिंग') || queryLower.includes('ibps') || queryLower.includes('आईबीपीएस')) {
+        targetCat = 'Banking & Insurance';
+        catNameHindi = 'बैंकिंग एंड इंश्योरेंस';
+      } else if (queryLower.includes('civil') || queryLower.includes('सिविल') || queryLower.includes('upsc') || queryLower.includes('यूपीएससी')) {
+        targetCat = 'Civil Services';
+        catNameHindi = 'सिविल सर्विसेज (UPSC)';
+      } else if (queryLower.includes('railway') || queryLower.includes('रेलवे') || queryLower.includes('rrb') || queryLower.includes('आरआरबी')) {
+        targetCat = 'Railways';
+        catNameHindi = 'रेलवे भर्ती (RRB)';
+      } else if (queryLower.includes('all') || queryLower.includes('सभी') || queryLower.includes('सारे')) {
+        targetCat = 'All';
+        catNameHindi = 'सभी परीक्षाएं';
+      }
+
+      if (targetCat) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('dristix-filter-category', { detail: { category: targetCat } }));
+        }
+        soundEffects.playSelect();
+        const reply = isHindi
+          ? `श्रेणी फ़िल्टर बदलकर "${catNameHindi}" कर दिया गया है। संबंधित परीक्षाएं स्क्रीन पर दिखाई जा रही हैं।`
+          : `Category filter set to ${targetCat}. Relevant tests are now displayed on screen.`;
+        useAnnouncerStore.getState().announce(reply, 'assertive', true);
+        return {
+          success: true,
+          intent: 'FILTER_CATEGORY',
+          userQuery: rawQuery,
+          assistantReply: reply,
+          actionExecuted: `Filtered by ${targetCat}`,
+        };
+      }
+    }
+
     // =========================================================
     // 2. TOP-LEVEL TAB & WORKSPACE NAVIGATION INTERCEPTORS
     // Switch between Analytics, Practice Arena, Mock Exams catalog.
@@ -1834,13 +2015,21 @@ Return ONLY a valid JSON object matching this schema:
       queryLower.includes('back to exam') ||
       queryLower.includes('cancel submit') ||
       queryLower.includes('cancel submission') ||
+      queryLower.includes('रद्द करो') ||
+      queryLower.includes('परीक्षा जारी रखो') ||
+      queryLower.includes('जारी रखो') ||
       (examStore.isSubmitModalOpen && (
         queryLower.includes('continue') ||
         queryLower.includes('resume') ||
         queryLower.includes('cancel') ||
+        queryLower.includes('रद्द') ||
+        queryLower.includes('जारी') ||
         queryLower === 'no' ||
         queryLower === 'nahi' ||
-        queryLower === 'wapas'
+        queryLower === 'nahin' ||
+        queryLower === 'नहीं' ||
+        queryLower === 'wapas' ||
+        queryLower === 'वापस'
       ));
 
     if (isContinueExamIntent && context.activeView === 'exam') {
@@ -1850,8 +2039,12 @@ Return ONLY a valid JSON object matching this schema:
       const q = context.currentQuestion;
       const qNum = q?.number || (examStore.currentIndex + 1);
       const reply = wasModalOpen
-        ? `Submission cancelled. Resuming exam at Question ${qNum}. You can say "Read question", "Next question", or select an option.`
-        : `You are continuing your active exam on Question ${qNum}. Say "Read question" to hear the question.`;
+        ? (isHindi
+            ? `सबमिशन रद्द कर दिया गया। प्रश्न ${qNum} पर परीक्षा जारी है। आप "प्रश्न पढ़ो", "अगला सवाल", या विकल्प चुन सकते हैं।`
+            : `Submission cancelled. Resuming exam at Question ${qNum}. You can say "Read question", "Next question", or select an option.`)
+        : (isHindi
+            ? `आप प्रश्न ${qNum} पर सक्रिय परीक्षा जारी रख रहे हैं। प्रश्न सुनने के लिए "प्रश्न पढ़ो" कहें।`
+            : `You are continuing your active exam on Question ${qNum}. Say "Read question" to hear the question.`);
       useAnnouncerStore.getState().announce(reply, 'assertive', true);
       return {
         success: true,
@@ -1871,20 +2064,31 @@ Return ONLY a valid JSON object matching this schema:
       queryLower.includes('final submit') ||
       queryLower.includes('confirm submit') ||
       queryLower.includes('submit final') ||
+      queryLower.includes('हाँ फाइनल सबमिट') ||
+      queryLower.includes('हाँ सबमिट करो') ||
+      queryLower.includes('फाइनल सबमिट') ||
       (examStore.isSubmitModalOpen && (
         queryLower.includes('yes submit') ||
         queryLower.includes('submit exam') ||
+        queryLower.includes('हाँ सबमिट') ||
+        queryLower.includes('सबमिट करो') ||
+        queryLower.includes('जमा करो') ||
         queryLower === 'yes' ||
         queryLower === 'submit' ||
         queryLower === 'confirm' ||
-        queryLower === 'haan'
+        queryLower === 'haan' ||
+        queryLower === 'हाँ' ||
+        queryLower === 'सबमिट' ||
+        queryLower === 'जमा'
       ));
 
     if (isFinalSubmitIntent && context.activeView === 'exam' && !examStore.isSubmitted) {
       examStore.setSubmitModalOpen(false);
       soundEffects.playSuccess();
       void examStore.submitExam();
-      const reply = 'Final submission confirmed. Submitting your examination now...';
+      const reply = isHindi
+        ? 'फाइनल सबमिशन कन्फर्म हो गया है। आपकी परीक्षा सबमिट की जा रही है...'
+        : 'Final submission confirmed. Submitting your examination now...';
       useAnnouncerStore.getState().announce(reply, 'assertive', true);
       return {
         success: true,
@@ -1956,10 +2160,8 @@ Return ONLY a valid JSON object matching this schema:
     if (isNotificationIntent) {
       const isClose =
         actionUpper === 'CLOSE_NOTIFICATIONS' ||
-        queryLower.includes('close') ||
-        queryLower.includes('band') ||
-        queryLower.includes('hatao') ||
-        queryLower.includes('dismiss');
+        isCloseAction(queryLower) ||
+        isCloseAction(rawQuery);
 
       if (isClose) {
         useNotificationStore.getState().toggleOpen(false);
@@ -2428,13 +2630,8 @@ Return ONLY a valid JSON object matching this schema:
       const isClose =
         actionUpper === 'CLOSE_SETTINGS' ||
         actionUpper === 'CLOSE_SHORTCUTS' ||
-        queryLower.includes('close') ||
-        queryLower.includes('band') ||
-        queryLower.includes('hatao') ||
-        queryLower.includes('exit') ||
-        queryLower.includes('hide') ||
-        queryLower.includes('बंद') ||
-        queryLower.includes('रद्द');
+        isCloseAction(queryLower) ||
+        isCloseAction(rawQuery);
 
       const isShortcuts =
         actionUpper === 'OPEN_SHORTCUTS' ||
@@ -2516,6 +2713,12 @@ Return ONLY a valid JSON object matching this schema:
       !isSettingsOrA11yIntent &&
       !isListExamsIntent &&
       !isPracticeSpecificList &&
+      !['SELECT_OPTION', 'CHOOSE_OPTION', 'OPTION_SELECT', 'CLEAR_OPTION', 'CLEAR', 'DESELECT',
+        'NEXT_QUESTION', 'NEXT', 'PREVIOUS_QUESTION', 'PREV', 'PREVIOUS',
+        'READ_QUESTION', 'EXPLAIN_QUESTION', 'CHECK_TIME', 'SUBMIT_EXAM', 'CONFIRM_SUBMIT',
+        'CANCEL_SUBMIT', 'STOP_SPEECH', 'STOP', 'RESUME_EXAM', 'SWITCH_LANGUAGE',
+        'CHANGE_LANGUAGE', 'LANGUAGE_CONVERSION', 'UNSUPPORTED_LANGUAGE',
+        'SCROLL_UP', 'SCROLL_DOWN', 'SCROLL_TOP', 'SCROLL_BOTTOM'].includes(actionUpper) &&
       !queryLower.includes('read all') &&
       !queryLower.includes('real all') &&
       !queryLower.includes('available practice') &&
@@ -2843,19 +3046,19 @@ Return ONLY a valid JSON object matching this schema:
       case 'EXPLAIN_DIAGRAM':
       case 'DIAGRAM': {
         if (context.activeView === 'exam') {
-          window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
-          actionExecuted = 'Opened AI Diagram Explainer';
-          const q = examStore.questions[examStore.currentIndex];
+          const q = examStore.questions[examStore.currentIndex] || (context.currentQuestion as any);
           if (q) {
-            if (q.diagramAiExplanation?.audioNarration) {
-              spokenReply = q.diagramAiExplanation.audioNarration;
-            } else if (q.diagramDescription) {
-              spokenReply = `Question ${q.questionNumber} diagram: ${q.diagramDescription}. Opening AI Diagram Explainer.`;
-            } else if (q.diagramUrl) {
-              spokenReply = `Opening AI Diagram Explainer for Question ${q.questionNumber}. Analyzing visual elements now.`;
-            } else {
-              spokenReply = `Question ${q.questionNumber} does not have an attached diagram or visual chart.`;
+            const dRes = explainDiagram(q, isHindi);
+            spokenReply = dRes.speech;
+            if (q.diagramUrl || q.diagramAiExplanation || q.diagramDescription) {
+              window.dispatchEvent(new CustomEvent('dristix:open-diagram-explainer'));
             }
+            actionExecuted = 'Explained Visual Diagram';
+          } else {
+            spokenReply = isHindi
+              ? 'वर्तमान प्रश्न में कोई विजुअल आरेख संलग्न नहीं है।'
+              : 'Question does not have an attached diagram or visual chart.';
+            actionExecuted = 'No Diagram Attached';
           }
         }
         break;
@@ -3180,11 +3383,12 @@ Return ONLY a valid JSON object matching this schema:
         break;
       }
       case 'EXPLAIN_EQUATION': {
-        const q = context.currentQuestion;
-        if (q?.equationLatex) {
-          const eqRes = explainEquation(q.equationLatex, isHindi, {
+        const q = context.currentQuestion || (examStore.questions[examStore.currentIndex] as any);
+        const mathLatex = q?.equationLatex || q?.mathLatex;
+        if (mathLatex) {
+          const eqRes = explainEquation(mathLatex, isHindi, {
             isPractice: context.currentExam?.isPractice,
-            questionText: q.text,
+            questionText: q?.text || q?.questionText,
           });
           spokenReply = eqRes.speech;
           actionExecuted = eqRes.isQuadratic ? 'Explained Quadratic Equation' : 'Explained Math Equation';
@@ -3197,7 +3401,7 @@ Return ONLY a valid JSON object matching this schema:
         break;
       }
       case 'EXPLAIN_GRAPH': {
-        const q = context.currentQuestion;
+        const q = context.currentQuestion || (examStore.questions[examStore.currentIndex] as any);
         if (q?.graph && q.graph.enabled && q.graph.data?.length) {
           const gRes = explainGraph(q.graph, isHindi);
           spokenReply = gRes.speech;
@@ -3225,6 +3429,25 @@ Return ONLY a valid JSON object matching this schema:
             : 'This question does not have an attached visual diagram.';
           actionExecuted = 'No Diagram Attached';
         }
+        break;
+      }
+      case 'SWITCH_LANGUAGE':
+      case 'CHANGE_LANGUAGE':
+      case 'SET_LANGUAGE':
+      case 'LANGUAGE_CONVERSION': {
+        const targetMode = isHindi ? 'hi-IN' : 'en-US';
+        applyVoiceLanguageChange(targetMode);
+        spokenReply = isHindi
+          ? 'भाषा बदलकर हिंदी कर दी गई है। अब मैं आपको सभी परीक्षाओं, प्रश्नों, विजुअल डायग्राम और पोर्टल की सभी सुविधाओं की व्याख्या हिंदी में समझाऊंगा।'
+          : 'Language switched to English. I will now explain and assist you in English across all examinations, questions, diagrams, and portal features.';
+        actionExecuted = isHindi ? 'Switched to Hindi' : 'Switched to English';
+        break;
+      }
+      case 'UNSUPPORTED_LANGUAGE': {
+        spokenReply = isHindi
+          ? 'DristiX AI वॉयस असिस्टेंट केवल अंग्रेज़ी और हिन्दी भाषा का समर्थन करता है। अन्य किसी भाषा का उपयोग समर्थित नहीं है। कृपया केवल अंग्रेज़ी या हिन्दी में बात करें।'
+          : 'DristiX AI Voice Assistant strictly supports only English and Hindi languages. Other languages are not entertained. Please speak in English or Hindi.';
+        actionExecuted = 'Refused Unsupported Language';
         break;
       }
       default: {

@@ -4,6 +4,8 @@ import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import { speechEngine } from '../../utils/speechEngine';
 import { getDataSource } from '../../services/dataSource';
 import { type AiDiagramExplanation, hasValidAiExplanation } from '../../../shared/types';
+import { explainDiagram } from '../../utils/visualMathExplainer';
+import { isHindiPreferred } from '../../utils/voiceRecognition';
 
 interface AiDiagramExplainerModalProps {
   isOpen: boolean;
@@ -68,15 +70,26 @@ export const AiDiagramExplainerModal: React.FC<AiDiagramExplainerModalProps> = (
     if (hasValidAiExplanation(explanation)) {
       if (!hasNarratedRef.current) {
         hasNarratedRef.current = true;
-        setIsPlayingAudio(true);
-        const speech = `AI Diagram Breakdown for Question ${questionNumber || ''}. ${
-          explanation!.audioNarration || explanation!.educationalContext
-        }. ${explanation!.visualBreakdown?.length ? `Visual elements: ${explanation!.visualBreakdown.join('. ')}.` : ''}`;
-        useAnnouncerStore.getState().announce(speech, 'assertive', true);
-        const unsub = speechEngine.onSpeechEnd(() => setIsPlayingAudio(false));
-        return () => {
-          if (unsub) unsub();
-        };
+        // Do not interrupt the assistant if it is already speaking the diagram explanation
+        if (!speechEngine.isSpeaking()) {
+          setIsPlayingAudio(true);
+          const isHindi = isHindiPreferred();
+          const dRes = explainDiagram(
+            {
+              questionNumber,
+              diagramAiExplanation: explanation,
+              diagramDescription,
+              diagramUrl,
+              diagramType,
+            },
+            isHindi
+          );
+          useAnnouncerStore.getState().announce(dRes.speech, 'assertive', true);
+          const unsub = speechEngine.onSpeechEnd(() => setIsPlayingAudio(false));
+          return () => {
+            if (unsub) unsub();
+          };
+        }
       }
       return;
     }
@@ -89,9 +102,18 @@ export const AiDiagramExplainerModal: React.FC<AiDiagramExplainerModalProps> = (
       const fetchAiExpl = async () => {
         setIsLoading(true);
         setFetchError(null);
-        useAnnouncerStore
-          .getState()
-          .announce(`AI Multimodal Vision is analyzing visual diagram for Question ${questionNumber || ''}...`, 'assertive', true);
+        const isHindi = isHindiPreferred();
+        if (!speechEngine.isSpeaking()) {
+          useAnnouncerStore
+            .getState()
+            .announce(
+              isHindi
+                ? `प्रश्न ${questionNumber || ''} के विजुअल आरेख का AI विश्लेषण किया जा रहा है...`
+                : `AI Multimodal Vision is analyzing visual diagram for Question ${questionNumber || ''}...`,
+              'assertive',
+              true
+            );
+        }
 
         try {
           const res = await getDataSource().ai.explainDiagram({
@@ -105,13 +127,21 @@ export const AiDiagramExplainerModal: React.FC<AiDiagramExplainerModalProps> = (
           if (!cancelled && res && hasValidAiExplanation(res)) {
             setExplanation(res);
             onExplanationGeneratedRef.current?.(res);
-            if (!hasNarratedRef.current) {
+            if (!hasNarratedRef.current && !speechEngine.isSpeaking()) {
               hasNarratedRef.current = true;
               setIsPlayingAudio(true);
-              const speech = `AI Diagram Breakdown for Question ${questionNumber || ''}. ${
-                res.audioNarration || res.educationalContext
-              }. ${res.visualBreakdown?.length ? `Visual elements: ${res.visualBreakdown.join('. ')}.` : ''}`;
-              useAnnouncerStore.getState().announce(speech, 'assertive', true);
+              const isHi = isHindiPreferred();
+              const dRes = explainDiagram(
+                {
+                  questionNumber,
+                  diagramAiExplanation: res,
+                  diagramDescription,
+                  diagramUrl,
+                  diagramType,
+                },
+                isHi
+              );
+              useAnnouncerStore.getState().announce(dRes.speech, 'assertive', true);
               speechEngine.onSpeechEnd(() => setIsPlayingAudio(false));
             }
           }
@@ -119,9 +149,16 @@ export const AiDiagramExplainerModal: React.FC<AiDiagramExplainerModalProps> = (
           if (!cancelled) {
             console.error('[dristix] failed to fetch diagram explanation:', err);
             setFetchError(err?.message || 'Could not connect to AI Vision Engine.');
+            const isHi = isHindiPreferred();
             useAnnouncerStore
               .getState()
-              .announce(`Could not load AI diagram breakdown: ${err?.message || 'AI Vision service is unavailable.'}`, 'assertive', true);
+              .announce(
+                isHi
+                  ? `AI आरेख विश्लेषण लोड नहीं हो सका: ${err?.message || 'AI विजन सेवा अनुपलब्ध है।'}`
+                  : `Could not load AI diagram breakdown: ${err?.message || 'AI Vision service is unavailable.'}`,
+                'assertive',
+                true
+              );
           }
         } finally {
           if (!cancelled) setIsLoading(false);
@@ -151,19 +188,25 @@ export const AiDiagramExplainerModal: React.FC<AiDiagramExplainerModalProps> = (
   if (!isOpen) return null;
 
   const handleToggleVoice = () => {
+    const isHindi = isHindiPreferred();
     if (isPlayingAudio || speechEngine.isSpeaking()) {
       speechEngine.stop();
       setIsPlayingAudio(false);
-      useAnnouncerStore.getState().announce('Diagram audio narration paused.', 'polite', true);
+      const pausedMsg = isHindi ? 'डायग्राम ऑडियो व्याख्या रोकी गई।' : 'Diagram audio narration paused.';
+      useAnnouncerStore.getState().announce(pausedMsg, 'polite', true);
     } else {
       setIsPlayingAudio(true);
-      const textToSpeak =
-        explanation?.audioNarration ||
-        `${explanation?.educationalContext || diagramDescription || questionText}. ${
-          explanation?.visualBreakdown?.length ? `Visual elements: ${explanation.visualBreakdown.join('. ')}.` : ''
-        }`;
-      const speech = `AI Diagram Breakdown for Question ${questionNumber || ''}. ${textToSpeak}`;
-      useAnnouncerStore.getState().announce(speech, 'assertive', true);
+      const dRes = explainDiagram(
+        {
+          questionNumber,
+          diagramAiExplanation: explanation,
+          diagramDescription,
+          diagramUrl,
+          diagramType,
+        },
+        isHindi
+      );
+      useAnnouncerStore.getState().announce(dRes.speech, 'assertive', true);
       speechEngine.onSpeechEnd(() => setIsPlayingAudio(false));
     }
   };

@@ -3,6 +3,7 @@ import { type Exam, type ExamSummary, type QuestionItem, type NotificationTestDe
 import { soundEffects } from '../utils/soundEffects';
 import { useAnnouncerStore } from './useAnnouncerStore';
 import { verbalizeMath, verbalizeForSpeech } from '../utils/mathVerbalizer';
+import { explainDiagram } from '../utils/visualMathExplainer';
 import { describeOptionSelection } from '../utils/optionSpeech';
 import { isHindiPreferred } from '../utils/voiceRecognition';
 import {
@@ -1782,13 +1783,16 @@ export const useExamStore = create<ExamState>((set, get) => ({
     const { currentIndex, questions } = get();
     const currentQ = questions[currentIndex];
     if (!currentQ) return;
+    const isHindi = isHindiPreferred();
 
-    if (!currentQ.diagramUrl && !currentQ.diagramDescription) {
+    if (!currentQ.diagramUrl && !currentQ.diagramDescription && !currentQ.graph) {
       if (autoSpeak) {
         useAnnouncerStore
           .getState()
           .announce(
-            `Question ${currentQ.questionNumber} does not have an attached visual diagram or chart.`,
+            isHindi
+              ? `प्रश्न ${currentQ.questionNumber} में कोई दृश्य आरेख या चार्ट संलग्न नहीं है।`
+              : `Question ${currentQ.questionNumber} does not have an attached visual diagram or chart.`,
             'assertive',
             true
           );
@@ -1796,12 +1800,10 @@ export const useExamStore = create<ExamState>((set, get) => ({
       return;
     }
 
-    if (hasValidAiExplanation(currentQ.diagramAiExplanation)) {
+    if (hasValidAiExplanation(currentQ.diagramAiExplanation) || currentQ.diagramDescription || currentQ.graph) {
       if (autoSpeak) {
-        const expl = currentQ.diagramAiExplanation!;
-        const speech = `AI Diagram Breakdown for Question ${currentQ.questionNumber}. ${expl.audioNarration || expl.educationalContext
-          }. ${expl.visualBreakdown?.length ? `Visual elements: ${expl.visualBreakdown.join('. ')}.` : ''}`;
-        useAnnouncerStore.getState().announce(speech, 'assertive', true);
+        const dRes = explainDiagram(currentQ, isHindi);
+        useAnnouncerStore.getState().announce(dRes.speech, 'assertive', true);
       }
       return;
     }
@@ -1810,7 +1812,9 @@ export const useExamStore = create<ExamState>((set, get) => ({
       useAnnouncerStore
         .getState()
         .announce(
-          `AI Multimodal Vision is analyzing the visual diagram for Question ${currentQ.questionNumber}...`,
+          isHindi
+            ? `प्रश्न ${currentQ.questionNumber} के विजुअल आरेख का AI विजन विश्लेषण किया जा रहा है...`
+            : `AI Multimodal Vision is analyzing the visual diagram for Question ${currentQ.questionNumber}...`,
           'assertive',
           true
         );
@@ -1831,17 +1835,14 @@ export const useExamStore = create<ExamState>((set, get) => ({
         set({ questions: updated });
 
         if (autoSpeak && get().currentIndex === currentIndex) {
-          const speech = `AI Diagram Breakdown for Question ${currentQ.questionNumber}. ${res.audioNarration || res.educationalContext
-            }. ${res.visualBreakdown?.length ? `Visual elements: ${res.visualBreakdown.join('. ')}.` : ''}`;
-          useAnnouncerStore.getState().announce(speech, 'assertive', true);
+          const dRes = explainDiagram({ ...currentQ, diagramAiExplanation: res }, isHindi);
+          useAnnouncerStore.getState().announce(dRes.speech, 'assertive', true);
         }
       }
     } catch (err: any) {
       console.warn('[dristix] explainCurrentDiagram error:', err);
       if (autoSpeak && get().currentIndex === currentIndex) {
-        const fallback = currentQ.diagramDescription
-          ? `Visual Diagram for Question ${currentQ.questionNumber}: ${currentQ.diagramDescription}.`
-          : `Visual diagram is attached for Question ${currentQ.questionNumber}.`;
+        const fallback = explainDiagram(currentQ, isHindi).speech;
         useAnnouncerStore.getState().announce(fallback, 'assertive', true);
       }
     }

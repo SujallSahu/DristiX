@@ -5,6 +5,8 @@ import { usePreferencesStore } from '../store/usePreferencesStore';
 import type { TextScale } from '../store/usePreferencesStore';
 import { useAnnouncerStore } from '../store/useAnnouncerStore';
 import { soundEffects } from '../utils/soundEffects';
+import { speechEngine } from '../utils/speechEngine';
+import { voiceRecognition } from '../utils/voiceRecognition';
 
 /**
  * Checks if the currently active focused element is a text-entry field
@@ -42,27 +44,6 @@ export function useGlobalShortcuts() {
         return;
       }
 
-      // If full modal dialogs (Settings or Shortcuts Help) are open, let them handle keys internally
-      if (store.isSettingsOpen || store.isShortcutsOpen) {
-        return;
-      }
-
-      // If Submit Confirmation Modal is open during active exam, let it handle Enter/Tab/Escape
-      if (store.activeView === 'exam' && store.isSubmitModalOpen) {
-        return;
-      }
-
-      // If Question Palette is open during an exam, pressing 'q' or 'Q' closes it
-      if (store.activeView === 'exam' && store.isPaletteOpen) {
-        if (e.key.toLowerCase() === 'q') {
-          e.preventDefault();
-          store.setPaletteOpen(false);
-          return;
-        }
-        // Palette is open: do not execute question-answering shortcuts
-        return;
-      }
-
       // Shortcut: Sign out of Student Portal via 'Ctrl + Enter' (strictly student portal only)
       if (
         (e.ctrlKey || e.metaKey) &&
@@ -88,6 +69,120 @@ export function useGlobalShortcuts() {
           void auth.logoutStudent();
           return;
         }
+      }
+
+      // Identify whether candidate is currently active in the Student Portal after login
+      const auth = useAuthStore.getState();
+      const isStudentPortal =
+        Boolean(auth.currentStudent) &&
+        !(typeof window !== 'undefined' && window.location.pathname.startsWith('/admin'));
+
+      // Universal Speech Interruption Key ('s' / 'S')
+      // Supports English, Hindi InScript ('े' / 'स' / 'ए'), physical KeyS, and keyCode 83
+      const isStopKey =
+        (
+          (e.key && (e.key.toLowerCase() === 's' || e.key === 'े' || e.key === 'स' || e.key === 'ए')) ||
+          e.code === 'KeyS' ||
+          e.keyCode === 83 ||
+          e.which === 83
+        ) &&
+        !e.altKey &&
+        !e.ctrlKey &&
+        !e.metaKey;
+
+      // Primary AI Voice Assistant Toggle Key ('v' / 'V' or 'Alt + V')
+      // Supports English, Hindi InScript ('ल' / 'न'), physical KeyV, and keyCode 86
+      const isToggleVoiceKey =
+        (
+          (e.key && (e.key.toLowerCase() === 'v' || e.key === 'ल' || e.key === 'न')) ||
+          e.code === 'KeyV' ||
+          e.keyCode === 86 ||
+          e.which === 86 ||
+          (e.altKey && (e.key?.toLowerCase() === 'v' || e.code === 'KeyV' || e.key === 'ल' || e.key === 'न'))
+        ) &&
+        !e.ctrlKey &&
+        !e.metaKey;
+
+      // Voice Language Switch Key ('l' / 'L' or 'Alt + L' toggles English ↔ Hindi)
+      // Supports English, Hindi InScript ('त' / 'ल'), physical KeyL, and keyCode 76
+      const isLangKey =
+        (
+          (e.key && (e.key.toLowerCase() === 'l' || e.key === 'त' || e.key === 'ल')) ||
+          e.code === 'KeyL' ||
+          e.keyCode === 76 ||
+          e.which === 76
+        ) &&
+        !e.ctrlKey &&
+        !e.metaKey;
+
+      const isAssistantVocalizing =
+        speechEngine.isSpeaking() ||
+        voiceRecognition.getState() === 'speaking';
+
+      // REQUIREMENT: Stop button 'S' operates strictly in the student portal after login only.
+      // Operates immediately across all modal dialogs, active exams, catalog, and dashboard.
+      if (isStopKey && isStudentPortal) {
+        const isTyping = isUserTyping(activeEl);
+        if (!isTyping || isAssistantVocalizing) {
+          e.preventDefault();
+          useAnnouncerStore.getState().stopSpeech();
+          soundEffects.playSelect();
+          return;
+        }
+      }
+
+      // Voice Assistant Toggle ('V' or 'Alt+V')
+      // Available globally and across modals without freezing or getting stuck
+      if (isToggleVoiceKey) {
+        const isTyping = isUserTyping(activeEl);
+        if (!isTyping || e.altKey) {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent('dristix-toggle-voice'));
+          return;
+        }
+      }
+
+      // Voice Language Toggle ('L' or 'Alt+L')
+      if (isLangKey) {
+        const isTyping = isUserTyping(activeEl);
+        if (!isTyping || e.altKey) {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent('dristix-toggle-voice-language'));
+          return;
+        }
+      }
+
+      // Alt+A for Settings, Alt+H for Shortcuts Guide
+      if (e.altKey && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault();
+        store.setSettingsOpen(true);
+        return;
+      }
+      if (e.altKey && (e.key === 'h' || e.key === 'H' || e.key === '?')) {
+        e.preventDefault();
+        store.setShortcutsOpen(true);
+        return;
+      }
+
+      // If full modal dialogs (Settings or Shortcuts Help) are open, let them handle keys internally
+      if (store.isSettingsOpen || store.isShortcutsOpen) {
+        return;
+      }
+
+      // If Submit Confirmation Modal is open during active exam, let it handle Enter/Tab/Escape
+      if (store.activeView === 'exam' && store.isSubmitModalOpen) {
+        return;
+      }
+
+      // If Question Palette is open during an exam, pressing 'q' or 'Q' closes it
+      if (store.activeView === 'exam' && store.isPaletteOpen) {
+        if (e.key.toLowerCase() === 'q') {
+          e.preventDefault();
+          store.setPaletteOpen(false);
+          return;
+        }
+        // Palette is open: do not execute question-answering shortcuts
+        return;
       }
 
       // If user is actively typing in a text field, let native typing happen
@@ -156,35 +251,21 @@ export function useGlobalShortcuts() {
       // public landing page and sign-in flow — anything else would move the
       // exam store into a view the visitor cannot see, and the portal would
       // open on that view after they sign in.
-      // Universal Accessibility Shortcuts (Available on ALL pages: Landing, Login, Exam, Dashboard)
-      if (e.key.toLowerCase() === 'v' && !e.altKey && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        window.dispatchEvent(new CustomEvent('dristix-toggle-voice'));
-        return;
-      }
-
+      // Shortcuts Guide help window ('?' or 'H' or 'F1')
       if (e.key === '?' || e.key.toLowerCase() === 'h' || e.key === 'F1') {
         e.preventDefault();
         store.setShortcutsOpen(true);
         return;
       }
 
-      if (
-        (e.key.toLowerCase() === 'a' && !e.ctrlKey && !e.metaKey) ||
-        (e.altKey && (e.key === 'a' || e.key === 'A'))
-      ) {
+      // Accessibility Preferences dialog ('A' without modifier)
+      if (e.key.toLowerCase() === 'a' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         store.setSettingsOpen(true);
         return;
       }
 
-      if (e.key.toLowerCase() === 's' && !e.altKey && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        useAnnouncerStore.getState().stopSpeech();
-        return;
-      }
-
-      if (!useAuthStore.getState().currentStudent) {
+      if (!isStudentPortal) {
         return;
       }
       // Toggle Student Performance & Analytics Dashboard 'd' or 'D'
@@ -227,7 +308,10 @@ export function useGlobalShortcuts() {
       }
 
       // Alt + S -> Submit Exam Session (only when in active unsubmitted exam)
-      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+      if (
+        e.altKey &&
+        (e.key === 's' || e.key === 'S' || e.code === 'KeyS' || e.key === 'े' || e.key === 'स' || e.keyCode === 83)
+      ) {
         e.preventDefault();
         if (store.activeView === 'exam' && !store.isSubmitted) {
           store.setSubmitModalOpen(true);

@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
 import type { ThemeMode, TextScale } from '../../store/usePreferencesStore';
 import { useExamStore } from '../../store/useExamStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { speechEngine, EDGE_TTS_VOICES } from '../../utils/speechEngine';
 import { soundEffects } from '../../utils/soundEffects';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
@@ -325,6 +326,64 @@ export const A11ySettingsModal: React.FC = () => {
           ['text', 'search', 'number', 'password', 'email'].includes(
             (activeEl as HTMLInputElement).type || 'text'
           )));
+
+    // Universal Stop Speaking in student portal
+    const isStop =
+      (
+        (e.key && (e.key.toLowerCase() === 's' || e.key === 'े' || e.key === 'स' || e.key === 'ए')) ||
+        e.code === 'KeyS' ||
+        e.keyCode === 83 ||
+        e.which === 83
+      ) &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.metaKey;
+
+    const isStudent =
+      Boolean(useAuthStore.getState().currentStudent) &&
+      !(typeof window !== 'undefined' && window.location.pathname.startsWith('/admin'));
+
+    if (isStop && isStudent && (!isTextInput || speechEngine.isSpeaking())) {
+      e.preventDefault();
+      useAnnouncerStore.getState().stopSpeech();
+      soundEffects.playSelect();
+      return;
+    }
+
+    // Universal Voice Toggle 'V' or Alt+V
+    const isToggleVoice =
+      (
+        (e.key && (e.key.toLowerCase() === 'v' || e.key === 'ल' || e.key === 'न')) ||
+        e.code === 'KeyV' ||
+        e.keyCode === 86 ||
+        e.which === 86 ||
+        (e.altKey && (e.key?.toLowerCase() === 'v' || e.code === 'KeyV' || e.key === 'ल' || e.key === 'न'))
+      ) &&
+      !e.ctrlKey &&
+      !e.metaKey;
+
+    if (isToggleVoice && (!isTextInput || e.altKey)) {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('dristix-toggle-voice'));
+      return;
+    }
+
+    // Voice language switch 'L' or Alt+L
+    const isLang =
+      (
+        (e.key && (e.key.toLowerCase() === 'l' || e.key === 'त' || e.key === 'ल')) ||
+        e.code === 'KeyL' ||
+        e.keyCode === 76 ||
+        e.which === 76
+      ) &&
+      !e.ctrlKey &&
+      !e.metaKey;
+
+    if (isLang && (!isTextInput || e.altKey)) {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('dristix-toggle-voice-language'));
+      return;
+    }
 
     if (!isTextInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
       if (e.key === '+' || e.key === '=' || e.key === 'Add') {

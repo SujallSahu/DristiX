@@ -52,6 +52,24 @@ export function matchExamFromQuery(
     .replace(/\b10\s*प्लस\s*2\b/gi, '10+2')
     .replace(/\b10\s*2\b/g, '10+2');
 
+  // Hindi & Devanagari Acronym & Term Transliterations
+  query = query
+    .replace(/(?:एसएससी|एस\.एस\.सी|एस\s*एस\s*सी)/gi, 'ssc')
+    .replace(/(?:सीजीएल|सी\.जी\.एल|सी\s*जी\s*एल)/gi, 'cgl')
+    .replace(/(?:आरआरबी|आर\.आर\.बी|आर\s*आर\s*बी)/gi, 'rrb')
+    .replace(/(?:एनटीपीसी|एन\.टी\.पी\.सी|एन\s*टी\s*पी\s*सी)/gi, 'ntpc')
+    .replace(/(?:यूपीएससी|यू\.पी\.एस\.सी|यू\s*पी\s*एस\s*सी)/gi, 'upsc')
+    .replace(/(?:सीसैट|सी\s*सैट|सीसेट)/gi, 'csat')
+    .replace(/(?:आईबीपीएस|आई\.बी\.पी\.एस|आई\s*बी\s*पी\s*एस)/gi, 'ibps')
+    .replace(/(?:पीओ|पी\.ओ|पी\s*ओ)/gi, 'po')
+    .replace(/(?:रेलवे|रेलवेज)/gi, 'railway')
+    .replace(/(?:सिविल\s*सेवा|सिविल\s*सर्विसेज)/gi, 'civil services')
+    .replace(/(?:क्वांटिटेटिव|क्वांट)/gi, 'quantitative')
+    .replace(/(?:लॉजिकल|तर्कशक्ति|रीजनिंग)/gi, 'reasoning')
+    .replace(/(?:वर्बल\s*एबिलिटी|शब्दावली|वर्बल)/gi, 'verbal')
+    .replace(/(?:जनरल\s*अवेयरनेस|सामान्य\s*ज्ञान|जीके)/gi, 'general awareness')
+    .replace(/(?:डेटा\s*इंटरप्रिटेशन|आंकड़ा\s*निर्वचन)/gi, 'data interpretation');
+
   const combined = `${p} ${query}`.toLowerCase();
 
   // 2. Direct Substring ID or Code Match in User Query
@@ -92,8 +110,8 @@ export function matchExamFromQuery(
   // 4. Explicit Index / Ordinal Matching (e.g. Exam 6, 6th Test, "6 number", "chhatha", "open 6")
   let extractedTargetIdx: number | null = null;
 
-  // Patterns like "exam 6", "test 6", "number 6", "no 6", "open 6", "start 6"
-  const prefixNumMatch = combined.match(/\b(?:exam|test|number|no\.?|open|start|kholo|chalao)\s*(\d+)\b/i);
+  // Patterns like "exam 6", "test 6", "number 6", "no 6", "open 6", "start 6", "टेस्ट 1", "एग्जाम 1", "ड्रिल 1"
+  const prefixNumMatch = combined.match(/(?:exam|test|drill|number|no\.?|open|start|kholo|chalao|shuru|टेस्ट|एग्जाम|ड्रिल|परीक्षा|नंबर|नम्बर)\s*(\d+)/i);
   if (prefixNumMatch && prefixNumMatch[1]) {
     extractedTargetIdx = parseInt(prefixNumMatch[1], 10) - 1;
   }
@@ -113,23 +131,37 @@ export function matchExamFromQuery(
       pehli: 0,
       first: 0,
       '1st': 0,
+      'पहला': 0,
+      'पहिला': 0,
+      'पहली': 0,
       dusra: 1,
       doosra: 1,
       dusri: 1,
       second: 1,
       '2nd': 1,
+      'दूसरा': 1,
+      'दुसरा': 1,
+      'दूसरी': 1,
       teesra: 2,
       teesri: 2,
       third: 2,
       '3rd': 2,
+      'तीसरा': 2,
+      'तीसरी': 2,
       chautha: 3,
       chauthi: 3,
       fourth: 3,
       '4th': 3,
+      'चौथा': 3,
+      'चौथी': 3,
       paanchwa: 4,
       panchwa: 4,
       fifth: 4,
       '5th': 4,
+      'पांचवां': 4,
+      'पाँचवाँ': 4,
+      'पांचवी': 4,
+      'पाँचवीं': 4,
       chhatha: 5,
       chhatwa: 5,
       chatha: 5,
@@ -137,50 +169,81 @@ export function matchExamFromQuery(
       chhatthi: 5,
       sixth: 5,
       '6th': 5,
+      'छठा': 5,
+      'छठवां': 5,
+      'छठी': 5,
       saatwa: 6,
       satwa: 6,
       seventh: 6,
       '7th': 6,
+      'सातवां': 6,
+      'सातवीं': 6,
       aathwa: 7,
       athwa: 7,
       eighth: 7,
       '8th': 7,
+      'आठवां': 7,
+      'आठवीं': 7,
       nauwa: 8,
       ninth: 8,
       '9th': 8,
+      'नौवां': 8,
+      'नौवीं': 8,
       daswa: 9,
       tenth: 9,
       '10th': 9,
+      'दसवां': 9,
+      'दसवीं': 9,
     };
 
     for (const [word, idx] of Object.entries(ordinalWordMap)) {
-      if (new RegExp(`\\b${word}\\b`, 'i').test(combined)) {
+      const isDevanagari = /[\u0900-\u097F]/.test(word);
+      const matched = isDevanagari
+        ? combined.includes(word)
+        : new RegExp(`\\b${word}\\b`, 'i').test(combined);
+      if (matched) {
         extractedTargetIdx = idx;
         break;
       }
     }
   }
 
-  // Hindi number words before "number", "wala", "exam", "test"
+  // Hindi number words before "number", "wala", "exam", "test", "drill"
   if (extractedTargetIdx === null) {
     const hindiNumWords: { [key: string]: number } = {
       ek: 0,
+      'एक': 0,
       do: 1,
+      'दो': 1,
       teen: 2,
+      'तीन': 2,
       char: 3,
+      'चार': 3,
       paanch: 4,
       panch: 4,
+      'पांच': 4,
+      'पाँच': 4,
       chhe: 5,
       chhah: 5,
       che: 5,
+      'छह': 5,
+      'छे': 5,
       saat: 6,
+      'सात': 6,
       aath: 7,
+      'आठ': 7,
       nau: 8,
+      'नौ': 8,
       das: 9,
+      'दस': 9,
     };
 
     for (const [w, idx] of Object.entries(hindiNumWords)) {
-      if (new RegExp(`\\b${w}\\s*(?:number|no|wala|vala|exam|test|kholo|chalao)\\b`, 'i').test(combined)) {
+      const isDevanagari = /[\u0900-\u097F]/.test(w);
+      const pattern = isDevanagari
+        ? new RegExp(`${w}\\s*(?:नंबर|नम्बर|वाला|टेस्ट|एग्जाम|परीक्षा|परीक्षण|ड्रिल|kholo|chalao|shuru|number|no|wala|vala|exam|test|drill)`, 'i')
+        : new RegExp(`\\b${w}\\s*(?:number|no|wala|vala|exam|test|drill|kholo|chalao|shuru)\\b`, 'i');
+      if (pattern.test(combined)) {
         extractedTargetIdx = idx;
         break;
       }

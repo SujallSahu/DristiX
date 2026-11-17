@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useExamStore } from '../../store/useExamStore';
 import { useAnnouncerStore } from '../../store/useAnnouncerStore';
 import { speechEngine } from '../../utils/speechEngine';
+import { soundEffects } from '../../utils/soundEffects';
 import { AlertTriangle, CheckCircle, X, Loader2 } from 'lucide-react';
 
 export const SubmitConfirmModal: React.FC = () => {
@@ -62,6 +63,43 @@ export const SubmitConfirmModal: React.FC = () => {
           'assertive',
           true
         );
+      return;
+    }
+
+    const isStop =
+      (
+        (e.key && (e.key.toLowerCase() === 's' || e.key === 'े' || e.key === 'स' || e.key === 'ए')) ||
+        e.code === 'KeyS' ||
+        e.keyCode === 83 ||
+        e.which === 83
+      ) &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.metaKey;
+
+    if (isStop) {
+      e.preventDefault();
+      e.stopPropagation();
+      useAnnouncerStore.getState().stopSpeech();
+      soundEffects.playSelect();
+      return;
+    }
+
+    const isToggleVoice =
+      (
+        (e.key && (e.key.toLowerCase() === 'v' || e.key === 'ल' || e.key === 'न')) ||
+        e.code === 'KeyV' ||
+        e.keyCode === 86 ||
+        e.which === 86 ||
+        (e.altKey && (e.key?.toLowerCase() === 'v' || e.code === 'KeyV' || e.key === 'ल' || e.key === 'न'))
+      ) &&
+      !e.ctrlKey &&
+      !e.metaKey;
+
+    if (isToggleVoice) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.dispatchEvent(new CustomEvent('dristix-toggle-voice'));
       return;
     }
 
